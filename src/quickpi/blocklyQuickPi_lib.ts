@@ -11031,4 +11031,10 @@ function hideSlider(sensor) {
         if(sensor.muteBtn)
             sensor.muteBtn.toFront();
     }
-};
+}
+
+export {
+  quickPiLocalLanguageStrings,
+  QuickStore,
+  getContext,
+}

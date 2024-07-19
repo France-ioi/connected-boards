@@ -1,21 +1,27 @@
 import {GalaxiaBoard} from './galaxia/galaxia_board';
 import {getQuickPiConnection} from './galaxia/galaxia';
+import {
+  quickPiLocalLanguageStrings,
+  QuickStore,
+  getContext,
+} from './quickpi/blocklyQuickPi_lib';
 
 const exportToWindow = {
   GalaxiaBoard,
   getQuickPiConnection,
+  quickPiLocalLanguageStrings,
+  QuickStore,
+  getContext,
 };
 
 for (let [name, object] of Object.entries(exportToWindow)) {
   window[name] = object;
 }
 
-let a = 5 ** 4;
-let b = [1, 3, 5].includes(1);
-
 export {
   GalaxiaBoard,
   getQuickPiConnection,
-  a,
-  b,
+  quickPiLocalLanguageStrings,
+  QuickStore,
+  getContext,
 }
