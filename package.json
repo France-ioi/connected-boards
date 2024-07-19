@@ -1,5 +1,5 @@
 {
-  "name": "board-programming",
+  "name": "connected-boards",
   "version": "1.0.0",
   "description": "Quickpi, Galaxia, micro:bit, etc...",
   "main": "dist/index.js",
