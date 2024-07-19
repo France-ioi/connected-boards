@@ -107,10 +107,10 @@ export const getQuickPiConnection = function (userName, _onConnect, _onDisconnec
     this.serialStartRead = async function(port, callback) {
         this.reader = port.readable.getReader();
         while (true) {
-            const { value, done } = await reader.read();
+            const { value, done } = await this.reader.read();
             this.processGalaxiaOutput(value);
             if (done || this.releasing) {
-                reader.cancel();
+                this.reader.cancel();
                 break;
             }
         }
