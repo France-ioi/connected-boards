@@ -129,7 +129,6 @@ var quickPiLocalLanguageStrings = {
             getServoAngle: "getServoAngle",
 
             setBuzzerState: "setBuzzerState",
-            setBuzzerNote: "setBuzzerNote",
 
             turnBuzzerOn: "turnBuzzerOn",
             turnBuzzerOff: "turnBuzzerOff",
@@ -309,7 +308,8 @@ var quickPiLocalLanguageStrings = {
             connect: "Connecter",
             install: "Installer",
             config: "Config",
-
+            remoteControl: "Contrôle à distance",
+            simulator: "Simulateur",
      
             raspiConfig: "Configuration du Raspberry Pi",
             local: "Local",
@@ -324,8 +324,9 @@ var quickPiLocalLanguageStrings = {
 
             connectToDevice: "Connecter l'appareil",
             disconnectFromDevice: "Déconnecter",
-       
 
+            removeSensor: "Supprimer",
+       
             irReceiverTitle: "Recevoir des codes infrarouges",
             directIrControl: "Dirigez votre télécommande vers votre carte QuickPi et appuyez sur un des boutons",
             getIrCode: "Recevoir un code",
@@ -420,6 +421,11 @@ var quickPiLocalLanguageStrings = {
             validate1: "Valider 1",
             validate2: "Valider 2",
             validate3: "Valider 3",
+            cancel: "Annuler",
+
+            areYouSure: "Vous êtes sûr ?",
+            yes: "Oui",
+            no: "Non",
 
             // sensorNameBuzzer: "buzzer",
             sensorNameBuzzer: "buzz",
@@ -449,7 +455,15 @@ var quickPiLocalLanguageStrings = {
             sensorNameServo: "servo",
             sensorNameHumidity: "humidity",
             sensorNamePotentiometer: "pot",
-            sensorNameCloudStore: "cloud"
+            sensorNameCloudStore: "cloud",
+
+            selectOption: "Sélectionnez une rubrique…",
+            components: "Composants",
+            connection: "Connexion",
+            display: "Affichage",
+            displayPrompt: "Display component name or port name ?",
+            componentNames: "COMPONENT NAME",
+            portNames: "PORT NAMES",
         },
         concepts: {
             quickpi_start: 'Créer un programme',
@@ -1563,6 +1577,7 @@ var buzzerSound = {
 
 var colors = {
     blue: "#4a90e2",
+    orange: "#f5a623"
 }
 
 
@@ -2658,7 +2673,8 @@ var getContext = function (display, infos, curLevel) {
             description: strings.messages.cloudstore,
             isAnalog: false,
             isSensor: false,
-            portType: "none",
+            // portType: "none",
+            portType: "D",
             valueType: "object",
             selectorImages: ["cloudstore.png"],
             /*getInitialState: function(sensor) {
@@ -3176,7 +3192,6 @@ var getContext = function (display, infos, curLevel) {
 
    context.generatePythonSensorTable = function()
    {
-        return "";
         var pythonSensorTable = "sensorTable = [";
         var first = true;
 
@@ -3722,6 +3737,7 @@ var getContext = function (display, infos, curLevel) {
     };
 
     context.resetDisplay = function() {
+        // console.log("resetDisplay")
         if (!context.display || !this.raphaelFactory)
             return;
 
@@ -3875,14 +3891,9 @@ var getContext = function (display, infos, curLevel) {
                 }
             });
 
-            if (infos.customSensors) {
-                // nSensors++;
-            }
-
             if (nSensors < 4)
                 nSensors = 4;
 
-            // TODO : be carefull, the geometry is reversed for cols and rows I think
             var geometry = null;
             if (context.compactLayout)
                 // geometry = squareSize(paper.width, paper.height, nSensors, 2);
@@ -3891,29 +3902,32 @@ var getContext = function (display, infos, curLevel) {
                 geometry = squareSize(paper.width, paper.height, nSensors, 1);
             
             // console.log(geometry)
-            var cellW = paper.width / geometry.rows;
+            var nbRows = geometry.rows;
+            var nbCol = geometry.cols;
+            var cellW = paper.width / nbCol;
 
             // context.sensorSize = geometry.size * .10;
+            reorganizeSensors(geometry);
 
+            var lineAttr = {
+                "stroke-width": 1,
+                "stroke": "black",
+                opacity: 0.1
+            };
+            var x1 = cellW*0.2;
+            var x2 = paper.width - cellW*0.2;
             var iSensor = 0;
+            for (var row = 0; row < nbRows; row++) {
+                var y = geometry.size * row;
+                
+                if(row > 0){
+                    var line = paper.path(["M", x1,y,"L", x2,y]);
+                    context.sensorDivisions.push(line);
+                    line.attr(lineAttr);
+                }
 
-            for (var col = 0; col < geometry.cols; col++) {
-                var y = geometry.size * col;
-
-                var line = paper.path(["M", 0,
-                    y,
-                    "L", paper.width,
-                    y]);
-                context.sensorDivisions.push(line);
-
-                line.attr({
-                    "stroke-width": 1,
-                    "stroke": "lightgrey",
-                    "stroke-linecapstring": "round"
-                });
-
-                for (var row = 0; row < geometry.rows; row++) {
-                    var x = cellW * row;
+                for (var col = 0; col < nbCol; col++) {
+                    var x = cellW * col;
                     // var y1 = y + geometry.size / 4;
                     var y1 = y;
                     // var y2 = y + geometry.size * 3 / 4;
@@ -3933,37 +3947,27 @@ var getContext = function (display, infos, curLevel) {
                     // cells of the screen at 2 because the display is still good with it.
                     // I used rows, because I think that for geometry, rows and cols are reversed. You can try to change
                     // it and see the result in animal connecte.
-                    if (sensor && sensor.type === "screen" && cells > geometry.rows && cells == 3 && geometry.rows == 2)
+                    if (sensor && sensor.type === "screen" && cells > nbCol && cells == 3 && nbCol == 2)
                         cells = 2;
 
-                    line = paper.path(["M", x, y1, "V", y2]);
-                    // line = paper.rect(x,y1,1,y2 - y1,1);
-                    context.sensorDivisions.push(line);
+                    if(col > 0){
+                        var line = paper.path(["M", x, y1, "V", y2]).attr(lineAttr);
+                        context.sensorDivisions.push(line);
+                    }
 
-                    line.attr({
-                        stroke: "none",
-                        "stroke-width": 1,
-                        "stroke": "lightgrey",
-                        // "fill": "lightgrey",
-                        // fill: "90-#fff-#000",
-                        "stroke-linecap": "round"
-                    });
-                    // line.attr({
-                    //     stroke: "none",
-                    //     fill: "0-#fff-#f00:20-#000"
-                    // });
-
-                    var foundrows = false;
+                    var foundcols = false;
                     var bump = false;
 
-                    while (!foundrows && !bump)
+                    while (!foundcols && !bump)
                     {
-                        var rowsleft = geometry.rows - row;
-                        if (cells > rowsleft)
+                        var colsleft = nbCol - col;
+                        if (cells > colsleft)
                         {
                             for (var iNewSensor = iSensor + 1; iNewSensor < infos.quickPiSensors.length; iNewSensor++)
                             {
                                 var newSensor = infos.quickPiSensors[iNewSensor];
+                                // if(newSensor.type == "adder")
+                                    // continue
 
                                 cells = 1;
                                 cellsAmount = findSensorDefinition(newSensor).cellsAmount;
@@ -3976,7 +3980,7 @@ var getContext = function (display, infos, curLevel) {
                                     infos.quickPiSensors[iNewSensor] = sensor;
                                     infos.quickPiSensors[iSensor] = newSensor;
                                     sensor = newSensor;
-                                    foundrows = true;
+                                    foundcols = true;
                                     break;
                                 }
                             }
@@ -3984,7 +3988,7 @@ var getContext = function (display, infos, curLevel) {
                         }
                         else
                         {
-                            foundrows = true;
+                            foundcols = true;
                         }
                     }
 
@@ -3996,7 +4000,7 @@ var getContext = function (display, infos, curLevel) {
                         // drawCustomSensorAdder(x, y, cellW * cells, geometry.size);
                         // drawCustomSensorAdder(x, y, geometry.size);
                     } else if (infos.quickPiSensors[iSensor]) {                        
-                        row += cells - 1;
+                        col += cells - 1;
 
                         sensor.drawInfo = {
                                 x: x,
@@ -4013,6 +4017,19 @@ var getContext = function (display, infos, curLevel) {
         }
     }
 
+    function reorganizeSensors(geo) {
+        // console.log(geo)
+        // var nbRows = geo.rows;
+        // var nbCol = geo.cols;
+        // var newSensors = [];
+        // var sensors = Beav.Object.clone(infos.quickPiSensors);
+        //  sensors.map()
+        // var row = 0, col = 0;
+        // do{
+        //     for(var sen of sensors)
+        // }while(newSensors.length < infos.quickPiSensors.length)
+    }
+
     // Reset the context's display
     context.createDisplay = function () {
         // Do something here
@@ -4026,25 +4043,35 @@ var getContext = function (display, infos, curLevel) {
             return;
 
 
-        var connectionHTML = "<div id=\"piui\">" +
-            "   <button type=\"button\" id=\"piconnect\" class=\"btn\">" +
-            "       <span class=\"fa fa-wifi\"></span><span id=\"piconnecttext\" class=\"btnText\">" + strings.messages.connect + "</span> <span id=\"piconnectprogress\" class=\"fas fa-spinner fa-spin\"></span>" +
-            "   </button>" +
-            "   <span id=\"piinstallui\">" +
-            "       <span class=\"fa fa-exchange-alt\"></span>" +
-            "       <button type=\"button\" id=\"piinstall\" class=\"btn\">" +
-            "           <span class=\"fa fa-upload\"></span><span>" + strings.messages.install + "</span><span id=piinstallprogresss class=\"fas fa-spinner fa-spin\"></span><span id=\"piinstallcheck\" class=\"fa fa-check\"></span>" +
-            "       </button>" +
-            "   </span>" +
-            "   <span id=\"pichangehatui\">" +
-            "       <button type=\"button\" id=\"pichangehat\" class=\"btn\">" +
-            "           <span class=\"fas fa-hat-wizard\"></span><span>" + strings.messages.changeBoard + "</span></span></span>" +
-            "       </button>" +
-            "       <button type=\"button\" id=\"pihatsetup\" class=\"btn\">" +
-            "           <span class=\"fas fa-cog\"></span><span>" + strings.messages.config + "</span></span></span>" +
-            "       </button>" +
-            "   </span>" +
-            "</div>";
+        var connectionHTML = 
+        "<div id=\"piui\" class='hide' >" +
+        // "   <button type=\"button\" id=\"piconnect\" class=\"btn\">" +
+        // // "       <span class=\"fa fa-wifi\"></span><span id=\"piconnecttext\" class=\"btnText\">" + strings.messages.connect + "</span> " +
+        // "       <span class=\"fas fa-exchange-alt\"></span><span id=\"piconnecttext\" class=\"btnText\">" + strings.messages.connect + "</span> " +
+        // "   </button>" +
+        // "   <span id=\"piinstallui\">" +
+        // "       <span class=\"fa fa-exchange-alt\"></span>" +
+        // "       <button type=\"button\" id=\"piinstall\" class=\"btn\">" +
+        // "           <span class=\"fa fa-upload\"></span><span>" + strings.messages.install + "</span><span id=piinstallprogresss class=\"fas fa-spinner fa-spin\"></span><span id=\"piinstallcheck\" class=\"fa fa-check\"></span>" +
+        // "       </button>" +
+        // "   </span>" +
+        "   <div id=\"dropdown_menu\">"+
+        "       <span class='menu_line' id='toggle_menu'><span class=\"fas fa-exchange-alt\"></span><span class='label'>"+strings.messages.simulator+"</span></span>"+
+        "       <span class='menu_line clickable' id='simulator'><span class=\"fas fa-desktop\"></span><span class='label'>"+strings.messages.simulator+"</span></span>"+
+        "       <span class='menu_line clickable' id='remote_control'><span class=\"fas fa-plug\"></span><span class='label'>"+strings.messages.remoteControl+"</span></span>"+
+        "       <span class='menu_line clickable' id='install'><span class=\"fas fa-upload\"></span><span class='label'>"+strings.messages.install+"</span></span>"+
+        "   </div>"+
+
+        "   <span id=\"pichangehatui\">" +
+        "       <button type=\"button\" id=\"pichangehat\" class=\"btn\">" +
+        // "           <span class=\"fas fa-hat-wizard\"></span><span>" + strings.messages.changeBoard + "</span></span></span>" +
+        "           <span class=\"fas fa-cog\"></span>"+
+        "       </button>" +
+        // "       <button type=\"button\" id=\"pihatsetup\" class=\"btn\">" +
+        // "           <span class=\"fas fa-cog\"></span><span>" + strings.messages.config + "</span></span></span>" +
+        // "       </button>" +
+        "   </span>" +
+        "</div>";
 
         var piUi = getQuickPiOption('disableConnection') ? '' : connectionHTML;
 
@@ -4056,7 +4083,7 @@ var getContext = function (display, infos, curLevel) {
         $('#taskIntro').addClass('piui');
 
         $('#grid').html("<div id=\"virtualBoard\"></div><div id=\"virtualSensors\" style=\"height: 100%; width: 100%;\">"
-            + "</div>");
+          + "</div>");
 
 
         if (!context.quickPiZoom || !context.autoGrading)
@@ -4148,491 +4175,212 @@ var getContext = function (display, infos, curLevel) {
             context.offLineMode = false;
         }
 
-        $('#piconnect').click(function () {
-            var connectionDialogHTML = "<div class=\"content connectPi qpi\">" +
-                "   <div class=\"panel-heading\">" +
-                "       <h2 class=\"sectionTitle\">" +
-                "           <span class=\"iconTag\"><i class=\"icon fas fa-list-ul\"></i></span>" +
-                            strings.messages.raspiConfig +
-                "       </h2>" +
-                "       <div class=\"exit\" id=\"picancel\"><i class=\"icon fas fa-times\"></i></div>" +
-                "   </div>" +
-                "   <div class=\"panel-body\">" +
-                "       <div id=\"piconnectionmainui\">" +
-                "           <div class=\"switchRadio btn-group\" id=\"piconsel\">" +
-                "               <button type=\"button\" class=\"btn\" id=\"piconlocal\"><i class=\"fas fa-location-arrow icon\"></i>" + strings.messages.local + "</button>" +
-                "               <button type=\"button\" class=\"btn active\" id=\"piconwifi\"><i class=\"fa fa-wifi icon\"></i>WiFi</button>" +
-                "               <button type=\"button\" class=\"btn\" id=\"piconusb\"><i class=\"fab fa-usb icon\"></i>USB</button>" +
-                "               <button type=\"button\" class=\"btn\" id=\"piconbt\"><i class=\"fab fa-bluetooth-b icon\"></i>Bluetooth</button>" +
-                "           </div>" +
-                "           <div id=\"pischoolcon\">" +
-                "               <div class=\"form-group\">" +
-                "                   <label id=\"pischoolkeylabel\">" + strings.messages.schoolKey + "</label>" +
-                "                   <div class=\"input-group\">" +
-                "                       <div class=\"input-group-prepend\">Aa</div>" +
-                "                       <input type=\"text\" id=\"schoolkey\" class=\"form-control\">" +
-                "                   </div>" +
-                "               </div>" +
-                "               <div class=\"form-group\">" +
-                "                   <label id=\"pilistlabel\">" + strings.messages.connectList + "</label>" +
-                "                   <div class=\"input-group\">" +
-                "                       <button class=\"input-group-prepend\" id=pigetlist disabled>" + strings.messages.getPiList + "</button>" +
-                "                       <select id=\"pilist\" class=\"custom-select\" disabled>" +
-                "                       </select>" +
-                "                   </div>" +
-                "               </div>" +
-                "               <div class=\"form-group\">" +
-                "                   <label id=\"piiplabel\">" + strings.messages.enterIpAddress + "</label>" +
-                "                   <div class=\"input-group\">" +
-                "                       <div class=\"input-group-prepend\">123</div>" +
-                "                       <input id=piaddress type=\"text\" class=\"form-control\">" +
-                "                   </div>" +
-                "               </div>" +
-                "               <div>" +
-                "                   <input id=\"piusetunnel\" disabled type=\"checkbox\">" + strings.messages.connectTroughtTunnel +
-                "               </div>" +
-                "           </div>" +
-                "           <div id=\"panel-body-usbbt\">" +
-                "               <label id=\"piconnectionlabel\"></label>" +
-                "           </div>" +
-                "           <div id=\"panel-body-local\">" +
-                "               <label id=\"piconnectionlabellocal\"></label>" +
-                "               <div id=\"piconnectolocalhost\">" +
-                "                   <input type=\"radio\" id=\"piconnectolocalhostcheckbox\" name=\"pilocalconnectiontype\" value=\"localhost\">" +
-                                        strings.messages.connectToLocalhost +
-                "               </div>" +
-                "               <div id=\"piconnectocurrenturl\">" +
-                "                   <input type=\"radio\" id=\"piconnectocurrenturlcheckbox\" name=\"pilocalconnectiontype\" value=\"currenturl\">" +
-                                        strings.messages.connectToWindowLocation +
-                "               </div>" +
-                "           </div>" +
-                "       </div>" +
-                "       <div class=\"inlineButtons\">" +
-                "           <button id=\"piconnectok\" class=\"btn\"><i class=\"fa fa-wifi icon\"></i>" + strings.messages.connectToDevice + "</button>" +
-                "           <button id=\"pirelease\" class=\"btn\"><i class=\"fa fa-times icon\"></i>" + strings.messages.disconnectFromDevice + "</button>" +
-                "       </div>" +
-                "   </div>" +
-                "</div>";
+        var showMenu = false;
+        $('#toggle_menu, #simulator').click(function() {
+            showMenu = !showMenu;
+            updateMenu();
+        });
+        $("#dropdown_menu #remote_control").click(function() {
+            if(!context.quickPiConnection.isConnected()) { 
+                showConfig(); 
+            }else{
+                showasConnected();
+                context.offLineMode = false;
+            }
+        });
+        $("#dropdown_menu #install").click(function() {
+            if(!context.quickPiConnection.isConnected()) { 
+                showConfig(); 
+            }else{
+                context.blocklyHelper.reportValues = false;
+
+                var python_code = context.generatePythonSensorTable();
+                python_code += "\n\n";
+                python_code += window.task.displayedSubTask.blocklyHelper.getCode('python');
+
+                python_code = python_code.replace("from quickpi import *", "");
+
+                if (context.runner)
+                    context.runner.stop();
+
+                context.installing = true;
+                $('#piinstallprogresss').show();
+                $('#piinstallcheck').hide();
+
+                context.quickPiConnection.installProgram(python_code, function () {
+                    context.justinstalled = true;
+                    $('#piinstallprogresss').hide();
+                    $('#piinstallcheck').show();
+                });
+            }
+        });
+        $('#pichangehat').click(showConfig);
+
+        function updateMenu() {
+            if(showMenu){
+                $("#piui").addClass("show");
+                $("#piui").removeClass("hide");
+            }else{
+                $("#piui").addClass("hide");
+                $("#piui").removeClass("show");
+            }
+        };
+
+        function getConnectionDialogHTML() {
+            var html = "<div id=\"quickpiViewer\" class=\"content connectPi qpi\" style=\"display: block;\">" +
+            "<div class=\"content\">"+
+        // var connectionDialogHTML = "<div class=\"content connectPi qpi\">" +
+            "   <div class=\"panel-heading\">" +
+            "       <h2 class=\"sectionTitle\">" +
+            "           <span class=\"iconTag\"><i class=\"icon fas fa-list-ul\"></i></span>" +
+                        strings.messages.raspiConfig +
+            "       </h2>" +
+            "       <div class=\"exit\" id=\"picancel\"><i class=\"icon fas fa-times\"></i></div>" +
+            "   </div>" +
+            "   <div class=\"panel-body\">" +
+            // "       <div id=\"piconnectionmainui\">" +
+            "<div class=\"navigation\">" +
+            "<div class=\"navigationContent\"> " +
+            // "<label for=\"showNavigationContent\" class=\"showNavigationContent\">" + strings.messages.selectOption + "</label>" +
+            "<input type=\"checkbox\" id=\"showNavigationContent\" role=\"button\">" +
+
+            "<ul>" +
+            "   <li id=\"qpi-portsnames\">" + strings.messages.display + "</li>" +
+            "   <li id=\"qpi-components\">" + strings.messages.components  + "</li>" +
+            "   <li id=\"qpi-change-board\">" + strings.messages.changeBoard  + "</li>" +
+            "   <li id=\"qpi-connection\" class=\"selected\">" + strings.messages.connection + "</li>" +
+            "</ul>" +
+            "   </div>" +
+            "</div> " +
+            " <div class=\"viewer\">"+
+                "<div id=\"qpi-uiblock-portsnames\" class=\"hiddenContent viewerInlineContent\" >" +
+                    strings.messages.displayPrompt +
+                    "<div class=\"switchRadio btn-group\" id=\"pi-displayconf\">" +
+                        "<button type=\"button\" class=\"btn active\" id=\"picomponentname\"><i class=\"fas fa-microchip icon\"></i>" + strings.messages.componentNames + "</button>" +
+                        "<button type=\"button\" class=\"btn\" id=\"piportname\"><i class=\"fas fa-plug icon\"></i>" + strings.messages.portNames + "</button>" +
+                    "</div>" +
+                    "<div id='example_sensor'>" +
+                        "<span id='name'>"+sensorDefinitions[17].suggestedName+"1</span>"+
+                        "<span id='port'>"+sensorDefinitions[17].portType+"5</span>"+
+                        "<img src="+getImg(sensorDefinitions[17].selectorImages[0])+"></span>"+
+                    "</div>" +
+                "</div>" +
+
+                "<div id=\"qpi-uiblock-components\" class=\"hiddenContent viewerInlineContent\" >" +                    
+
+                    "<div id=\"tabs\">" +
+                        "<div id=\"tabs_back\"></div>" +
+                        "<div id='remove_tab' class='tab selected'>"+strings.messages.removeSensor+"</div>"+
+                        "<div id='add_tab' class='tab'>"+strings.messages.add+"</div>"+
+                    "</div>" +
+                    "<div id=\"remove_cont\">" +
+                        "<div id=\"sensorGrid\">" +
+                        "</div>" +
+                        "<div class='buttonContainer' >"+
+                            "<button id=\"piremovesensor\" class=\"btn\"><i class=\"fas fa-trash icon\"></i>" + strings.messages.removeSensor + "</button>" +
+                        "</div>" +
+                    "</div>" +
+                    "<div id=\"add_cont\" class='hiddenContent' >" +
+                        "<div id=\"addSensorGrid\">" +
+                        "</div>" +
+                        "<div class='buttonContainer' >"+
+                            "<button id=\"piaddsensor\" class=\"btn\"><i class=\"fas fa-plus icon\"></i>" + strings.messages.add + "</button>" +
+                        "</div>" +
+                    "</div>"+
+                "</div>" +
+
+            "       <div id=\"qpi-uiblock-change-board\" class=\"hiddenContent viewerInlineContent\">" +
+            "           <div class=\"panel-body\">" +
+            "               <div id=boardlist>" +
+            "               </div>" +
+            "               <div panel-body-usbbt>" +
+            "                   <label id=\"piconnectionlabel\"></label>" +
+            "               </div>" +
+            "           </div>" +
+            "       </div>" +
+
+
+            "       <div id=\"qpi-uiblock-connection\" class=\"hiddenContent viewerInlineContent\">" +
+
+            "           <div class=\"switchRadio btn-group\" id=\"piconsel\">" +
+            "               <button type=\"button\" class=\"btn\" id=\"piconlocal\"><i class=\"fas fa-location-arrow icon\"></i>" + strings.messages.local + "</button>" +
+            "               <button type=\"button\" class=\"btn active\" id=\"piconwifi\"><i class=\"fa fa-wifi icon\"></i>WiFi</button>" +
+            "               <button type=\"button\" class=\"btn\" id=\"piconusb\"><i class=\"fab fa-usb icon\"></i>USB</button>" +
+            "               <button type=\"button\" class=\"btn\" id=\"piconbt\"><i class=\"fab fa-bluetooth-b icon\"></i>Bluetooth</button>" +
+            "           </div>" +
+            "           <div id=\"pischoolcon\">" +
+            "               <div class=\"form-group\">" +
+            "                   <label id=\"pischoolkeylabel\">" + strings.messages.schoolKey + "</label>" +
+            "                   <div class=\"input-group\">" +
+            "                       <div class=\"input-group-prepend\">Aa</div>" +
+            "                       <input type=\"text\" id=\"schoolkey\" class=\"form-control\">" +
+            "                   </div>" +
+            "               </div>" +
+            "               <div class=\"form-group\">" +
+            "                   <label id=\"pilistlabel\">" + strings.messages.connectList + "</label>" +
+            "                   <div class=\"input-group\">" +
+            "                       <button class=\"input-group-prepend\" id=pigetlist disabled>" + strings.messages.getPiList + "</button>" +
+            "                       <select id=\"pilist\" class=\"custom-select\" disabled>" +
+            "                       </select>" +
+            "                   </div>" +
+            "               </div>" +
+            "               <div class=\"form-group\">" +
+            "                   <label id=\"piiplabel\">" + strings.messages.enterIpAddress + "</label>" +
+            "                   <div class=\"input-group\">" +
+            "                       <div class=\"input-group-prepend\">123</div>" +
+            "                       <input id=piaddress type=\"text\" class=\"form-control\">" +
+            "                   </div>" +
+            "               </div>" +
+            "               <div>" +
+            "                   <input id=\"piusetunnel\" disabled type=\"checkbox\">" + strings.messages.connectTroughtTunnel +
+            "               </div>" +
+            "           </div>" +
+            "           <div id=\"panel-body-usbbt\">" +
+            "               <label id=\"piconnectionlabel\"></label>" +
+            "           </div>" +
+            "           <div id=\"panel-body-local\">" +
+            "               <label id=\"piconnectionlabellocal\"></label>" +
+            "               <div id=\"piconnectolocalhost\">" +
+            "                   <input type=\"radio\" id=\"piconnectolocalhostcheckbox\" name=\"pilocalconnectiontype\" value=\"localhost\">" +
+                                    strings.messages.connectToLocalhost +
+            "               </div>" +
+            "               <div id=\"piconnectocurrenturl\">" +
+            "                   <input type=\"radio\" id=\"piconnectocurrenturlcheckbox\" name=\"pilocalconnectiontype\" value=\"currenturl\">" +
+                                    strings.messages.connectToWindowLocation +
+            "               </div>" +
+            "           </div>" +
+            "           <div class=\"inlineButtons\">" +
+            "               <button id=\"piconnectok\" class=\"btn\">" +
+            "               <i id=\"piconnectprogressicon\" class=\"fas fa-spinner fa-spin icon\"></i>" +
+            "               <i id=\"piconnectwifiicon\" class=\"fa fa-wifi icon\"></i>" + 
+                                strings.messages.connectToDevice +
+            "               </button>" +
+            "               <button id=\"pirelease\" class=\"btn\"><i class=\"fa fa-times icon\"></i>" + strings.messages.disconnectFromDevice + "</button>" +
+            "           </div>" +
+
+            "       </div>" +
+            "   </div>" +
+
+             "   </div>" +
+            "   </div>" +
+
+            "</div>";
+            return html
+        }
+
+        function showConfig() {
+            var connectionDialogHTML = getConnectionDialogHTML();
 
             window.displayHelper.showPopupDialog(connectionDialogHTML, function () {
-                if (context.offLineMode) {
-                    $('#pirelease').attr('disabled', true);
-                }
-                else {
-                    $('#pirelease').attr('disabled', false);
-                }
-    
-                $('#piconnectok').attr('disabled', true);
-    
-                $('#piconnectionlabel').hide();
-    
-                if (context.quickPiConnection.isConnected()) {
-                    if (getSessionStorage('connectionMethod') == "USB") {
-                        $('#piconwifi').removeClass('active');
-                        $('#piconusb').addClass('active');
-                        $('#pischoolcon').hide();
-                        $('#piaddress').val("192.168.233.1");
-    
-                        $('#piconnectok').attr('disabled', true);
-                        $('#piconnectionlabel').show();
-                        $('#piconnectionlabel').text(strings.messages.canConnectoToUSB)
-    
-                        context.inUSBConnection = true;
-                        context.inBTConnection = false;
-                    } else if (getSessionStorage('connectionMethod') == "BT") {
-                        $('#piconwifi').removeClass('active');
-                        $('#piconbt').addClass('active');
-                        $('#pischoolcon').hide();
-    
-                        $('#piaddress').val("192.168.233.2");
-    
-                        $('#piconnectok').attr('disabled', true);
-                        $('#piconnectionlabel').show();
-                        $('#piconnectionlabel').text(strings.messages.canConnectoToBT)
-    
-                        context.inUSBConnection = false;
-                        context.inBTConnection = true;
-                    } else if (getSessionStorage('connectionMethod') == "LOCAL") {
-                        $('#piconlocal').trigger("click");
-                    }
-                } else {
-                    setSessionStorage('connectionMethod', "WIFI");
-                }
-    
-                $('#piaddress').on('input', function (e) {
-    
-                    if (context.offLineMode)
-                    {
-                        var content = $('#piaddress').val();
-    
-                        if (content)
-                            $('#piconnectok').attr('disabled', false);
-                        else
-                            $('#piconnectok').attr('disabled', true);
-                    }
-                });
-    
-    
-                if (getSessionStorage('pilist')) {
-                    populatePiList(JSON.parse(getSessionStorage('pilist')));
-                }
-    
-                if (getSessionStorage('raspberryPiIpAddress')) {
-                    $('#piaddress').val(getSessionStorage('raspberryPiIpAddress'));
-                    $('#piaddress').trigger("input");
-                }
-    
-                if (getSessionStorage('schoolkey')) {
-                    $('#schoolkey').val(getSessionStorage('schoolkey'));
-                    $('#pigetlist').attr("disabled", false);
-                }
-    
-                function setLocalIp()
-                {
-                    var localvalue = $('input[name=pilocalconnectiontype]:checked').val()
-    
-                    if (localvalue == "localhost") {
-                        $('#piaddress').val("localhost");
-                        $('#piaddress').trigger("input");
-                    } else {
-                        $('#piaddress').val(window.location.hostname);
-                        $('#piaddress').trigger("input");
-                    }
-                }
-    
-                $('input[type=radio][name=pilocalconnectiontype]').change(function() {
-                    setLocalIp();
-                });
-               
-                function cleanUSBBTIP()
-                {
-                    var ipaddress = $('#piaddress').val();
-    
-                    if (ipaddress == "192.168.233.1" ||
-                        ipaddress == "192.168.233.2" ||
-                        ipaddress == "localhost" ||
-                        ipaddress == window.location.hostname)
-                    {
-                            $('#piaddress').val("");
-                            $('#piaddress').trigger("input");
-                            
-                            var schoolkey = $('#schoolkey').val();
-                            if (schoolkey.length > 1)
-                                $('#pigetlist').trigger("click");
-                    }
-                }
-    
-                cleanUSBBTIP();
-    
-                $('#panel-body-local').hide();
-    
-                if (context.localhostAvailable || context.windowLocationAvailable)
-                {
-                    if (!context.quickPiConnection.isConnected() ||
-                        getSessionStorage('connectionMethod') == "LOCAL")
-                    {
-                        $('#piconsel .btn').removeClass('active');
-                        $('#piconlocal').addClass('active');
-    
-                        
-                        $('#pischoolcon').hide();
-                        $('#piconnectionlabel').hide();
-                        $('#panel-body-local').show();
-                        setSessionStorage('connectionMethod', "LOCAL");
-    
-                        if (context.localhostAvailable &&
-                            context.windowLocationAvailable)
-                        {
-                            $("#piconnectolocalhostcheckbox").prop("checked", true);
-    
-                            setLocalIp();
-                        } else if (context.localhostAvailable) {
-                            $('#piconnectolocalhost').hide();
-                            $('#piconnectocurrenturlcheckbox').hide();
-    
-                            setLocalIp();
-                        } else if (context.windowLocationAvailable) {
-                            $('#piconnectocurrenturl').hide();
-                            $('#piconnectolocalhostcheckbox').hide();
-    
-                            setLocalIp();
-                        }
-                    }
-                }
-                else
-                {
-                    $('#panel-body-local').hide();
-                    $("#piconlocal").hide();
-                }
-    
-    
-                $('#piconnectok').click(function () {
-                    context.inUSBConnection = false;
-                    context.inBTConnection = false;
-    
-                    $('#popupMessage').hide();
-                    window.displayHelper.popupMessageShown = false;
-    
-                    if ($('#piusetunnel').is(":checked")) {
-    
-                        var piname = $("#pilist option:selected").text().split("-")[0].trim();
-    
-                        var url = "ws://api.quick-pi.org/client/" +
-                            $('#schoolkey').val()  + "-" +
-                            piname +
-                            "/api/v1/commands";
-    
-                        setSessionStorage('quickPiUrl', url);
-                        context.quickPiConnection.connect(url);
-    
-                    } else {
-                        var ipaddress = $('#piaddress').val();
-                        setSessionStorage('raspberryPiIpAddress', ipaddress);
-    
-                        showasConnecting();
-                        var url = "ws://" + ipaddress + ":5000/api/v1/commands";
-                        setSessionStorage('quickPiUrl', url);
-    
-                        context.quickPiConnection.connect(url);
-                    }
-                });
-    
-                $('#pirelease').click(function () {
-                    context.inUSBConnection = false;
-                    context.inBTConnection = false;
-    
-                    $('#popupMessage').hide();
-                    window.displayHelper.popupMessageShown = false;
-    
-                    // IF connected release lock
-                    context.releasing = true;
-                    context.quickPiConnection.releaseLock();
-                });
-    
-                $('#picancel').click(function () {
-                    context.inUSBConnection = false;
-                    context.inBTConnection = false;
-    
-                    $('#popupMessage').hide();
-                    window.displayHelper.popupMessageShown = false;
-                });
-    
-                $('#schoolkey').on('input', function (e) {
-                    var schoolkey = $('#schoolkey').val();
-                    setSessionStorage('schoolkey', schoolkey);
-    
-                    if (schoolkey)
-                        $('#pigetlist').attr("disabled", false);
-                    else
-                        $('#pigetlist').attr("disabled", true);
-                });
-    
-    
-                $('#pigetlist').click(function () {
-                    var schoolkey = $('#schoolkey').val();
-    
-                    fetch('http://www.france-ioi.org/QuickPi/list.php?school=' + schoolkey)
-                        .then(function (response) {
-                            return response.json();
-                        })
-                        .then(function (jsonlist) {
-                            populatePiList(jsonlist);
-                        });
-                });
-    
-                // Select device connexion methods
-                $('#piconsel .btn').click(function () {
-                    if (!context.quickPiConnection.isConnected()) {
-                        if (!$(this).hasClass('active')) {
-                            $('#piconsel .btn').removeClass('active');
-                            $(this).addClass('active');
-                        }
-                    }
-                });
-    
-                $('#piconlocal').click(function () {
-                    context.inUSBConnection = false;
-                    context.inBTConnection = false;
-    
-                    cleanUSBBTIP();
-    
-                    if (!context.quickPiConnection.isConnected()) {
-                        setLocalIp();
-                        setSessionStorage('connectionMethod', "LOCAL");
-                        $(this).addClass('active');
-                        $('#panel-body-local').show();
-                        $('#pischoolcon').hide();
-                        $('#piconnectionlabel').hide();
-    
-                        $(this).addClass('active');
-                    }
-    
-                });
-    
-                $('#piconwifi').click(function () {
-                    context.inUSBConnection = false;
-                    context.inBTConnection = false;
-    
-                    cleanUSBBTIP();
-    
-                    if (!context.quickPiConnection.isConnected()) {
-                        setSessionStorage('connectionMethod', "WIFI");
-                        $(this).addClass('active');
-                        $('#panel-body-local').hide();
-                        $('#pischoolcon').show();
-                        $('#piconnectionlabel').hide();
-                    }
-    
-                });
-    
-                $('#piconusb').click(function () {
-                    if (!context.quickPiConnection.isConnected()) {
-                        setSessionStorage('connectionMethod', "USB");
-                        $('#piconnectok').attr('disabled', true);
-                        $('#panel-body-local').hide();
-                        $('#piconnectionlabel').show();
-                        $('#piconnectionlabel').html(strings.messages.cantConnectoToUSB)
-    
-                        $(this).addClass('active');
-                        $('#pischoolcon').hide();
-                        $('#piaddress').val("192.168.233.1");
-    
-                        context.inUSBConnection = true;
-                        context.inBTConnection = false;
-    
-                        function updateUSBAvailability(available) {
-    
-                            if  (context.inUSBConnection && context.offLineMode) {
-                                if (available) {
-                                    $('#piconnectok').attr('disabled', false);
-    
-                                    $('#piconnectionlabel').text(strings.messages.canConnectoToUSB)
-                                } else {
-                                    $('#piconnectok').attr('disabled', true);
-    
-                                    $('#piconnectionlabel').html(strings.messages.cantConnectoToUSB)
-                                }
-    
-                                setTimeout(function() { 
-                                    context.quickPiConnection.isAvailable("192.168.233.1", updateUSBAvailability);
-                                }, 1000);
-                            }
-                        }
-    
-                        updateUSBAvailability(false);
-    
-    
-                    }
-                });
-    
-                $('#piconbt').click(function () {
-                    $('#piconnectionlabel').show();
-                    if (!context.quickPiConnection.isConnected()) {
-                        setSessionStorage('connectionMethod', "BT");
-                        $('#piconnectok').attr('disabled', true);
-                        $('#panel-body-local').hide();
-                        $('#piconnectionlabel').show();
-                        $('#piconnectionlabel').html(strings.messages.cantConnectoToBT)
-    
-                        $(this).addClass('active');
-                        $('#pischoolcon').hide();
-    
-                        $('#piaddress').val("192.168.233.2");
-    
-                        context.inUSBConnection = false;
-                        context.inBTConnection = true;
-    
-                        function updateBTAvailability(available) {
-    
-                            if  (context.inBTConnection && context.offLineMode) {
-                                if (available) {
-                                    $('#piconnectok').attr('disabled', false);
-    
-                                    $('#piconnectionlabel').text(strings.messages.canConnectoToBT)
-                                } else {
-                                    $('#piconnectok').attr('disabled', true);
-    
-                                    $('#piconnectionlabel').html(strings.messages.cantConnectoToBT)
-                                }
-    
-                                setTimeout(function() { 
-                                    context.quickPiConnection.isAvailable("192.168.233.2", updateBTAvailability);
-                                }, 1000);                            
-                            }
-                        }
-    
-                        updateBTAvailability(false);
-                    }
-                });
-    
-                function populatePiList(jsonlist) {
-                    setSessionStorage('pilist', JSON.stringify(jsonlist));
-    
-                    var select = document.getElementById("pilist");
-                    var first = true;
-    
-                    $('#pilist').empty();
-                    $('#piusetunnel').attr('disabled', true);
-    
-                    for (var i = 0; i < jsonlist.length; i++) {
-                        var pi = jsonlist[i];
-    
-                        var el = document.createElement("option");
-    
-                        var minutes = Math.round(jsonlist[i].seconds_since_ping / 60);
-                        var timeago = "";
-    
-                        if (minutes < 60)
-                            timeago = strings.messages.minutesago.format(minutes);
-                        else
-                            timeago = strings.messages.hoursago;
-    
-    
-                        el.textContent = jsonlist[i].name + " - " + timeago;
-                        el.value = jsonlist[i].ip;
-    
-                        select.appendChild(el);
-    
-                        if (first) {
-                            $('#piaddress').val(jsonlist[i].ip);
-                            $('#piaddress').trigger("input");
-                            first = false;
-                            $('#pilist').prop('disabled', false);
-    
-                            $('#piusetunnel').attr('disabled', false);
-                        }
-                    }
-                }
-    
-                $('#pilist').on('change', function () {
-                    $("#piaddress").val(this.value);
-                });
-            });
-        });
+                $(".simple-dialog").addClass("config");
+                $('#popupMessage .navigationContent ul li').removeClass('selected');
+                $('#popupMessage .navigationContent ul li[id=qpi-connection]').addClass('selected');
+                $('#showNavigationContent').prop('checked', false);
 
+                $('[id^=qpi-uiblock]').addClass("hiddenContent");
+                $('#qpi-uiblock-connection').removeClass("hiddenContent");
 
-        $('#pichangehat').click(function () {
-            window.displayHelper.showPopupDialog("<div class=\"content connectPi qpi\">" +
-                "   <div class=\"panel-heading\">" +
-                "       <h2 class=\"sectionTitle\">" +
-                "           <span class=\"iconTag\"><i class=\"icon fas fa-list-ul\"></i></span>" +
-                            strings.messages.chooseBoard +
-                "       </h2>" +
-                "       <div class=\"exit\" id=\"picancel\"><i class=\"icon fas fa-times\"></i></div>" +
-                "   </div>" +
-                "   <div class=\"panel-body\">" +
-                "       <div id=boardlist>" +
-                "       </div>" +
-                "       <div panel-body-usbbt>" +
-                "           <label id=\"piconnectionlabel\"></label>" +
-                "       </div>" +
-                "   </div>" +
-                "</div>", function () {
-                $('#picancel').click(function () {
-                    $('#popupMessage').hide();
-                    window.displayHelper.popupMessageShown = false;
-                });
-
+                $("#piconnectprogressicon").hide();
 
                 for (var i = 0; i < boardDefinitions.length; i++) {
                     let board = boardDefinitions[i];
@@ -4648,8 +4396,909 @@ var getContext = function (display, infos, curLevel) {
                         context.changeBoard(board.name);
                     }
                 }
+
+                for (var i = 0; i < infos.quickPiSensors.length; i++) {
+                    var sensor = infos.quickPiSensors[i];
+                    var sensorDefinition = findSensorDefinition(sensor) ;
+                    if(sensor.type == "adder")
+                        continue
+
+                    addGridElement("sensorGrid",0,sensor.name,sensor.name,sensorDefinition.selectorImages[0],sensor.port);
+                }
+
+                updateAddGrid();
+
+                var usedPorts = [];
+                var toRemove = [];
+                var toAdd = [];
+
+                function updateAddGrid() {
+                    // console.log("updateAddGrid")
+                    $("#addSensorGrid").empty();
+                    for (var iSensorDef = 0; iSensorDef < sensorDefinitions.length; iSensorDef++) {
+                        var sensorDefinition = sensorDefinitions[iSensorDef];
+                        var id = sensorDefinition.name;
+                        // console.log("new",id)
+                        var name = sensorDefinition.description;
+                        if (sensorDefinition.subTypes) {
+                            for (var iSubType = 0; iSubType < sensorDefinition.subTypes.length; iSubType++) {
+                                var sub = sensorDefinition.subTypes[iSubType];
+                                if (!sensorDefinition.pluggable && !sub.pluggable)
+                                    continue;
+                                id = sensorDefinition.name+"_"+sub.subType;
+                                var name = sub.description;
+                                var img = (sub.selectorImages) ? sub.selectorImages[0] : sensorDefinition.selectorImages[0]
+                                // console.log(1,id)
+                                addGridElement("addSensorGrid",1,id,name,img,"");
+                                // console.log("+",id)
+                            }
+                        } else {
+                            if (!sensorDefinition.pluggable || !sensorDefinition.selectorImages)
+                                continue;
+
+                                // console.log("+",id)
+                            addGridElement("addSensorGrid",1,id,name,sensorDefinition.selectorImages[0],"");
+                        }
+                    }
+
+                    var board = getCurrentBoard();
+                    if (board.builtinSensors) {
+                        for (var i = 0; i < board.builtinSensors.length; i++) {
+                            var sensor = board.builtinSensors[i];
+                            var sensorDefinition = findSensorDefinition(sensor);
+
+                            if (context.findSensor(sensor.type, sensor.port, false))
+                                continue;
+
+                            var id = sensorDefinition.name + "_";
+                            if (sensor.subType)
+                                id += sensor.subType;
+                            id += "_" + sensor.port;
+
+                            var name = sensorDefinition.description + " " + strings.messages.builtin;
+                            var img = sensorDefinition.selectorImages[0];
+                            addGridElement("addSensorGrid",1,id,name,img,"");
+                                // console.log(3,id)
+                        }
+                    }
+
+                    $("#addSensorGrid .sensorElement").click(function() {
+                        var id = $(this).attr('id');
+                        var sensorID = id.replace("qpi-add-sensor-parent-", "");
+                        if($(this).hasClass("selected")){
+                            changePort(sensorID,false);
+                        }else{
+                            showPortDialog(sensorID);
+                        }
+                        changeSelect(id);
+                    });
+                };
+
+                function addGridElement(gridID,add,idName,name,img,port) {
+                    // console.log(add,idName,name,img)
+                    var idType = (add) ? "add" : "remove";
+                    $('#'+gridID).append(
+                        "<span class=\"sensorElement\" id=\"qpi-"+idType+"-sensor-parent-" + idName + "\">" +
+                            "<div class='name'>" +name +"</div>"+
+                            getSensorImg(img)+
+                            "<div class=\"sensorInfo\">" +
+                                "<span class='port'>"+port +"</span>"+
+                                "<input type=\"checkbox\" id=\"qpi-"+idType+"-sensor-"+idName +"\"></input>"+
+                            "</div>" +
+                        "</span>"
+                    );
+                };
+
+                function getSensorImg(img) {
+                    var html = "";
+                    html += "<img class=\"sensorImage\" src=" +getImg(img) +">";
+                    switch(img){
+                    case "servo.png":
+                        html += "<img class=\"sensorImage\" src=" +getImg("servo-pale.png") +">";
+                        html += "<img class=\"sensorImage\" src=" +getImg("servo-center.png") +">";
+                        break;
+                    case "potentiometer.png":
+                        html += "<img class=\"sensorImage\" src=" +getImg("potentiometer-pale.png") +">";
+                        break;
+                    case "mag.png":
+                        html += "<img class=\"sensorImage\" src=" +getImg("mag-needle.png") +">";
+                        break;
+                    }
+                    return html
+                };
+
+
+                $("#tabs .tab").click(function() {
+                    var id = $(this).attr("id");
+                    clickTab(id);
+                });
+                function clickTab(id) {
+                    // console.log("click tab"+id)
+                    var el = $("#"+id);
+                    if(el.hasClass("selected")){
+                        return
+                    }
+                    if(id == "remove_tab" && toAdd.length > 0 ||
+                        id == "add_tab" && toRemove.length > 0){
+                        showConfirmDialog(function() {
+                            unselectSensors();
+                            clickTab(id)
+                        });
+                        return
+                    }
+                    el.addClass("selected");
+                    if(id == "remove_tab"){
+                        $("#add_tab").removeClass("selected");
+                        $("#remove_cont").removeClass("hiddenContent");
+                        $("#add_cont").addClass("hiddenContent");
+                        unselectSensors("add");
+                    }else{
+                        $("#remove_tab").removeClass("selected");
+                        $("#add_cont").removeClass("hiddenContent");
+                        $("#remove_cont").addClass("hiddenContent");
+                        unselectSensors("remove");
+                    }
+                };
+                $("#sensorGrid .sensorElement").click(function() {
+                    var id = $(this).attr('id');
+                    changeSelect(id);
+                });
+
+                function changeSelect(id) {
+                    var add = id.includes("qpi-add");
+                    var arr = (add) ? toAdd : toRemove;
+                    var ele = $("#"+id);
+                    var inp = ele.children(".sensorInfo").children("input");
+                    if(ele.hasClass("selected")){
+                        ele.removeClass("selected");
+                        inp.prop("checked",false);
+                        if(arr.includes(id)){
+                            var index = arr.indexOf(id);
+                            arr.splice(index,1);
+                        }
+                    }else{
+                        ele.addClass("selected");
+                        inp.prop("checked",true);
+                        if(!arr.includes(id)){
+                            arr.push(id);
+                        }
+                    }
+                    // console.log(arr)
+                };
+
+                function unselectSensors(type) {
+                    if(!type){
+                        unselectSensors("add");
+                        unselectSensors("remove");
+                        return
+                    }
+                    var arr = (type == "add") ? toAdd : toRemove;
+                    var clone = Beav.Object.clone(arr);
+                    for(var id of clone){
+                        changeSelect(id);
+                        if(type == "add"){
+                            var elID = id.replace("qpi-add-sensor-parent-","");
+                            changePort(elID,false);
+                        }
+                    }
+                };
+
+                if(infos.customSensors){
+                    // $('#piaddsensor').click(clickAdder);
+                    $('#piaddsensor').click(addSensors);
+                }else{
+                    $('#piaddsensor').hide();
+                }
+                $('#piremovesensor').click(function () {
+                    //$('#popupMessage').hide();
+                    //window.displayHelper.popupMessageShown = false;
+
+                    var removed = false;
+
+                    $('[id^=qpi-remove-sensor-]').each(function(index) {
+                        if ($(this).is(':checked'))
+                        {
+                            var sensorName = $(this).attr('id').replace("qpi-remove-sensor-", "");
+                            var sensor = findSensorByName(sensorName);
+
+                            $("#qpi-remove-sensor-parent-" + sensorName).remove();
+
+                            for (var i = 0; i < infos.quickPiSensors.length; i++) {
+                                if (infos.quickPiSensors[i] === sensor) {
+                                    sensor.removed = true;
+                                    infos.quickPiSensors.splice(i, 1);
+                                }
+                            }
+
+                            removed = true;
+                            // console.log(sensorName);
+                        }
+                    });
+
+                    if (removed) {
+                        context.recreateDisplay = true;
+                        context.resetDisplay();
+                        updateAddGrid();
+                    }
+                });
+
+                function addSensors() {
+                    var added = false;
+
+                    $('[id^=qpi-add-sensor-]').each(function(index) {
+                        if ($(this).is(':checked'))
+                        {
+                            var id = $(this).attr('id');
+                            var sensorID = id.replace("qpi-add-sensor-", "");
+                            var params = sensorID.split("_");
+                            // console.log(params)
+                            var dummysensor = { type: params[0] };
+                            if (params.length == 2)
+                                dummysensor.subType = params[1];
+
+                            var sensorDefinition = findSensorDefinition(dummysensor);
+
+                            var port = $("#qpi-add-sensor-parent-"+sensorID+" .port").text();
+                            var name = getNewSensorSuggestedName(sensorDefinition.suggestedName);
+
+                            infos.quickPiSensors.push({
+                                type: sensorDefinition.name,
+                                subType: sensorDefinition.subType,
+                                port: port,
+                                name: name
+                            });
+
+                            added = true;
+
+
+                        }
+                    });
+
+                    if (added) {
+                        context.resetSensorTable();
+                        // context.recreateDisplay = true;
+                        context.resetDisplay();
+                        updateAddGrid();
+                        $('#popupMessage').hide();
+                        window.displayHelper.popupMessageShown = false;
+                    }
+                };
+
+                function showMenu (id) {
+                    $('#popupMessage .navigationContent ul li').removeClass('selected');
+                    $('#popupMessage .navigationContent ul li[id=qpi-'+ id +']').addClass('selected');
+                    $('#showNavigationContent').prop('checked', false);
+                    $('#piconnectionlabel').hide();
+
+                    $('[id^=qpi-uiblock]').addClass("hiddenContent");
+                    $('#qpi-uiblock-' + id).removeClass("hiddenContent");
+                };
+
+                function showPortDialog(id) {
+                    // removePortDialog();
+                    var back = $("<div id='port_dialog_back'></div>");
+                    var dial = $("<div id='port_dialog'></div>");
+
+                    var params = id.split("_");
+                    var builtinport = false;
+                    var dummysensor = { type: params[0] };
+                    if (params.length >= 2)
+                        if (params[1])
+                            dummysensor.subType = params[1];
+                    if (params.length >= 3)
+                        builtinport = params[2];
+                    var sensorDefinition = findSensorDefinition(dummysensor);
+                    // console.log(params);
+
+                    var html = "<div id='port_field'><span>"+strings.messages.port+"</span><select id='port_select' class=\"custom-select\">";
+                    // var portSelect = document.getElementById("selector-sensor-port");
+                    // $('#selector-sensor-port').empty();
+                    var hasPorts = false;
+                    if (builtinport) {
+                        html += "<option value="+builtinport+">"+builtinport+"</option>";
+                        hasPorts = true;
+                    } else {
+                        var ports = getCurrentBoard().portTypes[sensorDefinition.portType];
+                        // console.log(id,ports)
+                        if (sensorDefinition.portType == "i2c")
+                        {
+                            ports = ["i2c"];
+                        }
+
+                        for (var iPort = 0; iPort < ports.length; iPort++) {
+                            var port = sensorDefinition.portType + ports[iPort];
+                            if (sensorDefinition.portType == "i2c")
+                                port = "i2c";
+
+                            if (!isPortUsed(sensorDefinition.name, port) && !usedPorts.includes(port)) {
+                                html += "<option value="+port+">"+port+"</option>";
+                                // var option = document.createElement('option');
+                                hasPorts = true;
+                            }
+                        }
+                    }
+                    html += "</select><label id=\"selector-label\"></label></div>";
+                    html += "<div id='buttons'><button id=\"validate\"><i class='icon fas fa-check'></i>"+strings.messages.validate+"</button>";
+                    html += "<button id=\"cancel\"><i class='icon fas fa-times'></i>"+strings.messages.cancel+"</button></div>";
+                    dial.html(html);
+                    $("#popupMessage").after(back,dial);
+
+                    if (!hasPorts) {
+                        $('#buttons #validate').attr("disabled", true);
+
+                        var object_function = strings.messages.actuator;
+                        if (sensorDefinition.isSensor)
+                            object_function = strings.messages.sensor;
+
+                        $('#selector-label').text(strings.messages.noPortsAvailable.format(object_function, sensorDefinition.portType));
+                        $('#selector-label').show();
+                        $('#port_field span, #port_field select').hide();
+                    }
+                    else {
+                        $('#buttons #validate').attr("disabled", false);
+                        $('#selector-label').hide();
+                        $('#port_field span, #port_field select').show();
+                    }
+
+                    $("#port_dialog #cancel").click(function() {
+                        removePortDialog();
+                        var elID = "qpi-add-sensor-parent-"+id;
+                        changeSelect(elID);
+                        changePort(id,false);
+                    });
+
+                    $("#port_dialog #validate").click(function() {
+                        var port = $("#port_select").val();
+                        var elID = "qpi-add-sensor-parent-"+id;
+                        changePort(id,port);
+                        removePortDialog();
+                        // console.log(port)
+                    });
+
+                    // $("#port_select").focusout(function(){console.log("focusout")})
+                    // $("#port_select").change(function(){console.log("change")})
+                };
+
+                function changePort(id,port) {
+                    var elID = "qpi-add-sensor-parent-"+id;
+                    if(port){
+                        $("#"+elID+" .port").text(port);
+                        if(!usedPorts.includes(port)){
+                            usedPorts.push(port);
+                        }
+                    }else{
+                        var currPort = $("#"+elID+" .port").text();
+                        var ind = usedPorts.indexOf(currPort);
+                        if(ind >= 0){
+                            usedPorts.splice(ind,1);
+                        }
+                        $("#"+elID+" .port").text("");
+                    }
+                };
+
+                function removePortDialog() {
+                    $("#port_dialog_back, #port_dialog").remove();
+                };
+
+                function showConfirmDialog(cb) {
+                    var back = $("<div id='port_dialog_back'></div>");
+                    var dial = $("<div id='port_dialog'></div>");
+                    html = "<span>"+strings.messages.areYouSure+"</span>";
+                    html += "<div id='buttons'><button id=\"yes\">"+strings.messages.yes+"</button>";
+                    html += "<button id=\"no\">"+strings.messages.no+"</button></div>";
+                    dial.html(html);
+
+                    $("#popupMessage").after(back,dial);
+
+                    $("#port_dialog #no").click(function() {
+                        removePortDialog();
+                    });
+                    $("#port_dialog #yes").click(function() {
+                        if(cb)
+                            cb();
+                        removePortDialog();
+                    });
+                };
+
+                $('#qpi-portsnames').click(clickMenu("portsnames"));
+                $('#qpi-components').click(clickMenu("components"));
+                $('#qpi-change-board').click(clickMenu("change-board"));
+                $('#qpi-connection').click(clickMenu("connection"));
+
+                function clickMenu(id) {
+                    return function() {
+                        if(id != "components"){
+                           if(toAdd.length > 0 || toRemove.length > 0){
+                                showConfirmDialog(function() {
+                                    unselectSensors();
+                                    clickMenu(id)();
+                                });
+                                return
+                            }
+                        }
+                        showMenu(id);
+                    }
+                };
+
+                if (context.offLineMode) {
+                    $('#pirelease').attr('disabled', true);
+                }
+                else {
+                    $('#pirelease').attr('disabled', false);
+                }
+
+                $('#piconnectok').attr('disabled', true);
+
+                $('#piconnectionlabel').hide();
+
+                if (context.quickPiConnection.isConnected()) {
+                    if (getSessionStorage('connectionMethod') == "USB") {
+                        $('#piconwifi').removeClass('active');
+                        $('#piconusb').addClass('active');
+                        $('#pischoolcon').hide();
+                        $('#piaddress').val("192.168.233.1");
+
+                        $('#piconnectok').attr('disabled', true);
+                        $('#piconnectionlabel').show();
+                        $('#piconnectionlabel').text(strings.messages.canConnectoToUSB)
+
+                        context.inUSBConnection = true;
+                        context.inBTConnection = false;
+                    } else if (getSessionStorage('connectionMethod') == "BT") {
+                        $('#piconwifi').removeClass('active');
+                        $('#piconbt').addClass('active');
+                        $('#pischoolcon').hide();
+
+                        $('#piaddress').val("192.168.233.2");
+
+                        $('#piconnectok').attr('disabled', true);
+                        $('#piconnectionlabel').show();
+                        $('#piconnectionlabel').text(strings.messages.canConnectoToBT)
+
+                        context.inUSBConnection = false;
+                        context.inBTConnection = true;
+                    } else if (getSessionStorage('connectionMethod') == "LOCAL") {
+                        $('#piconlocal').trigger("click");
+                    }
+                } else {
+                    setSessionStorage('connectionMethod', "WIFI");
+                }
+
+                $('#piaddress').on('input', function (e) {
+
+                    if (context.offLineMode)
+                    {
+                        var content = $('#piaddress').val();
+
+                        if (content)
+                            $('#piconnectok').attr('disabled', false);
+                        else
+                            $('#piconnectok').attr('disabled', true);
+                    }
+                });
+
+
+                if (getSessionStorage('pilist')) {
+                    populatePiList(JSON.parse(getSessionStorage('pilist')));
+                }
+
+                if (getSessionStorage('raspberryPiIpAddress')) {
+                    $('#piaddress').val(getSessionStorage('raspberryPiIpAddress'));
+                    $('#piaddress').trigger("input");
+                }
+
+                if (getSessionStorage('schoolkey')) {
+                    $('#schoolkey').val(getSessionStorage('schoolkey'));
+                    $('#pigetlist').attr("disabled", false);
+                }
+
+                function setLocalIp()
+                {
+                    var localvalue = $('input[name=pilocalconnectiontype]:checked').val()
+
+                    if (localvalue == "localhost") {
+                        $('#piaddress').val("localhost");
+                        $('#piaddress').trigger("input");
+                    } else {
+                        $('#piaddress').val(window.location.hostname);
+                        $('#piaddress').trigger("input");
+                    }
+                }
+
+                $('input[type=radio][name=pilocalconnectiontype]').change(function() {
+                    setLocalIp();
+                });
+
+                function cleanUSBBTIP()
+                {
+                    var ipaddress = $('#piaddress').val();
+
+                    if (ipaddress == "192.168.233.1" ||
+                        ipaddress == "192.168.233.2" ||
+                        ipaddress == "localhost" ||
+                        ipaddress == window.location.hostname)
+                    {
+                            $('#piaddress').val("");
+                            $('#piaddress').trigger("input");
+
+                            var schoolkey = $('#schoolkey').val();
+                            if (schoolkey.length > 1)
+                                $('#pigetlist').trigger("click");
+                    }
+                }
+
+                cleanUSBBTIP();
+
+                $('#panel-body-local').hide();
+
+                if (context.localhostAvailable || context.windowLocationAvailable)
+                {
+                    if (!context.quickPiConnection.isConnected() ||
+                        getSessionStorage('connectionMethod') == "LOCAL")
+                    {
+                        $('#piconsel .btn').removeClass('active');
+                        $('#piconlocal').addClass('active');
+
+
+                        $('#pischoolcon').hide();
+                        $('#piconnectionlabel').hide();
+                        $('#panel-body-local').show();
+                        setSessionStorage('connectionMethod', "LOCAL");
+
+                        if (context.localhostAvailable &&
+                            context.windowLocationAvailable)
+                        {
+                            $("#piconnectolocalhostcheckbox").prop("checked", true);
+
+                            setLocalIp();
+                        } else if (context.localhostAvailable) {
+                            $('#piconnectolocalhost').hide();
+                            $('#piconnectocurrenturlcheckbox').hide();
+
+                            setLocalIp();
+                        } else if (context.windowLocationAvailable) {
+                            $('#piconnectocurrenturl').hide();
+                            $('#piconnectolocalhostcheckbox').hide();
+
+                            setLocalIp();
+                        }
+                    }
+                }
+                else
+                {
+                    $('#panel-body-local').hide();
+                    $("#piconlocal").hide();
+                }
+
+
+                $('#piconnectok').click(function () {
+                    context.inUSBConnection = false;
+                    context.inBTConnection = false;
+
+                    $('#piconnectok').attr("disabled", true);
+                    $("#piconnectprogressicon").show();
+                    $("#piconnectwifiicon").hide();
+
+                    // $('#popupMessage').hide();
+                    // window.displayHelper.popupMessageShown = false;
+
+                    if ($('#piusetunnel').is(":checked")) {
+
+                        var piname = $("#pilist option:selected").text().split("-")[0].trim();
+
+                        var url = "ws://api.quick-pi.org/client/" +
+                            $('#schoolkey').val()  + "-" +
+                            piname +
+                            "/api/v1/commands";
+
+                        setSessionStorage('quickPiUrl', url);
+                        context.quickPiConnection.connect(url);
+
+                    } else {
+                        var ipaddress = $('#piaddress').val();
+                        setSessionStorage('raspberryPiIpAddress', ipaddress);
+
+                        showasConnecting();
+                        var url = "ws://" + ipaddress + ":5000/api/v1/commands";
+                        setSessionStorage('quickPiUrl', url);
+
+                        context.quickPiConnection.connect(url);
+                    }
+                });
+
+                $('#pirelease').click(function () {
+                    context.inUSBConnection = false;
+                    context.inBTConnection = false;
+
+                    // $('#popupMessage').hide();
+                    // window.displayHelper.popupMessageShown = false;
+
+                    // IF connected release lock
+                    context.releasing = true;
+                    context.quickPiConnection.releaseLock();
+                });
+
+                $('#picancel').click(exitConfig);
+
+                function exitConfig() {
+                    if(toAdd.length > 0 || toRemove.length > 0){
+                        showConfirmDialog(function() {
+                            unselectSensors();
+                            exitConfig();
+                        });
+                        return
+                    }
+                    context.inUSBConnection = false;
+                    context.inBTConnection = false;
+
+                    $('#popupMessage').hide();
+                    window.displayHelper.popupMessageShown = false;
+                }
+
+                $('#schoolkey').on('input', function (e) {
+                    var schoolkey = $('#schoolkey').val();
+                    setSessionStorage('schoolkey', schoolkey);
+
+                    if (schoolkey)
+                        $('#pigetlist').attr("disabled", false);
+                    else
+                        $('#pigetlist').attr("disabled", true);
+                });
+
+
+                $('#pigetlist').click(function () {
+                    var schoolkey = $('#schoolkey').val();
+
+                    fetch('http://www.france-ioi.org/QuickPi/list.php?school=' + schoolkey)
+                        .then(function (response) {
+                            return response.json();
+                        })
+                        .then(function (jsonlist) {
+                            populatePiList(jsonlist);
+                        });
+                });
+
+                // Select device connexion methods
+                $('#piconsel .btn').click(function () {
+                    if (!context.quickPiConnection.isConnected()) {
+                        if (!$(this).hasClass('active')) {
+                            $('#piconsel .btn').removeClass('active');
+                            $(this).addClass('active');
+                        }
+                    }
+                });
+
+                $('#piconlocal').click(function () {
+                    context.inUSBConnection = false;
+                    context.inBTConnection = false;
+
+                    cleanUSBBTIP();
+
+                    if (!context.quickPiConnection.isConnected()) {
+                        setLocalIp();
+                        setSessionStorage('connectionMethod', "LOCAL");
+                        $(this).addClass('active');
+                        $('#panel-body-local').show();
+                        $('#pischoolcon').hide();
+                        $('#piconnectionlabel').hide();
+
+                        $(this).addClass('active');
+                    }
+
+                });
+
+                $('#piconwifi').click(function () {
+                    context.inUSBConnection = false;
+                    context.inBTConnection = false;
+
+                    cleanUSBBTIP();
+
+                    if (!context.quickPiConnection.isConnected()) {
+                        setSessionStorage('connectionMethod', "WIFI");
+                        $(this).addClass('active');
+                        $('#panel-body-local').hide();
+                        $('#pischoolcon').show();
+                        $('#piconnectionlabel').hide();
+                    }
+
+                });
+
+                $('#piconusb').click(function () {
+                    if (!context.quickPiConnection.isConnected()) {
+                        setSessionStorage('connectionMethod', "USB");
+                        $('#piconnectok').attr('disabled', true);
+                        $('#panel-body-local').hide();
+                        $('#piconnectionlabel').show();
+                        $('#piconnectionlabel').html(strings.messages.cantConnectoToUSB)
+
+                        $(this).addClass('active');
+                        $('#pischoolcon').hide();
+                        $('#piaddress').val("192.168.233.1");
+
+                        context.inUSBConnection = true;
+                        context.inBTConnection = false;
+
+                        function updateUSBAvailability(available) {
+
+                            if  (context.inUSBConnection && context.offLineMode) {
+                                if (available) {
+                                    $('#piconnectok').attr('disabled', false);
+
+                                    $('#piconnectionlabel').text(strings.messages.canConnectoToUSB)
+                                } else {
+                                    $('#piconnectok').attr('disabled', true);
+
+                                    $('#piconnectionlabel').html(strings.messages.cantConnectoToUSB)
+                                }
+
+                                setTimeout(function() {
+                                    context.quickPiConnection.isAvailable("192.168.233.1", updateUSBAvailability);
+                                }, 1000);
+                            }
+                        }
+
+                        updateUSBAvailability(false);
+
+
+                    }
+                });
+
+                $('#piconbt').click(function () {
+                    $('#piconnectionlabel').show();
+                    if (!context.quickPiConnection.isConnected()) {
+                        setSessionStorage('connectionMethod', "BT");
+                        $('#piconnectok').attr('disabled', true);
+                        $('#panel-body-local').hide();
+                        $('#piconnectionlabel').show();
+                        $('#piconnectionlabel').html(strings.messages.cantConnectoToBT)
+
+                        $(this).addClass('active');
+                        $('#pischoolcon').hide();
+
+                        $('#piaddress').val("192.168.233.2");
+
+                        context.inUSBConnection = false;
+                        context.inBTConnection = true;
+
+                        function updateBTAvailability(available) {
+
+                            if  (context.inBTConnection && context.offLineMode) {
+                                if (available) {
+                                    $('#piconnectok').attr('disabled', false);
+
+                                    $('#piconnectionlabel').text(strings.messages.canConnectoToBT)
+                                } else {
+                                    $('#piconnectok').attr('disabled', true);
+
+                                    $('#piconnectionlabel').html(strings.messages.cantConnectoToBT)
+                                }
+
+                                setTimeout(function() {
+                                    context.quickPiConnection.isAvailable("192.168.233.2", updateBTAvailability);
+                                }, 1000);
+                            }
+                        }
+
+                        updateBTAvailability(false);
+                    }
+                });
+
+                function populatePiList(jsonlist) {
+                    setSessionStorage('pilist', JSON.stringify(jsonlist));
+
+                    var select = document.getElementById("pilist");
+                    var first = true;
+
+                    $('#pilist').empty();
+                    $('#piusetunnel').attr('disabled', true);
+
+                    for (var i = 0; i < jsonlist.length; i++) {
+                        var pi = jsonlist[i];
+
+                        var el = document.createElement("option");
+
+                        var minutes = Math.round(jsonlist[i].seconds_since_ping / 60);
+                        var timeago = "";
+
+                        if (minutes < 60)
+                            timeago = strings.messages.minutesago.format(minutes);
+                        else
+                            timeago = strings.messages.hoursago;
+
+
+                        el.textContent = jsonlist[i].name + " - " + timeago;
+                        el.value = jsonlist[i].ip;
+
+                        select.appendChild(el);
+
+                        if (first) {
+                            $('#piaddress').val(jsonlist[i].ip);
+                            $('#piaddress').trigger("input");
+                            first = false;
+                            $('#pilist').prop('disabled', false);
+
+                            $('#piusetunnel').attr('disabled', false);
+                        }
+                    }
+                }
+
+                $('#pilist').on('change', function () {
+                    $("#piaddress").val(this.value);
+                });
+
+                updatePiComponentButtons();
+
+                $('#picomponentname').click(function () {
+                    context.useportforname = false;
+                    updatePiComponentButtons();
+                    //context.recreateDisplay = true;
+                    context.resetDisplay();
+                });
+
+                $('#piportname').click(function () {
+                    context.useportforname = true;
+                    updatePiComponentButtons();
+                    //context.recreateDisplay = true;
+                    context.resetDisplay();
+                });
+
+                function updatePiComponentButtons() {
+                    if (context.useportforname) {
+                        $('#piportname').addClass('active');
+                        $('#picomponentname').removeClass('active');
+                        $('#example_sensor #port').show();
+                        $('#example_sensor #name').hide();
+                    } else {
+                        $('#picomponentname').addClass('active');
+                        $('#piportname').removeClass('active');
+                        $('#example_sensor #name').show();
+                        $('#example_sensor #port').hide();
+                    }
+                }
             });
-        });
+        }
+
+
+        // $('#pichangehat').click(function () {
+        //     console.log("chooseBoard")
+        //     window.displayHelper.showPopupDialog("<div class=\"content connectPi qpi\">" +
+        //         "   <div class=\"panel-heading\">" +
+        //         "       <h2 class=\"sectionTitle\">" +
+        //         "           <span class=\"iconTag\"><i class=\"icon fas fa-list-ul\"></i></span>" +
+        //                     strings.messages.chooseBoard +
+        //         "       </h2>" +
+        //         "       <div class=\"exit\" id=\"picancel\"><i class=\"icon fas fa-times\"></i></div>" +
+        //         "   </div>" +
+        //         "   <div class=\"panel-body\">" +
+        //         "       <div id=boardlist>" +
+        //         "       </div>" +
+        //         "       <div panel-body-usbbt>" +
+        //         "           <label id=\"piconnectionlabel\"></label>" +
+        //         "       </div>" +
+        //         "   </div>" +
+        //         "</div>");
+
+        //     $('#picancel').click(function () {
+        //         $('#popupMessage').hide();
+        //         window.displayHelper.popupMessageShown = false;
+        //     });
+
+
+        //     for (var i = 0; i < boardDefinitions.length; i++) {
+        //         let board = boardDefinitions[i];
+        //         var image = document.createElement('img');
+        //         image.src = getImg(board.image);
+
+        //         $('#boardlist').append(image).append("&nbsp;&nbsp;");
+
+        //         image.onclick = function () {
+        //             $('#popupMessage').hide();
+        //             window.displayHelper.popupMessageShown = false;
+
+        //             context.changeBoard(board.name);
+        //         }
+        //     }
+        // });
 
 
         $('#pihatsetup').click(function () {
@@ -4683,62 +5332,62 @@ var getContext = function (display, infos, curLevel) {
                     var table = document.getElementById("sensorTable");
                     for (var iSensor = 0; iSensor < infos.quickPiSensors.length; iSensor++) {
                         var sensor = infos.quickPiSensors[iSensor];
-    
+
                         function addNewRow()
                         {
                             var row = table.insertRow();
                             var type = row.insertCell();
                             var name = row.insertCell();
                             var port = row.insertCell();
-    
+
                             return [type, name, port];
                         }
-    
-                        
+
+
                         if (sensor.type == "stick")
                         {
                             var gpios = findSensorDefinition(sensor).gpios;
                             var cols = addNewRow();
-    
+
                             cols[0].appendChild(document.createTextNode(sensor.type));
                             cols[1].appendChild(document.createTextNode(sensor.name + ".up"));
                             cols[2].appendChild(document.createTextNode("D" + gpios[0]));
-    
+
                             var cols = addNewRow();
-    
+
                             cols[0].appendChild(document.createTextNode(sensor.type));
                             cols[1].appendChild(document.createTextNode(sensor.name + ".down"));
                             cols[2].appendChild(document.createTextNode("D" + gpios[1]));
                             var cols = addNewRow();
-    
+
                             cols[0].appendChild(document.createTextNode(sensor.type));
                             cols[1].appendChild(document.createTextNode(sensor.name + ".left"));
                             cols[2].appendChild(document.createTextNode("D" + gpios[2]));
                             var cols = addNewRow();
-    
+
                             cols[0].appendChild(document.createTextNode(sensor.type));
                             cols[1].appendChild(document.createTextNode(sensor.name + ".right"));
                             cols[2].appendChild(document.createTextNode("D" + gpios[3]));
                             var cols = addNewRow();
-    
+
                             cols[0].appendChild(document.createTextNode(sensor.type));
                             cols[1].appendChild(document.createTextNode(sensor.name + ".center"));
                             cols[2].appendChild(document.createTextNode("D" + gpios[4]));
-    
+
     /*
                             $('#stickupname').text(sensor.name + ".up");
-    
+
                             $('#stickdownname').text(sensor.name + ".down");
                             $('#stickleftname').text(sensor.name + ".left");
                             $('#stickrightname').text(sensor.name + ".right");
                             $('#stickcentername').text(sensor.name + ".center");
-        
+
                             $('#stickupport').text("D" + gpios[0]);
                             $('#stickdownport').text("D" + gpios[1]);
                             $('#stickleftport').text("D" + gpios[2]);
                             $('#stickrightport').text("D" + gpios[3]);
                             $('#stickcenterport').text("D" + gpios[4]);
-        
+
                             $('#stickupstate').text(sensor.state[0] ? "ON" : "OFF");
                             $('#stickdownstate').text(sensor.state[1] ? "ON" : "OFF");
                             $('#stickleftstate').text(sensor.state[2] ? "ON" : "OFF");
@@ -4747,22 +5396,21 @@ var getContext = function (display, infos, curLevel) {
         */
                         }
                         else
-                        {          
+                        {
                             var cols = addNewRow();
-        
-        
+
+
                             cols[0].appendChild(document.createTextNode(sensor.type));
                             cols[1].appendChild(document.createTextNode(sensor.name));
                             cols[2].appendChild(document.createTextNode(sensor.port));
                         }
-               
+
                     }
-    
+
                     $('#picancel').click(function () {
                         $('#popupMessage').hide();
                         window.displayHelper.popupMessageShown = false;
                     });
-
                 });
         });
 
@@ -4797,7 +5445,6 @@ var getContext = function (display, infos, curLevel) {
                     installPythonCode(python_code);
                 });
             }
-
         });
 
 
@@ -4848,16 +5495,17 @@ var getContext = function (display, infos, curLevel) {
             }
 
             var newSensor = {
-                "type": "cloudstore",
-                "name": "cloud1",
+                type: "cloudstore",
+                name: "cloud1",
+                port: "D5"
             };
             infos.quickPiSensors.push(newSensor);
         }
         if(infos.customSensors){
-            infos.quickPiSensors.push({
-                type: "adder",
-                name: ""
-            })
+            // infos.quickPiSensors.push({
+            //     type: "adder",
+            //     name: ""
+            // })
         }
         // console.log(infos.quickPiSensors)
 
@@ -4883,7 +5531,7 @@ var getContext = function (display, infos, curLevel) {
         return name + (maxvalue + 1);
     }
 
-    function drawCustomSensorAdder(x, y, w, h) {
+    function drawCustomSensorAdder(x, y, w, h, fontsize) {
         if (context.sensorAdder) {
             context.sensorAdder.remove();
         }
@@ -4897,7 +5545,7 @@ var getContext = function (display, infos, curLevel) {
         var y1 = cy - plusSize/2;
         var y2 = cy + plusSize/2;
         var yText = y + h - (h/2 - r)/2;
-        var fontsize = h * .15;
+        // var fontsize = h * .15;
         var sSize1 = 2*h/100;
         var sSize2 = 3*h/100;
         // console.log(h)
@@ -4931,224 +5579,448 @@ var getContext = function (display, infos, curLevel) {
         // });
         // context.sensorAdder.node.style = "-moz-user-select: none; -webkit-user-select: none;";
 
-        context.sensorAdder.click(function () {
+        context.sensorAdder.click(clickAdder);
 
-            window.displayHelper.showPopupDialog("<div class=\"content qpi\">" +
-                "   <div class=\"panel-heading\">" +
-                "       <h2 class=\"sectionTitle\">" +
-                "           <span class=\"iconTag\"><i class=\"icon fas fa-list-ul\"></i></span>" +
-                            strings.messages.addcomponent +
-                "       </h2>" +
-                "       <div class=\"exit\" id=\"picancel\"><i class=\"icon fas fa-times\"></i></div>" +
-                "   </div>" +
-                "   <div id=\"sensorPicker\" class=\"panel-body\">" +
-                "       <label>" + strings.messages.selectcomponent + "</label>" +
-                "       <div class=\"flex-container\">" +
-                "           <div id=\"selector-image-container\" class=\"flex-col half\">" +
-                "               <img id=\"selector-sensor-image\">" +
-                "           </div>" +
-                "           <div class=\"flex-col half\">" +
-                "               <div class=\"form-group\">" +
-                "                   <div class=\"input-group\">" +
-                "                       <select id=\"selector-sensor-list\" class=\"custom-select\"></select>" +
-                "                   </div>" +
-                "              </div>" +
-                "              <div class=\"form-group\">" +
-                "                   <div class=\"input-group\">" +
-                "                       <select id=\"selector-sensor-port\" class=\"custom-select\"></select>" +
-                "                   </div>" +
-                "                   <label id=\"selector-label\"></label>" +
-                "               </div>" +
-                "           </div>" +
-                "       </div>" +
-                "   </div>" +
-                "   <div class=\"singleButton\">" +
-                "       <button id=\"selector-add-button\" class=\"btn btn-centered\"><i class=\"icon fa fa-check\"></i>" + strings.messages.add + "</button>" +
-                "   </div>" +
-                "</div>", function () {
-                var select = document.getElementById("selector-sensor-list");
-                for (var iSensorDef = 0; iSensorDef < sensorDefinitions.length; iSensorDef++) {
-                    var sensorDefinition = sensorDefinitions[iSensorDef];
-    
-                    if (sensorDefinition.subTypes) {
-                        for (var iSubType = 0; iSubType < sensorDefinition.subTypes.length; iSubType++) {
-    
-                            if (!sensorDefinition.pluggable && !sensorDefinition.subTypes[iSubType].pluggable)
-                                continue;
-    
-    
-                            var el = document.createElement("option");
-                            el.textContent = sensorDefinition.description;
-    
-                            if (sensorDefinition.subTypes[iSubType].description)
-                                el.textContent = sensorDefinition.subTypes[iSubType].description;
-    
-                            el.value = sensorDefinition.name;
-                            el.value += "-" + sensorDefinition.subTypes[iSubType].subType;
-                            select.appendChild(el);
-                        }
-                    } else {
-                        if (!sensorDefinition.pluggable)
+        //     window.displayHelper.showPopupDialog("<div class=\"content qpi\">" +
+        //         "   <div class=\"panel-heading\">" +
+        //         "       <h2 class=\"sectionTitle\">" +
+        //         "           <span class=\"iconTag\"><i class=\"icon fas fa-list-ul\"></i></span>" +
+        //                     strings.messages.addcomponent +
+        //         "       </h2>" +
+        //         "       <div class=\"exit\" id=\"picancel\"><i class=\"icon fas fa-times\"></i></div>" +
+        //         "   </div>" +
+        //         "   <div id=\"sensorPicker\" class=\"panel-body\">" +
+        //         "       <label>" + strings.messages.selectcomponent + "</label>" +
+        //         "       <div class=\"flex-container\">" +
+        //         "           <div id=\"selector-image-container\" class=\"flex-col half\">" +
+        //         "               <img id=\"selector-sensor-image\">" +
+        //         "           </div>" +
+        //         "           <div class=\"flex-col half\">" +
+        //         "               <div class=\"form-group\">" +
+        //         "                   <div class=\"input-group\">" +
+        //         "                       <select id=\"selector-sensor-list\" class=\"custom-select\"></select>" +
+        //         "                   </div>" +
+        //         "              </div>" +
+        //         "              <div class=\"form-group\">" +
+        //         "                   <div class=\"input-group\">" +
+        //         "                       <select id=\"selector-sensor-port\" class=\"custom-select\"></select>" +
+        //         "                   </div>" +
+        //         "                   <label id=\"selector-label\"></label>" +
+        //         "               </div>" +
+        //         "           </div>" +
+        //         "       </div>" +
+        //         "   </div>" +
+        //         "   <div class=\"singleButton\">" +
+        //         "       <button id=\"selector-add-button\" class=\"btn btn-centered\"><i class=\"icon fa fa-check\"></i>" + strings.messages.add + "</button>" +
+        //         "   </div>" +
+        //         "</div>");
+
+        //     var select = document.getElementById("selector-sensor-list");
+        //     for (var iSensorDef = 0; iSensorDef < sensorDefinitions.length; iSensorDef++) {
+        //         var sensorDefinition = sensorDefinitions[iSensorDef];
+
+        //         if (sensorDefinition.subTypes) {
+        //             for (var iSubType = 0; iSubType < sensorDefinition.subTypes.length; iSubType++) {
+
+        //                 if (!sensorDefinition.pluggable && !sensorDefinition.subTypes[iSubType].pluggable)
+        //                     continue;
+
+
+        //                 var el = document.createElement("option");
+        //                 el.textContent = sensorDefinition.description;
+
+        //                 if (sensorDefinition.subTypes[iSubType].description)
+        //                     el.textContent = sensorDefinition.subTypes[iSubType].description;
+
+        //                 el.value = sensorDefinition.name;
+        //                 el.value += "-" + sensorDefinition.subTypes[iSubType].subType;
+        //                 select.appendChild(el);
+        //             }
+        //         } else {
+        //             if (!sensorDefinition.pluggable)
+        //                 continue;
+
+        //             var el = document.createElement("option");
+        //             el.textContent = sensorDefinition.description;
+        //             el.value = sensorDefinition.name;
+
+        //             select.appendChild(el);
+        //         }
+        //     }
+
+        //     var board = getCurrentBoard();
+        //     if (board.builtinSensors) {
+        //         for (var i = 0; i < board.builtinSensors.length; i++) {
+        //             var sensor = board.builtinSensors[i];
+        //             var sensorDefinition = findSensorDefinition(sensor);
+
+        //             if (context.findSensor(sensor.type, sensor.port, false))
+        //                 continue;
+
+        //             var el = document.createElement("option");
+
+        //             el.textContent = sensorDefinition.description + strings.messages.builtin;
+        //             el.value = sensorDefinition.name + "-";
+
+        //             if (sensor.subType)
+        //                 el.value += sensor.subType;
+
+        //             el.value += "-" + sensor.port;
+
+        //             select.appendChild(el);
+        //         }
+        //     }
+
+        //     $('#selector-sensor-list').on('change', function () {
+        //         var values = this.value.split("-");
+        //         var builtinport = false;
+
+        //         var dummysensor = { type: values[0] };
+
+        //         if (values.length >= 2)
+        //             if (values[1])
+        //                 dummysensor.subType = values[1];
+
+        //         if (values.length >= 3)
+        //             builtinport = values[2];
+
+        //         var sensorDefinition = findSensorDefinition(dummysensor);
+
+        //         var imageContainer = document.getElementById("selector-image-container");
+        //         while (imageContainer.firstChild) {
+        //             imageContainer.removeChild(imageContainer.firstChild);
+        //         }
+        //         for (var i = 0; i < sensorDefinition.selectorImages.length; i++) {
+        //             var image = document.createElement('img');
+
+        //             image.src = getImg(sensorDefinition.selectorImages[i]);
+
+        //             imageContainer.appendChild(image);
+
+        //             //$('#selector-sensor-image').attr("src", getImg(sensorDefinition.selectorImages[0]));
+        //         }
+
+
+        //         var portSelect = document.getElementById("selector-sensor-port");
+        //         $('#selector-sensor-port').empty();
+        //         var hasPorts = false;
+        //         if (builtinport) {
+        //             var option = document.createElement('option');
+        //             option.innerText = builtinport;
+        //             option.value = builtinport;
+        //             portSelect.appendChild(option);
+        //             hasPorts = true;
+        //         } else {
+        //             var ports = getCurrentBoard().portTypes[sensorDefinition.portType];
+        //             if (sensorDefinition.portType == "i2c")
+        //             {
+        //                 ports = ["i2c"];
+        //             }
+
+        //             for (var iPort = 0; iPort < ports.length; iPort++) {
+        //                 var port = sensorDefinition.portType + ports[iPort];
+        //                 if (sensorDefinition.portType == "i2c")
+        //                     port = "i2c";
+
+        //                 if (!isPortUsed(sensorDefinition.name, port)) {
+        //                     var option = document.createElement('option');
+        //                     option.innerText = port;
+        //                     option.value = port;
+        //                     portSelect.appendChild(option);
+        //                     hasPorts = true;
+        //                 }
+        //             }
+        //         }
+
+
+
+        //         if (!hasPorts) {
+        //             $('#selector-add-button').attr("disabled", true);
+
+        //             var object_function = strings.messages.actuator;
+        //             if (sensorDefinition.isSensor)
+        //                 object_function = strings.messages.sensor;
+
+        //             $('#selector-label').text(strings.messages.noPortsAvailable.format(object_function, sensorDefinition.portType));
+        //             $('#selector-label').show();
+        //         }
+        //         else {
+        //             $('#selector-add-button').attr("disabled", false);
+        //             $('#selector-label').hide();
+        //         }
+        //     });
+
+        //     $('#selector-add-button').click(function () {
+        //         var sensorType = $("#selector-sensor-list option:selected").val();
+        //         var values = sensorType.split("-");
+
+        //         var dummysensor = { type: values[0] };
+        //         if (values.length == 2)
+        //             dummysensor.subType = values[1];
+
+        //         var sensorDefinition = findSensorDefinition(dummysensor);
+
+
+        //         var port = $("#selector-sensor-port option:selected").text();
+        //         var name = getNewSensorSuggestedName(sensorDefinition.suggestedName);
+
+        //         // if(name == 'screen1') {
+        //             // prepend screen because squareSize func can't handle cells wrap
+        //             infos.quickPiSensors.unshift({
+        //                 type: sensorDefinition.name,
+        //                 subType: sensorDefinition.subType,
+        //                 port: port,
+        //                 name: name
+        //             });                    
+
+        //         // } else {
+        //         //     infos.quickPiSensors.push({
+        //         //         type: sensorDefinition.name,
+        //         //         subType: sensorDefinition.subType,
+        //         //         port: port,
+        //         //         name: name
+        //         //     });                    
+        //         // }
+
+
+
+        //         $('#popupMessage').hide();
+        //         window.displayHelper.popupMessageShown = false;
+
+        //         context.resetSensorTable();
+        //         context.resetDisplay();
+        //     });
+
+
+        //     $("#selector-sensor-list").trigger("change");
+
+        //     $('#picancel').click(function () {
+        //         $('#popupMessage').hide();
+        //         window.displayHelper.popupMessageShown = false;
+        //     });
+        // });
+    };
+
+    function clickAdder() {
+        window.displayHelper.showPopupDialog("<div class=\"content qpi\">" +
+            "   <div class=\"panel-heading\">" +
+            "       <h2 class=\"sectionTitle\">" +
+            "           <span class=\"iconTag\"><i class=\"icon fas fa-list-ul\"></i></span>" +
+                        strings.messages.addcomponent +
+            "       </h2>" +
+            "       <div class=\"exit\" id=\"picancel\"><i class=\"icon fas fa-times\"></i></div>" +
+            "   </div>" +
+            "   <div id=\"sensorPicker\" class=\"panel-body\">" +
+            "       <label>" + strings.messages.selectcomponent + "</label>" +
+            "       <div class=\"flex-container\">" +
+            "           <div id=\"selector-image-container\" class=\"flex-col half\">" +
+            "               <img id=\"selector-sensor-image\">" +
+            "           </div>" +
+            "           <div class=\"flex-col half\">" +
+            "               <div class=\"form-group\">" +
+            "                   <div class=\"input-group\">" +
+            "                       <select id=\"selector-sensor-list\" class=\"custom-select\"></select>" +
+            "                   </div>" +
+            "              </div>" +
+            "              <div class=\"form-group\">" +
+            "                   <div class=\"input-group\">" +
+            "                       <select id=\"selector-sensor-port\" class=\"custom-select\"></select>" +
+            "                   </div>" +
+            "                   <label id=\"selector-label\"></label>" +
+            "               </div>" +
+            "           </div>" +
+            "       </div>" +
+            "   </div>" +
+            "   <div class=\"singleButton\">" +
+            "       <button id=\"selector-add-button\" class=\"btn btn-centered\"><i class=\"icon fa fa-check\"></i>" + strings.messages.add + "</button>" +
+            "   </div>" +
+            "</div>", function () {
+            var select = document.getElementById("selector-sensor-list");
+            for (var iSensorDef = 0; iSensorDef < sensorDefinitions.length; iSensorDef++) {
+                var sensorDefinition = sensorDefinitions[iSensorDef];
+                // console.log("adder",sensorDefinition.name)
+                if (sensorDefinition.subTypes) {
+                    for (var iSubType = 0; iSubType < sensorDefinition.subTypes.length; iSubType++) {
+
+                        if (!sensorDefinition.pluggable && !sensorDefinition.subTypes[iSubType].pluggable)
                             continue;
-    
+
+
                         var el = document.createElement("option");
                         el.textContent = sensorDefinition.description;
+
+                        if (sensorDefinition.subTypes[iSubType].description)
+                            el.textContent = sensorDefinition.subTypes[iSubType].description;
+
                         el.value = sensorDefinition.name;
-    
+                        el.value += "-" + sensorDefinition.subTypes[iSubType].subType;
                         select.appendChild(el);
+                        // console.log("+",el.value)
                     }
+                } else {
+                    if (!sensorDefinition.pluggable)
+                        continue;
+
+                    var el = document.createElement("option");
+                    el.textContent = sensorDefinition.description;
+                    el.value = sensorDefinition.name;
+                    // console.log("+",el.value)
+
+                    select.appendChild(el);
                 }
-    
-                var board = getCurrentBoard();
-                if (board.builtinSensors) {
-                    for (var i = 0; i < board.builtinSensors.length; i++) {
-                        var sensor = board.builtinSensors[i];
-                        var sensorDefinition = findSensorDefinition(sensor);
-    
-                        if (context.findSensor(sensor.type, sensor.port, false))
-                            continue;
-    
-                        var el = document.createElement("option");
-    
-                        el.textContent = sensorDefinition.description + strings.messages.builtin;
-                        el.value = sensorDefinition.name + "-";
-    
-                        if (sensor.subType)
-                            el.value += sensor.subType;
-    
-                        el.value += "-" + sensor.port;
-    
-                        select.appendChild(el);
-                    }
+            }
+
+            var board = getCurrentBoard();
+            if (board.builtinSensors) {
+                for (var i = 0; i < board.builtinSensors.length; i++) {
+                    var sensor = board.builtinSensors[i];
+                    var sensorDefinition = findSensorDefinition(sensor);
+
+                    if (context.findSensor(sensor.type, sensor.port, false))
+                        continue;
+
+                    var el = document.createElement("option");
+
+                    el.textContent = sensorDefinition.description + strings.messages.builtin;
+                    el.value = sensorDefinition.name + "-";
+
+                    if (sensor.subType)
+                        el.value += sensor.subType;
+
+                    el.value += "-" + sensor.port;
+
+                    select.appendChild(el);
                 }
-    
-                $('#selector-sensor-list').on('change', function () {
-                    var values = this.value.split("-");
-                    var builtinport = false;
-    
-                    var dummysensor = { type: values[0] };
-    
-                    if (values.length >= 2)
-                        if (values[1])
-                            dummysensor.subType = values[1];
-    
-                    if (values.length >= 3)
-                        builtinport = values[2];
-    
-                    var sensorDefinition = findSensorDefinition(dummysensor);
-    
-                    var imageContainer = document.getElementById("selector-image-container");
-                    while (imageContainer.firstChild) {
-                        imageContainer.removeChild(imageContainer.firstChild);
-                    }
-                    for (var i = 0; i < sensorDefinition.selectorImages.length; i++) {
-                        var image = document.createElement('img');
-    
-                        image.src = getImg(sensorDefinition.selectorImages[i]);
-    
-                        imageContainer.appendChild(image);
-    
-                        //$('#selector-sensor-image').attr("src", getImg(sensorDefinition.selectorImages[0]));
-                    }
-    
-    
-                    var portSelect = document.getElementById("selector-sensor-port");
-                    $('#selector-sensor-port').empty();
-                    var hasPorts = false;
-                    if (builtinport) {
-                        var option = document.createElement('option');
-                        option.innerText = builtinport;
-                        option.value = builtinport;
-                        portSelect.appendChild(option);
-                        hasPorts = true;
-                    } else {
-                        var ports = getCurrentBoard().portTypes[sensorDefinition.portType];
-                        if (sensorDefinition.portType == "i2c")
-                        {
-                            ports = ["i2c"];
-                        }
-    
-                        for (var iPort = 0; iPort < ports.length; iPort++) {
-                            var port = sensorDefinition.portType + ports[iPort];
-                            if (sensorDefinition.portType == "i2c")
-                                port = "i2c";
-    
-                            if (!isPortUsed(sensorDefinition.name, port)) {
-                                var option = document.createElement('option');
-                                option.innerText = port;
-                                option.value = port;
-                                portSelect.appendChild(option);
-                                hasPorts = true;
-                            }
-                        }
-                    }
-    
-    
-    
-                    if (!hasPorts) {
-                        $('#selector-add-button').attr("disabled", true);
-    
-                        var object_function = strings.messages.actuator;
-                        if (sensorDefinition.isSensor)
-                            object_function = strings.messages.sensor;
-    
-                        $('#selector-label').text(strings.messages.noPortsAvailable.format(object_function, sensorDefinition.portType));
-                        $('#selector-label').show();
-                    }
-                    else {
-                        $('#selector-add-button').attr("disabled", false);
-                        $('#selector-label').hide();
-                    }
-                });
-    
-                $('#selector-add-button').click(function () {
-                    var sensorType = $("#selector-sensor-list option:selected").val();
-                    var values = sensorType.split("-");
-    
-                    var dummysensor = { type: values[0] };
-                    if (values.length == 2)
+            }
+
+            $('#selector-sensor-list').on('change', function () {
+                var values = this.value.split("-");
+                // console.log(values)
+                var builtinport = false;
+
+                var dummysensor = { type: values[0] };
+
+                if (values.length >= 2)
+                    if (values[1])
                         dummysensor.subType = values[1];
-    
-                    var sensorDefinition = findSensorDefinition(dummysensor);
-    
-    
-                    var port = $("#selector-sensor-port option:selected").text();
-                    var name = getNewSensorSuggestedName(sensorDefinition.suggestedName);
-    
-                    if(name == 'screen1') {
-                        // prepend screen because squareSize func can't handle cells wrap
-                        infos.quickPiSensors.unshift({
-                            type: sensorDefinition.name,
-                            subType: sensorDefinition.subType,
-                            port: port,
-                            name: name
-                        });                    
-    
-                    } else {
-                        infos.quickPiSensors.push({
-                            type: sensorDefinition.name,
-                            subType: sensorDefinition.subType,
-                            port: port,
-                            name: name
-                        });                    
+
+                if (values.length >= 3)
+                    builtinport = values[2];
+
+                var sensorDefinition = findSensorDefinition(dummysensor);
+
+                var imageContainer = document.getElementById("selector-image-container");
+                while (imageContainer.firstChild) {
+                    imageContainer.removeChild(imageContainer.firstChild);
+                }
+                for (var i = 0; i < sensorDefinition.selectorImages.length; i++) {
+                    var image = document.createElement('img');
+
+                    image.src = getImg(sensorDefinition.selectorImages[i]);
+
+                    imageContainer.appendChild(image);
+
+                    //$('#selector-sensor-image').attr("src", getImg(sensorDefinition.selectorImages[0]));
+                }
+
+
+                var portSelect = document.getElementById("selector-sensor-port");
+                $('#selector-sensor-port').empty();
+                var hasPorts = false;
+                if (builtinport) {
+                    var option = document.createElement('option');
+                    option.innerText = builtinport;
+                    option.value = builtinport;
+                    portSelect.appendChild(option);
+                    hasPorts = true;
+                } else {
+                    var ports = getCurrentBoard().portTypes[sensorDefinition.portType];
+                    // console.log(ports)
+                    if (sensorDefinition.portType == "i2c")
+                    {
+                        ports = ["i2c"];
                     }
-    
-    
-    
-                    $('#popupMessage').hide();
-                    window.displayHelper.popupMessageShown = false;
-    
-                    context.resetSensorTable();
-                    context.resetDisplay();
-                });
-    
-    
-                $("#selector-sensor-list").trigger("change");
-    
-                $('#picancel').click(function () {
-                    $('#popupMessage').hide();
-                    window.displayHelper.popupMessageShown = false;
-                });
+
+                    for (var iPort = 0; iPort < ports.length; iPort++) {
+                        var port = sensorDefinition.portType + ports[iPort];
+                        if (sensorDefinition.portType == "i2c")
+                            port = "i2c";
+
+                        if (!isPortUsed(sensorDefinition.name, port)) {
+                            var option = document.createElement('option');
+                            option.innerText = port;
+                            option.value = port;
+                            portSelect.appendChild(option);
+                            hasPorts = true;
+                        }
+                    }
+                }
+
+
+
+                if (!hasPorts) {
+                    $('#selector-add-button').attr("disabled", true);
+
+                    var object_function = strings.messages.actuator;
+                    if (sensorDefinition.isSensor)
+                        object_function = strings.messages.sensor;
+
+                    $('#selector-label').text(strings.messages.noPortsAvailable.format(object_function, sensorDefinition.portType));
+                    $('#selector-label').show();
+                }
+                else {
+                    $('#selector-add-button').attr("disabled", false);
+                    $('#selector-label').hide();
+                }
+            });
+
+            $('#selector-add-button').click(function () {
+                var sensorType = $("#selector-sensor-list option:selected").val();
+                var values = sensorType.split("-");
+
+                var dummysensor = { type: values[0] };
+                if (values.length == 2)
+                    dummysensor.subType = values[1];
+
+                var sensorDefinition = findSensorDefinition(dummysensor);
+
+
+                var port = $("#selector-sensor-port option:selected").text();
+                var name = getNewSensorSuggestedName(sensorDefinition.suggestedName);
+
+                // if(name == 'screen1') {
+                    // prepend screen because squareSize func can't handle cells wrap
+                    infos.quickPiSensors.unshift({
+                        type: sensorDefinition.name,
+                        subType: sensorDefinition.subType,
+                        port: port,
+                        name: name
+                    });
+
+                // } else {
+                //     infos.quickPiSensors.push({
+                //         type: sensorDefinition.name,
+                //         subType: sensorDefinition.subType,
+                //         port: port,
+                //         name: name
+                //     });
+                // }
+
+
+
+                $('#popupMessage').hide();
+                window.displayHelper.popupMessageShown = false;
+
+                context.resetSensorTable();
+                context.resetDisplay();
+            });
+
+
+            $("#selector-sensor-list").trigger("change");
+
+            $('#picancel').click(function () {
+                $('#popupMessage').hide();
+                window.displayHelper.popupMessageShown = false;
             });
         });
     };
@@ -5209,8 +6081,8 @@ var getContext = function (display, infos, curLevel) {
         }
 
         return {
-            rows: ncols,
-            cols: nrows,
+            cols: ncols,
+            rows: nrows,
             size: cell_size
         };
     }
@@ -5241,6 +6113,10 @@ var getContext = function (display, infos, curLevel) {
         $('#piconnectprogress').show();
         $('#piinstallcheck').hide();
         $('#piinstallprogresss').hide();
+
+        if(context.sensorStateListener) {
+            context.sensorStateListener('disconnected');
+        }
     }
 
     function showasReleased() {
@@ -5251,10 +6127,6 @@ var getContext = function (display, infos, curLevel) {
         $('#pihatsetup').hide();
         $('#piconnect').css('background-color', '#F9A423');
         $('#piconnecttext').show();
-
-        if(context.sensorStateListener) {
-            context.sensorStateListener('disconnected');
-        }
     }
 
 
@@ -5285,6 +6157,12 @@ var getContext = function (display, infos, curLevel) {
 
         context.recreateDisplay = true;
         context.resetDisplay();
+
+        /// Connect Dialog
+
+        $("#piconnectprogressicon").hide();
+        $("#piconnectwifiicon").show();
+        $("#pirelease").attr("disabled", false);
 
         startSensorPollInterval();
     }
@@ -5318,6 +6196,10 @@ var getContext = function (display, infos, curLevel) {
             setSessionStorage('autoConnect', "0");
             window.task.displayedSubTask.context.resetDisplay();
         }
+
+        /// Dialog
+        $("#pirelease").attr("disabled", true);
+        $("#piconnectok").attr("disabled", false);
 
     }
 
@@ -6292,8 +7174,8 @@ var getContext = function (display, infos, curLevel) {
         return (window.modulesPath ? window.modulesPath : '../../modules/') + 'img/quickpi/' + filename;
     }
 
-    function createSlider(sensor, max, min, x, y, w, h, index)
-    {
+    function createSlider(sensor, max, min, x, y, w, h, index) {
+        // console.log("createSlider")
         var sliderobj = {};
         sliderobj.sliderdata = {};
 
@@ -6449,11 +7331,14 @@ var getContext = function (display, infos, curLevel) {
             }
         );
 
+        sliderobj.slider.toFront();
+
         return sliderobj;
     }
 
 
     function setSlider(sensor, juststate, imgx, imgy, imgw, imgh, min, max, triaxial) {
+        // console.log("setSlider",juststate)
         if (juststate) {
 
             if (Array.isArray(sensor.state)) {
@@ -6469,6 +7354,7 @@ var getContext = function (display, infos, curLevel) {
                         (percentage * sensor.sliders[i].sliderdata.scale);
 
                     sensor.sliders[i].thumb.attr('y', thumby);
+                    sensor.sliders[i].slider.toFront();
                 }
             } else {
                 var percentage = findSensorDefinition(sensor).getPercentageFromState(sensor.state, sensor);
@@ -6646,6 +7532,10 @@ var getContext = function (display, infos, curLevel) {
             context.sensorStateListener(sensor);
         }
 
+        var sameFont = true;
+        var fontWeight = "normal";
+        var sideTextSmall = false;
+
         if (paper == undefined || !context.display || !sensor.drawInfo)
             return;
 
@@ -6720,6 +7610,7 @@ var getContext = function (display, infos, curLevel) {
 
         var namesize = sensor.drawInfo.height * 0.15;
         statesize = namesize;
+        portsize = namesize;
         
         var maxNameSize = 25;
         var maxStateSize = 20;
@@ -6774,6 +7665,11 @@ var getContext = function (display, infos, curLevel) {
         }
         namesize = Math.min(namesize,maxNameSize);
         statesize = Math.min(statesize,maxStateSize);
+        if(sameFont){
+            // namesize = h*0.12;
+            statesize = namesize;
+            // console.log(statesize)
+        }
 
         var sensorAttr = {
             "x": imgx,
@@ -6811,7 +7707,6 @@ var getContext = function (display, infos, curLevel) {
                     imagename += "red";
 
                 imagename += ".png";
-
                 sensor.ledon = paper.image(getImg(imagename), imgx, imgy, imgw, imgh);
             }
 
@@ -6855,7 +7750,7 @@ var getContext = function (display, infos, curLevel) {
         } else if (sensor.type == "ledmatrix") {
             if (sensor.stateText)
                 sensor.stateText.remove();
-            
+
             if (!sensor.state || !sensor.state.length)
                 sensor.state = [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]];
 
@@ -6901,7 +7796,8 @@ var getContext = function (display, infos, curLevel) {
 
             sensor.focusrect.unclick();
             sensor.focusrect.click(ledMatrixListener(imgx, imgy, imgw, imgh, sensor));
-        } else if (sensor.type == "buzzer") { 
+        } 
+        else if (sensor.type == "buzzer") { 
             if(typeof sensor.state == 'number' &&
                sensor.state != 0 &&
                sensor.state != 1) {
@@ -7022,7 +7918,8 @@ var getContext = function (display, infos, curLevel) {
                 }
             }
 
-        } else if (sensor.type == "button") {
+        } 
+        else if (sensor.type == "button") {
             if (sensor.stateText)
                 sensor.stateText.remove();
 
@@ -7129,7 +8026,8 @@ var getContext = function (display, infos, curLevel) {
                 // sensor.focusrect.node.ontouchstart = sensor.focusrect.node.onmousedown;
                 // sensor.focusrect.node.ontouchend = sensor.focusrect.node.onmouseup;
             }
-        } else if (sensor.type == "screen") {
+        } 
+        else if (sensor.type == "screen") {
             if (sensor.stateText) {
                 sensor.stateText.remove();
                 sensor.stateText = null;
@@ -7166,8 +8064,6 @@ var getContext = function (display, infos, curLevel) {
             if (!sensor.img || isElementRemoved(sensor.img)) {
                 sensor.img = paper.image(getImg('screen.png'), imgx, imgy, imgw, imgh);
             }
-               
-
 
             sensor.img.attr({
                 "x": imgx,
@@ -7176,7 +8072,6 @@ var getContext = function (display, infos, curLevel) {
                 "height": imgh,
                 "opacity": fadeopacity,
             });
-
 
             if (sensor.state) {
                 if (sensor.state.isDrawingData) {
@@ -7238,7 +8133,8 @@ var getContext = function (display, infos, curLevel) {
                     sensor.stateText.attr("")
                 }
             }
-        } else if (sensor.type == "temperature") {
+        } 
+        else if (sensor.type == "temperature") {
             if (sensor.stateText)
                 sensor.stateText.remove();
 
@@ -7303,7 +8199,8 @@ var getContext = function (display, infos, curLevel) {
                 removeSlider(sensor);
             }
 
-        } else if (sensor.type == "servo") {
+        } 
+        else if (sensor.type == "servo") {
             if (sensor.stateText)
                 sensor.stateText.remove();
 
@@ -7371,7 +8268,8 @@ var getContext = function (display, infos, curLevel) {
 
                 removeSlider(sensor);
             }
-        } else if (sensor.type == "potentiometer") {
+        } 
+        else if (sensor.type == "potentiometer") {
             if (sensor.stateText)
                 sensor.stateText.remove();
 
@@ -7415,7 +8313,8 @@ var getContext = function (display, infos, curLevel) {
                 removeSlider(sensor);
             }
 
-        } else if (sensor.type == "range") {
+        }
+        else if (sensor.type == "range") {
             if (sensor.stateText)
                 sensor.stateText.remove();
 
@@ -7497,7 +8396,8 @@ var getContext = function (display, infos, curLevel) {
 
                 removeSlider(sensor);
             }
-        } else if (sensor.type == "light") {
+        } 
+        else if (sensor.type == "light") {
             if (sensor.stateText)
                 sensor.stateText.remove();
 
@@ -7554,7 +8454,8 @@ var getContext = function (display, infos, curLevel) {
 
                 removeSlider(sensor);
             }
-        } else if (sensor.type == "humidity") {
+        } 
+        else if (sensor.type == "humidity") {
             if (sensor.stateText)
                 sensor.stateText.remove();
 
@@ -7582,7 +8483,8 @@ var getContext = function (display, infos, curLevel) {
 
                 removeSlider(sensor);
             }
-        } else if (sensor.type == "accelerometer") {
+        } 
+        else if (sensor.type == "accelerometer") {
             if (sensor.stateText)
                 sensor.stateText.remove();
 
@@ -7608,7 +8510,8 @@ var getContext = function (display, infos, curLevel) {
             }
 
             if (sensor.state) {
-                statesize = h*0.12;
+                if(sideTextSmall)
+                    statesize = h*0.12;
                 try {
                     var str = "X: " + sensor.state[0] + " m/s²\nY: " + sensor.state[1] + " m/s²\nZ: " + sensor.state[2] + " m/s²";
                     sensor.stateText = paper.text(cx, state1y, str);
@@ -7629,14 +8532,17 @@ var getContext = function (display, infos, curLevel) {
 
                 removeSlider(sensor);
             }
-        } else if (sensor.type == "gyroscope") {
+        } 
+        else if (sensor.type == "gyroscope") {
             if (!sensor.state) {
                 sensor.state = [0, 0, 0];
             }
             if (sensor.stateText) {
                 sensor.stateText.remove();
             }
-            statesize = h*0.12;
+            if(sideTextSmall)
+                statesize = h*0.12;
+
             var str = "X: " + sensor.state[0] + "°/s\nY: " + sensor.state[1] + "°/s\nZ: " + sensor.state[2] + "°/s";
             sensor.stateText = paper.text(cx, state1y, str);
             if (!sensor.previousState)
@@ -7720,7 +8626,8 @@ var getContext = function (display, infos, curLevel) {
                     removeSlider(sensor);
                 }                            
             }            
-        } else if (sensor.type == "magnetometer") {
+        } 
+        else if (sensor.type == "magnetometer") {
             if (sensor.stateText)
                 sensor.stateText.remove();
 
@@ -7762,7 +8669,9 @@ var getContext = function (display, infos, curLevel) {
                 sensor.stateText.remove();
 
             if (sensor.state) {
-                statesize = h*0.12;
+                if(sideTextSmall)
+                    statesize = h*0.12;
+
                 var str = "X: " + sensor.state[0] + " μT\nY: " + sensor.state[1] + " μT\nZ: " + sensor.state[2] + " μT";
                 sensor.stateText = paper.text(cx, state1y, str);
             }
@@ -7776,7 +8685,8 @@ var getContext = function (display, infos, curLevel) {
 
                 removeSlider(sensor);
             }
-        } else if (sensor.type == "sound") {
+        } 
+        else if (sensor.type == "sound") {
             if (sensor.stateText)
                 sensor.stateText.remove();
 
@@ -7810,7 +8720,8 @@ var getContext = function (display, infos, curLevel) {
                 removeSlider(sensor);
             }
 
-        } else if (sensor.type == "irtrans") {
+        } 
+        else if (sensor.type == "irtrans") {
             if (sensor.stateText)
                 sensor.stateText.remove();
 
@@ -7840,11 +8751,12 @@ var getContext = function (display, infos, curLevel) {
                                 var addedSomeButtons = false;
                                 var remotecontent = document.getElementById('piremotecontent');
                                 var parentdiv = document.createElement("DIV");
-                                parentdiv.className = "form-group";
+                                parentdiv.className  = "form-group";
 
                                 remotecontent.appendChild(parentdiv);
                                 var count = 0;
-                                for (var code in context.remoteIRcodes) {
+                                for (var code in context.remoteIRcodes)
+                                {
                                     addedSomeButtons = true;
                                     context.remoteIRcodes[code];
 
@@ -7857,30 +8769,30 @@ var getContext = function (display, infos, curLevel) {
 
                                     let capturedcode = code;
                                     let captureddata = context.remoteIRcodes[code];
-                                    btn.onclick = function () {
+                                    btn.onclick = function() {
                                         $('#popupMessage').hide();
                                         window.displayHelper.popupMessageShown = false;
 
                                         //if (sensor.waitingForIrMessage)
-                                        //sensor.waitingForIrMessage(capturedcode);
+                                            //sensor.waitingForIrMessage(capturedcode);
 
-                                        context.quickPiConnection.sendCommand("presetIRMessage(\"" + capturedcode + "\", '" + captureddata + "')", function (returnVal) {
-                                        });
-                                        context.quickPiConnection.sendCommand("sendIRMessage(\"irtran1\", \"" + capturedcode + "\")", function (returnVal) {
-                                        });
+                                        context.quickPiConnection.sendCommand("presetIRMessage(\"" + capturedcode + "\", '" + captureddata + "')", function(returnVal) {});
+                                        context.quickPiConnection.sendCommand("sendIRMessage(\"irtran1\", \"" + capturedcode + "\")", function(returnVal) {});
 
                                     };
 
                                     count += 1;
 
-                                    if (count == 4) {
+                                    if (count == 4)
+                                    {
                                         count = 0;
                                         parentdiv = document.createElement("DIV");
-                                        parentdiv.className = "form-group";
+                                        parentdiv.className  = "form-group";
                                         remotecontent.appendChild(parentdiv);
                                     }
                                 }
-                                if (!addedSomeButtons) {
+                                if (!addedSomeButtons)
+                                {
                                     $('#piremotemessage').text(strings.messages.noIrPresets);
                                 }
 
@@ -7895,7 +8807,7 @@ var getContext = function (display, infos, curLevel) {
                                 btn.className = "btn";
                                 btn.appendChild(t);
                                 parentdiv.appendChild(btn);
-                                btn.onclick = function () {
+                                btn.onclick = function() {
                                     $('#popupMessage').hide();
                                     window.displayHelper.popupMessageShown = false;
 
@@ -7931,7 +8843,8 @@ var getContext = function (display, infos, curLevel) {
 
                 findSensorDefinition(sensor).setLiveState(sensor, sensor.state, function(x) {});
             }
-        } else if (sensor.type == "irrecv") {
+        } 
+        else if (sensor.type == "irrecv") {
             if (sensor.stateText)
                 sensor.stateText.remove();
 
@@ -7963,42 +8876,42 @@ var getContext = function (display, infos, curLevel) {
                             $('#popupMessage').hide();
                             window.displayHelper.popupMessageShown = false;
                         });
-    
+
                         $('#picancel2').click(function () {
                             $('#popupMessage').hide();
                             window.displayHelper.popupMessageShown = false;
                         });
-    
+
                         var addedSomeButtons = false;
                         var remotecontent = document.getElementById('piremotecontent');
                         var parentdiv = document.createElement("DIV");
                         parentdiv.className  = "form-group";
-    
+
                         remotecontent.appendChild(parentdiv);
                         var count = 0;
                         for (var code in context.remoteIRcodes)
                         {
                             addedSomeButtons = true;
                             context.remoteIRcodes[code];
-    
+
                             var btn = document.createElement("BUTTON");
                             var t = document.createTextNode(code);
-    
+
                             btn.className = "btn";
                             btn.appendChild(t);
                             parentdiv.appendChild(btn);
-    
+
                             let capturedcode = code;
                             btn.onclick = function() {
                                 $('#popupMessage').hide();
                                 window.displayHelper.popupMessageShown = false;
-        
+
                                 if (sensor.waitingForIrMessage)
                                     sensor.waitingForIrMessage(capturedcode);
                             };
-    
+
                             count += 1;
-    
+
                             if (count == 4)
                             {
                                 count = 0;
@@ -8011,22 +8924,22 @@ var getContext = function (display, infos, curLevel) {
                         {
                             $('#piremotemessage').text(strings.messages.noIrPresets);
                         }
-    
+
                         var btn = document.createElement("BUTTON");
-    
+
                         if (sensor.state)
                             var t = document.createTextNode(strings.messages.irDisableContinous);
                         else
                             var t = document.createTextNode(strings.messages.irEnableContinous);
-    
-                        
+
+
                         btn.className = "btn";
                         btn.appendChild(t);
                         parentdiv.appendChild(btn);
                         btn.onclick = function() {
                             $('#popupMessage').hide();
                             window.displayHelper.popupMessageShown = false;
-    
+
                             sensor.state = !sensor.state;
                             warnClientSensorStateChanged(sensor);
                             drawSensor(sensor);
@@ -8061,29 +8974,29 @@ var getContext = function (display, infos, curLevel) {
                         "</div>";
 
                     window.displayHelper.showPopupDialog(irLearnDialog, function () {
-                      $('#picancel').click(function () {
-                        $('#popupMessage').hide();
-                        window.displayHelper.popupMessageShown = false;
-                        context.stopLiveUpdate = false;
-                      });
-
-                      $('#picancel2').click(function () {
-                        $('#popupMessage').hide();
-                        window.displayHelper.popupMessageShown = false;
-                        context.stopLiveUpdate = false;
-                      });
-
-                      $('#piirlearn').click(function () {
-
-                        $('#piirlearn').attr('disabled', true);
-
-                        $("#piircode").text("");
-                        context.quickPiConnection.sendCommand("readIRMessageCode(\"irrec1\", 10000)", function(retval)
-                        {
-                          $('#piirlearn').attr('disabled', false);
-                          $("#piircode").text(retval);
+                        $('#picancel').click(function () {
+                            $('#popupMessage').hide();
+                            window.displayHelper.popupMessageShown = false;
+                            context.stopLiveUpdate = false;
                         });
-                      });
+
+                        $('#picancel2').click(function () {
+                            $('#popupMessage').hide();
+                            window.displayHelper.popupMessageShown = false;
+                            context.stopLiveUpdate = false;
+                        });
+
+                        $('#piirlearn').click(function () {
+
+                            $('#piirlearn').attr('disabled', true);
+
+                            $("#piircode").text("");
+                            context.quickPiConnection.sendCommand("readIRMessageCode(\"irrec1\", 10000)", function(retval)
+                            {
+                                $('#piirlearn').attr('disabled', false);
+                                $("#piircode").text(retval);
+                            });
+                        });
                     });
                 }
             });
@@ -8112,7 +9025,8 @@ var getContext = function (display, infos, curLevel) {
                 sensor.focusrect.node.ontouchstart = sensor.focusrect.node.onmousedown;
                 sensor.focusrect.node.ontouchend = sensor.focusrect.node.onmouseup;
             }*/
-        } else if (sensor.type == "stick") {
+        } 
+        else if (sensor.type == "stick") {
             if (sensor.stateText)
                 sensor.stateText.remove();
 
@@ -8157,25 +9071,34 @@ var getContext = function (display, infos, curLevel) {
 
             // var stateString = "\n";
             var stateString = "";
+            var click = false;
             if (sensor.state[0]) {
                 stateString += strings.messages.up.toUpperCase() + "\n";
                 sensor.imgup.attr({ "opacity": 1 });
+                click = true;
             }
             if (sensor.state[1]) {
                 stateString += strings.messages.down.toUpperCase() + "\n";
                 sensor.imgdown.attr({ "opacity": 1 });
+                click = true;
             }
             if (sensor.state[2]) {
                 stateString += strings.messages.left.toUpperCase() + "\n";
                 sensor.imgleft.attr({ "opacity": 1 });
+                click = true;
             }
             if (sensor.state[3]) {
                 stateString += strings.messages.right.toUpperCase() + "\n";
                 sensor.imgright.attr({ "opacity": 1 });
+                click = true;
             }
             if (sensor.state[4]) {
                 stateString += strings.messages.center.toUpperCase() + "\n";
                 sensor.imgcenter.attr({ "opacity": 1 });
+                click = true;
+            }
+            if(!click){
+                stateString += "...";
             }
 
             sensor.stateText = paper.text(state1x, state1y, stateString);
@@ -8402,7 +9325,8 @@ var getContext = function (display, infos, curLevel) {
 
             sensor.focusrect.node.ontouchstart = sensor.focusrect.node.onmousedown;
             sensor.focusrect.node.ontouchend = sensor.focusrect.node.onmouseup;
-        } else if (sensor.type == "cloudstore") {
+        } 
+        else if (sensor.type == "cloudstore") {
             if (!sensor.img || isElementRemoved(sensor.img))
                 sensor.img = paper.image(getImg('cloudstore.png'), imgx, imgy, imgw, imgh);
 
@@ -8417,7 +9341,8 @@ var getContext = function (display, infos, curLevel) {
             drawPortText = false;
             // drawName = false;
 
-        } else if (sensor.type == "clock") {
+        } 
+        else if (sensor.type == "clock") {
             if (!sensor.img || isElementRemoved(sensor.img))
                 sensor.img = paper.image(getImg('clock.png'), imgx, imgy, imgw, imgh);
 
@@ -8432,61 +9357,11 @@ var getContext = function (display, infos, curLevel) {
 
             drawPortText = false;
             drawName = false;
-        }else if(sensor.type == "adder"){
-            drawCustomSensorAdder(x,y,w,h);
+        }
+        else if(sensor.type == "adder"){
+            drawCustomSensorAdder(x,y,w,h,namesize);
             return
         }
-
-
-        sensor.focusrect.mousedown(function () {
-            var fsize = 30;
-            // var xCross = x + w - fsize;
-            var xCross = portx;
-            // console.log(xCross,x,w)
-            if (infos.customSensors && !context.autoGrading) {
-                if (context.removerect) {
-                    context.removerect.remove();
-                }
-
-                if (!context.runner || !context.runner.isRunning()) {
-                context.removerect = paper.text(xCross, imgy, "\uf00d"); // fa-times char
-                removeRect = context.removerect;
-                sensorWithRemoveRect = sensor;
-
-                context.removerect.attr({
-                    "font-size": fsize + "px",
-                    fill: "lightgray",
-                    "font-family": "Font Awesome 5 Free",
-                    'text-anchor': 'start',
-                    "x": xCross,
-                    "y": imgy,
-                });
-
-                context.removerect.node.style = "-moz-user-select: none; -webkit-user-select: none;";
-                context.removerect.node.style.fontFamily = '"Font Awesome 5 Free"';
-                context.removerect.node.style.fontWeight = "bold";
-
-
-                context.removerect.click(function (element) {
-
-                    window.displayHelper.showPopupMessage(strings.messages.removeConfirmation,
-                        'blanket',
-                        strings.messages.remove,
-                        function () {
-                            for (var i = 0; i < infos.quickPiSensors.length; i++) {
-                                if (infos.quickPiSensors[i] === sensor) {
-                                    sensor.removed = true;
-                                    infos.quickPiSensors.splice(i, 1);
-                                }
-                            }
-                            context.recreateDisplay = true;
-                            context.resetDisplay();
-                        },
-                        strings.messages.keep);
-                });
-            }
-            }
-        });
 
 
         if (sensor.stateText) {
@@ -8494,8 +9369,12 @@ var getContext = function (display, infos, curLevel) {
                 var statecolor = "gray";
                 // if (context.compactLayout)
                 //     statecolor = "black";
-
-                sensor.stateText.attr({ "font-size": statesize + "px", 'text-anchor': stateanchor, 'font-weight': 'bold', fill: statecolor });
+                // console.log(statesize)
+                sensor.stateText.attr({ 
+                    "font-size": statesize, 
+                    'text-anchor': stateanchor, 
+                    'font-weight': fontWeight, 
+                    fill: statecolor });
                 // var b = sensor.stateText._getBBox();
                 // sensor.stateText.translate(0, b.height/2);
                 sensor.stateText.node.style = "-moz-user-select: none; -webkit-user-select: none;";
@@ -8522,8 +9401,17 @@ var getContext = function (display, infos, curLevel) {
 
         if (drawName) {
             if (sensor.name) {
-                sensor.nameText = paper.text(namex, namey, sensor.name );
-                sensor.nameText.attr({ "font-size": namesize + "px", 'text-anchor': nameanchor, fill: "#7B7B7B" });
+                let sensorId = sensor.name;
+                if (context.useportforname)
+                    sensorId = sensor.port;
+
+                sensor.nameText = paper.text(namex, namey, sensorId );
+                // sensor.nameText = paper.text(namex, namey, sensor.name );
+                sensor.nameText.attr({ 
+                    "font-size": namesize,
+                    "font-weight": fontWeight, 
+                    'text-anchor': nameanchor, 
+                    fill: "#7B7B7B" });
                 sensor.nameText.node.style = "-moz-user-select: none; -webkit-user-select: none;";
                 var bbox = sensor.nameText.getBBox();
                 if(bbox.width > w - 20){
@@ -10394,12 +11282,12 @@ var getContext = function (display, infos, curLevel) {
                         return function () {
                             this.setColour(context.blocklyHelper.getDefaultColours().categories["sensors"]);
                             this.appendDummyInput("PARAM_0")
-                                .appendField(strings.label.onButtonPressed)
-                                .appendField(new window.Blockly.FieldDropdown(getSensorNames("button")), 'PARAM_0')
-                                .appendField(strings.label.onButtonPressedEnd);
+                              .appendField(strings.label.onButtonPressed)
+                              .appendField(new window.Blockly.FieldDropdown(getSensorNames("button")), 'PARAM_0')
+                              .appendField(strings.label.onButtonPressedEnd);
                             this.appendStatementInput("PARAM_1")
-                                .setCheck(null)
-                                .appendField(strings.label.onButtonPressedDo);
+                              .setCheck(null)
+                              .appendField(strings.label.onButtonPressedDo);
                             this.setPreviousStatement(false);
                             this.setNextStatement(false);
                             this.setOutput(null);
@@ -10932,6 +11820,7 @@ var getContext = function (display, infos, curLevel) {
         Blockly.HSV_SATURATION = 0.65;
         Blockly.HSV_VALUE = 0.80;
         Blockly.Blocks.inputs.HUE = 50;
+
         return {
             categories: {
                 //actuator: 0,
