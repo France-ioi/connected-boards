@@ -35,7 +35,7 @@ var sensorValues = {
 }
 
 let g_instance = null;
-var getQuickPiConnection = function (userName, _onConnect, _onDisconnect, _onChangeBoard) {
+export const getQuickPiConnection = function (userName, _onConnect, _onDisconnect, _onChangeBoard) {
     this.onConnect = _onConnect;
     this.onDisconnect = _onDisconnect;
 

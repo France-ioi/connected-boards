@@ -9,12 +9,14 @@
   ],
   "packageManager": "yarn@1.22.22+sha1.ac34549e6aa8e7ead463a7407e1c7390f61a6610",
   "devDependencies": {
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-swc": "^0.3.1",
+    "@swc/core": "^1.7.0",
     "@types/dom-serial": "^1.0.6",
-    "esbuild": "^0.23.0",
-    "rollup": "^4.18.1",
-    "rollup-plugin-esbuild": "^6.1.1"
+    "rollup": "^4.18.1"
   },
   "scripts": {
-    "build": "rollup -c"
+    "build": "rollup -c",
+    "dev": "rollup -c -w"
   }
 }

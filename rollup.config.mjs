@@ -1,4 +1,5 @@
-import esbuild from 'rollup-plugin-esbuild'
+import swc from '@rollup/plugin-swc';
+import nodeResolve from "@rollup/plugin-node-resolve";
 
 const bundle = config => ({
   ...config,
@@ -8,13 +9,29 @@ const bundle = config => ({
 
 export default [
   bundle({
-    plugins: [esbuild()],
+    plugins: [
+      nodeResolve({
+        extensions: ['.ts'],
+      }),
+      swc({
+        swc: {
+          "jsc": {
+            "parser": {
+              "syntax": "typescript"
+            },
+            "target": "es5"
+          },
+        },
+        include: ['src/**/*.{ts,js}'],
+      }),
+    ],
     output: [
       {
         name: 'boardProgramming',
         file: `dist/index.js`,
         format: 'iife',
         sourcemap: false,
+        strict: false,
       },
     ],
   }),
