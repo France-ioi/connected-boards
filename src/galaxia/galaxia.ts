@@ -1,22 +1,39 @@
-var DEBUG_SILENCE_SENSORS = false;
-var DEBUG_OUTPUT_IN_CONSOLE = false;
-var DEBUG_FULL_OUTPUT = true;
-var SERVO_MIN_DUTY = 26;
-var SERVO_MAX_DUTY = 124;
+import {getSessionStorage, setSessionStorage} from "../helpers/session_storage";
+
+let DEBUG_SILENCE_SENSORS = false;
+let DEBUG_OUTPUT_IN_CONSOLE = false;
+let DEBUG_FULL_OUTPUT = true;
+let SERVO_MIN_DUTY = 26;
+let SERVO_MAX_DUTY = 124;
 
 
 async function getSerial(filters) {
-    var port = await navigator.serial.requestPort({
-        filters: filters
-    });
+    const allPorts = await navigator.serial.getPorts();
+    const savedBoard = getSessionStorage('galaxia_board');
+
+    let port: SerialPort;
+    if (null !== savedBoard) {
+        port = allPorts.find(port => savedBoard === JSON.stringify(port.getInfo()));
+    }
+
+    if (!port) {
+        port = await navigator.serial.requestPort({
+            filters: filters
+        });
+    }
+
     await port.open({ baudRate: 115200 });
+
+    const info = port.getInfo();
+    setSessionStorage('galaxia_board', JSON.stringify(info));
+
     return port;
 }
 
 async function serialWrite(port, data) {
     const writer = port.writable.getWriter();
     const encoder = new TextEncoder();
-/*    var remainingData = data;
+/*    let remainingData = data;
     while(remainingData.length > 0) {
         await writer.write(encoder.encode(remainingData.substring(0, 64)));
         remainingData = remainingData.substring(64);
@@ -26,7 +43,7 @@ async function serialWrite(port, data) {
     writer.releaseLock();
 }
 
-var sensorValues = {
+let sensorValues = {
     "light": 0,
     "acx": 12,
     "acy": 10,
@@ -63,9 +80,9 @@ export const getQuickPiConnection = function (userName, _onConnect, _onDisconnec
     this.onChangeBoard = _onChangeBoard;
 
     this.processGalaxiaOutput = function(data) {
-        var text = new TextDecoder().decode(data);
+        let text = new TextDecoder().decode(data);
         this.currentOutput += text;
-        var lines = this.currentOutput.split('\r\n');
+        let lines = this.currentOutput.split('\r\n');
         if(!DEBUG_FULL_OUTPUT) {
             lines = lines.slice(-50);
         }
@@ -127,11 +144,6 @@ export const getQuickPiConnection = function (userName, _onConnect, _onDisconnec
     }
 
     this.isAvailable = function(ipaddress, callback) {
-        // Avoid blocklyQuickPi_lib auto-connecting
-        try {
-            sessionStorage["autoConnect"] = 0;
-        } catch(e) {}
-        
         callback(ipaddress == "localhost");
     }
 
@@ -153,8 +165,8 @@ export const getQuickPiConnection = function (userName, _onConnect, _onDisconnec
 
 
     this.installProgram = function (pythonProgram, oninstall) {
-        var fullProgram = pythonProgram;
-        var cmds = [
+        let fullProgram = pythonProgram;
+        let cmds = [
             "f = open(\"program.py\", \"w\")"
         ]
         while(fullProgram.length > 0) {
@@ -162,7 +174,7 @@ export const getQuickPiConnection = function (userName, _onConnect, _onDisconnec
             fullProgram = fullProgram.substring(128);
         }
         cmds.push("f.close()");
-        var idx = -1;
+        let idx = -1;
         function executeNext() {
             idx += 1;
             if(idx >= cmds.length) {
@@ -184,10 +196,10 @@ export const getQuickPiConnection = function (userName, _onConnect, _onDisconnec
         // TODO
     }
 
-    var releaseTimeout = null;
+    let releaseTimeout = null;
     this.releaseLock = function() {
         if(!this.serial) { return; }
-        var that = this;
+        let that = this;
         this.releasing = true;
         async function endRelease() {
             if(!releaseTimeout) { return; }
@@ -222,16 +234,16 @@ export const getQuickPiConnection = function (userName, _onConnect, _onDisconnec
     }
 
 
-    var currentExecutionCallback = null;
-    var currentOutputId = "";
-    var nbCommandsExecuted = 0;
+    let currentExecutionCallback = null;
+    let currentOutputId = "";
+    let nbCommandsExecuted = 0;
     function executeSerial(command, callback) {
         if(this.executing) {
             this.executionQueue.push([command, callback]);
             return;
         }
         this.executing = true;
-        var that = this;
+        let that = this;
         nbCommandsExecuted += 1;
         if(nbCommandsExecuted > 500) {
             this.executionQueue.push(["\x04", () => {}]);
@@ -247,7 +259,7 @@ export const getQuickPiConnection = function (userName, _onConnect, _onDisconnec
                 }
                 that.executing = false;
                 if(that.executionQueue.length > 0) {
-                    var [command, callback] = that.executionQueue.shift();
+                    let [command, callback] = that.executionQueue.shift();
                     executeSerial(command, callback);
                 }
             }
@@ -304,26 +316,26 @@ export const getQuickPiConnection = function (userName, _onConnect, _onDisconnec
             if(DEBUG_SILENCE_SENSORS) {
                 return callback(true);
             }
-            var angle = parseInt(command.substring(22, command.length - 1));
+            let angle = parseInt(command.substring(22, command.length - 1));
             if(!angle || angle < 0) { angle = 0; }
             if(angle > 180) { angle = 180; }
-            var duty = Math.floor(0.025*1023+angle*0.1*1023/180);
+            let duty = Math.floor(0.025*1023+angle*0.1*1023/180);
             executeSerial("pwm7.duty(" + duty + ")\r\nprint(True)", callback);
         } else if(command == "getServoAngle(\"servo\")") {
             if(DEBUG_SILENCE_SENSORS) {
                 return callback(90);
             }
             executeSerial("print(pwm7.duty())", function(data) {
-                var duty = parseInt(data);
-                var angle = Math.floor((duty - SERVO_MIN_DUTY) * 180 / (SERVO_MAX_DUTY - SERVO_MIN_DUTY));
+                let duty = parseInt(data);
+                let angle = Math.floor((duty - SERVO_MIN_DUTY) * 180 / (SERVO_MAX_DUTY - SERVO_MIN_DUTY));
                 callback(angle);
             });
         } else if(command.startsWith("setBuzzerState(\"buzzer\",")) {
             if(DEBUG_SILENCE_SENSORS) {
                 return callback(true);
             }
-            var state = command.substring(24, command.length - 1);
-            var target = "off";
+            let state = command.substring(24, command.length - 1);
+            let target = "off";
             if(state == "True" || state == "1") {
                 target = "on";
             }
@@ -339,7 +351,7 @@ export const getQuickPiConnection = function (userName, _onConnect, _onDisconnec
 }
 
 
-var pythonLib = `
+let pythonLib = `
 from machine import *
 from thingz import *
 
@@ -410,7 +422,7 @@ def setBuzzerState(name, state):
 
 `;
 
-var mainLib = `
+let mainLib = `
 import os
 from machine import *
 from thingz import *
