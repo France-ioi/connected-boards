@@ -1,4 +1,3 @@
-import {GalaxiaBoard} from './galaxia/galaxia_board';
 import {getQuickPiConnection} from './galaxia/galaxia';
 import {
   QuickStore,
@@ -9,7 +8,6 @@ import {quickPiLocalLanguageStrings} from './lang/language_strings';
 import "./style.scss"
 
 const exportToWindow = {
-  GalaxiaBoard,
   getQuickPiConnection,
   quickPiLocalLanguageStrings,
   QuickStore,
@@ -21,7 +19,6 @@ for (let [name, object] of Object.entries(exportToWindow)) {
 }
 
 export {
-  GalaxiaBoard,
   getQuickPiConnection,
   quickPiLocalLanguageStrings,
   QuickStore,

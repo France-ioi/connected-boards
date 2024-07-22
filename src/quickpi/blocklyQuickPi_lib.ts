@@ -1,4 +1,6 @@
-﻿var buzzerSound = {
+﻿import {galaxiaBoard} from "../galaxia/galaxia_board";
+
+var buzzerSound = {
     context: null,
     default_freq: 200,
     channels: {},
@@ -2622,7 +2624,7 @@ var getContext = function (display, infos, curLevel) {
                 warnClientSensorStateChanged(sensor);
                 drawSensor(sensor);
             }
-            var board = context.infos.quickPiBoard == "galaxia" ? GalaxiaBoard : MicrobitBoard;
+            var board = context.infos.quickPiBoard == "galaxia" ? galaxiaBoard : null;
             var galaxiaBoardUpdate = board.init('#virtualBoard', onUserEvent);
             context.sensorStateListener = galaxiaBoardUpdate;
         }

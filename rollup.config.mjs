@@ -15,7 +15,7 @@ export default {
           "parser": {
             "syntax": "typescript"
           },
-          "target": "es5"
+          "target": "esnext" // TODO: put back es5
         },
       },
       include: ['src/**/*.{ts,js}'],

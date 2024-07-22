@@ -1,54 +1,60 @@
-export const GalaxiaBoard = {
-    buttonStatesUpdators: {},
-    galaxiaSvg: null,
-    galaxiaSvgInline: null,
-    initialized: false,
-    innerState: {},
-    onUserEvent: function() {},
+interface GalaxiaBoardInnerState {
+    connected?: boolean,
+    led?: string,
+}
 
-    ledColors: {
+let galaxiaSvgInline = null;
+
+export class GalaxiaBoard {
+    buttonStatesUpdators = {};
+    galaxiaSvg = null;
+    initialized = false;
+    innerState: GalaxiaBoardInnerState = {};
+    ledColors = {
         'transparent': '#d3d3d3',
         'green': '#B8E986',
         'red': '#FF001F',
         'blue': '#00C1FF',
         'orange': '#F5A623'
-    },
+    };
+    onUserEvent: (sensorName: string, state: unknown) => void;
 
-    init: function(selector, onUserEvent) {
+    init(selector, onUserEvent) {
         this.onUserEvent = onUserEvent;
         this.importGalaxia(selector);
-        return this.updateState.bind(this);
-    },
 
-    fetchGalaxiaCard: function (callback) {
+        return this.updateState.bind(this);
+    }
+
+    async fetchGalaxiaCard() {
         // Cache results
-        if (this.galaxiaSvgInline) {
-            callback(this.galaxiaSvgInline);
-            return;
+        if (galaxiaSvgInline) {
+            return Promise.resolve(galaxiaSvgInline);
         }
 
         const svgPath = (window.modulesPath || '') + 'img/quickpi/galaxia.svg';
 
-        fetch(svgPath)
+        return fetch(svgPath)
             .then(response => response.text())
             .then(svgData => {
-                this.galaxiaSvgInline = svgData;
-                callback(svgData);
+                galaxiaSvgInline = svgData;
+
+                return svgData;
             })
-    },
+    }
 
-    importGalaxia: function(selector) {
-        this.fetchGalaxiaCard((svgData) => {
-            window.$(selector).html(svgData).css('user-select', 'none');
-            this.galaxiaSvg = window.$(selector + ' svg');
+    async importGalaxia(selector) {
+        const svgData = await this.fetchGalaxiaCard();
 
-            this.initInteraction();
-            this.displayInnerState();
-            this.initialized = true;
-        })
-    },
+        window.$(selector).html(svgData).css('user-select', 'none');
+        this.galaxiaSvg = window.$(selector + ' svg');
 
-    initInteraction: function() {
+        this.initInteraction();
+        this.displayInnerState();
+        this.initialized = true;
+    }
+
+    initInteraction() {
         this.galaxiaSvg.attr('width', "100%");
         this.galaxiaSvg.attr('height', "100%");
 
@@ -62,9 +68,9 @@ export const GalaxiaBoard = {
             var padId = padIds[i];
             this.bindPadButton(padId);
         }
-    },
+    }
 
-    bindPushButton: function(buttonId) {
+    bindPushButton(buttonId) {
         var that = this;
         var buttons = this.galaxiaSvg.find('#button-' + buttonId + '-top, #button-' + buttonId + '-bot');
         var buttonTop = buttons.filter('#button-' + buttonId + '-top');
@@ -92,9 +98,9 @@ export const GalaxiaBoard = {
         buttons.mouseleave(buttonUp);
 
         this.buttonStatesUpdators[buttonId] = {'down': buttonDown, 'up': buttonUp};
-    },
+    }
 
-    bindPadButton: function(buttonId) {
+    bindPadButton(buttonId) {
         var that = this;
         var button = this.galaxiaSvg.find('#pad-' + buttonId);
 
@@ -116,24 +122,24 @@ export const GalaxiaBoard = {
         button.mouseup(buttonUp);
         button.mouseleave(buttonUp);
         this.buttonStatesUpdators[buttonId] = {'down': buttonDown, 'up': buttonUp};
-    },
+    }
 
-    setLed: function(color) {
+    setLed(color) {
         if(!this.initialized) { return; }
         if(this.ledColors[color] !== undefined) {
             color = this.ledColors[color];
         }
         var led = this.galaxiaSvg.find('#led');
         led.css('fill', color);
-    },
+    }
 
-    setConnected: function(isConnected) {
+    setConnected(isConnected) {
         if(!this.initialized) { return; }
         var cable = this.galaxiaSvg.find('#cable');
         cable.toggle(isConnected);
-    },
+    }
 
-    updateState: function(sensor) {
+    updateState(sensor) {
         if(sensor === 'connected') {
             this.innerState.connected = true;
             this.setConnected(true);
@@ -153,9 +159,9 @@ export const GalaxiaBoard = {
             }
             this.setLed(this.innerState.led);
         }
-    },
+    }
 
-    displayInnerState: function() {
+    displayInnerState() {
         // The display might be reset so we need to keep it up to date
         for(var id in this.buttonStatesUpdators) {
             this.buttonStatesUpdators[id][this.innerState[id] ? 'down' : 'up'](true);
@@ -164,3 +170,5 @@ export const GalaxiaBoard = {
         this.setConnected(this.innerState.connected);
     }
 }
+
+export const galaxiaBoard = new GalaxiaBoard();
