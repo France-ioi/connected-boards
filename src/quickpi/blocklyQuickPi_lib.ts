@@ -311,7 +311,7 @@ var quickPiLocalLanguageStrings = {
             remoteControl: "Contrôle à distance",
             simulator: "Simulateur",
      
-            raspiConfig: "Configuration du Raspberry Pi",
+            raspiConfig: "Configuration de la carte",
             local: "Local",
             schoolKey: "Indiquez un identifiant d'école",
             connectList: "Sélectionnez un appareil à connecter dans la liste suivante",
@@ -320,7 +320,7 @@ var quickPiLocalLanguageStrings = {
             connectTroughtTunnel: "Connecter à travers le France-ioi tunnel",
 
             connectToLocalhost: "Connecter l'interface à la machine sur laquelle tourne ce navigateur",
-            connectToWindowLocation: "Connecter au Raspberry Pi depuis lequel cette page est chargée",
+            connectToWindowLocation: "Connecter à la carte depuis lequel cette page est chargée",
 
             connectToDevice: "Connecter l'appareil",
             disconnectFromDevice: "Déconnecter",
@@ -384,8 +384,7 @@ var quickPiLocalLanguageStrings = {
             irreceiver: "IR Receiver",
             cloudstore: "Cloud Store",
             addcomponent: "Ajouter un composant",
-            add: "ajouter",
-            selectcomponent: "Sélectionnez un composant à ajouter à votre Raspberry Pi et attachez-le à un port.",
+            selectcomponent: "Sélectionnez un composant à ajouter à votre carte et attachez-le à un port.",
             add: "Ajouter",
             builtin: "(builtin)",
             chooseBoard: "Choisissez votre carte",
@@ -790,7 +789,7 @@ var quickPiLocalLanguageStrings = {
             config: "Configuración",
 
      
-            raspiConfig: "Configuración de Raspberry Pi",
+            raspiConfig: "Configuración de tu tablero",
             local: "Local",
             schoolKey: "Ingresa una identificación de la escuela",
             connectList: "Selecciona un dispositivo para conectarte de la siguiente lista",
@@ -799,7 +798,7 @@ var quickPiLocalLanguageStrings = {
             connectTroughtTunnel: "Conéctate a través del túnel de France-ioi",
 
             connectToLocalhost: "Conectarse al dispositivo que ejecuta este navegador",
-            connectToWindowLocation: "Conéctate a la Raspberry Pi desde la que se carga esta página",
+            connectToWindowLocation: "Conéctate al tablero desde la que se carga esta página",
 
             connectToDevice: "Conectar al dispositivo",
             disconnectFromDevice: "Desconectar",
@@ -862,7 +861,7 @@ var quickPiLocalLanguageStrings = {
             irreceiver: "Receptor de infrarrojos",
             cloudstore: "Almacenamiento en la nube",
             addcomponent: "Agregar componente",
-            selectcomponent: "Selecciona un componente para agregar a tu Raspberry Pi y conéctalo a un puerto.",
+            selectcomponent: "Selecciona un componente para agregar a tu tablero y conéctalo a un puerto.",
             add: "Agregar",
             builtin: "(incorporado)",
             chooseBoard: "Elije tu tablero",
@@ -1244,7 +1243,7 @@ var quickPiLocalLanguageStrings = {
             config: "Config",
 
      
-            raspiConfig: "Configurazione del Raspberry Pi",
+            raspiConfig: "Configurazione del scheda",
             local: "Local",
             schoolKey: "Indica un ID scolastico",
             connectList: "Seleziona un apparecchio da connettere nel seguente elenco",
@@ -1318,7 +1317,7 @@ var quickPiLocalLanguageStrings = {
             irreceiver: "IR Receiver",
             cloudstore: "Cloud Store",
             addcomponent: "Aggiungi un componente",
-            selectcomponent: "Seleziona un componente da aggiungere al tuo Raspberry Pi e collegalo a una porta.",
+            selectcomponent: "Seleziona un componente da aggiungere alla tua scheda e collegalo a una porta.",
             add: "Aggiungi",
             builtin: "(builtin)",
             chooseBoard: "Scegli la tua scheda",
@@ -1404,8 +1403,8 @@ var quickPiLocalLanguageStrings = {
     none: {
         comment: {
             // Comments for each block, used in the auto-generated documentation for task writers
-            turnLedOn: "Turns on a light connected to Raspberry",
-            turnLedOff: "Turns off a light connected to Raspberry",
+            turnLedOn: "Turns on the light",
+            turnLedOff: "Turns off the light",
             isButtonPressed: "Returns the state of a button, Pressed means True and not pressed means False",
             waitForButton: "Stops program execution until a button is pressed",
             buttonWasPressed: "Returns true if the button has been pressed and will clear the value",
