@@ -6,6 +6,8 @@ import {
 } from './quickpi/blocklyQuickPi_lib';
 import {quickPiLocalLanguageStrings} from './lang/language_strings';
 
+import "./style.scss"
+
 const exportToWindow = {
   GalaxiaBoard,
   getQuickPiConnection,

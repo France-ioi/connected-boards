@@ -1,38 +1,37 @@
 import swc from '@rollup/plugin-swc';
 import nodeResolve from "@rollup/plugin-node-resolve";
+import styles from 'rollup-plugin-styles';
 
-const bundle = config => ({
-  ...config,
+export default {
   input: 'src/index.ts',
   external: id => !/^[./]/.test(id),
-})
-
-export default [
-  bundle({
-    plugins: [
-      nodeResolve({
-        extensions: ['.ts'],
-      }),
-      swc({
-        swc: {
-          "jsc": {
-            "parser": {
-              "syntax": "typescript"
-            },
-            "target": "es5"
+  plugins: [
+    nodeResolve({
+      extensions: ['.ts'],
+    }),
+    swc({
+      swc: {
+        "jsc": {
+          "parser": {
+            "syntax": "typescript"
           },
+          "target": "es5"
         },
-        include: ['src/**/*.{ts,js}'],
-      }),
-    ],
-    output: [
-      {
-        name: 'boardProgramming',
-        file: `dist/index.js`,
-        format: 'iife',
-        sourcemap: false,
-        strict: false,
       },
-    ],
-  }),
-]
+      include: ['src/**/*.{ts,js}'],
+    }),
+    styles({
+      mode: 'extract',
+    }),
+  ],
+  output: [
+    {
+      name: 'boardProgramming',
+      file: `dist/index.js`,
+      format: 'iife',
+      sourcemap: false,
+      strict: false,
+      assetFileNames: "[name][extname]",
+    },
+  ],
+}
