@@ -4,7 +4,7 @@ import {
   QuickStore,
   getContext,
 } from './quickpi/blocklyQuickPi_lib';
-import {quickPiLocalLanguageStrings} from './language_strings';
+import {quickPiLocalLanguageStrings} from './lang/language_strings';
 
 const exportToWindow = {
   GalaxiaBoard,
