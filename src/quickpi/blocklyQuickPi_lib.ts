@@ -10441,7 +10441,6 @@ function hideSlider(sensor) {
 }
 
 export {
-  quickPiLocalLanguageStrings,
   QuickStore,
   getContext,
 }
