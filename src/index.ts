@@ -1,10 +1,10 @@
 import {GalaxiaBoard} from './galaxia/galaxia_board';
 import {getQuickPiConnection} from './galaxia/galaxia';
 import {
-  quickPiLocalLanguageStrings,
   QuickStore,
   getContext,
 } from './quickpi/blocklyQuickPi_lib';
+import {quickPiLocalLanguageStrings} from './language_strings';
 
 const exportToWindow = {
   GalaxiaBoard,
