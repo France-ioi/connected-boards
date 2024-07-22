@@ -1,4 +1,8 @@
-﻿import {galaxiaBoard} from "../galaxia/galaxia_board";
+﻿import {galaxiaBoard} from "./boards/galaxia/galaxia_board";
+import {quickPiLocalLanguageStrings} from "./lang/language_strings";
+import {quickPiBoard} from "./boards/quickpi/quickpi_board";
+import {AbstractBoard} from "./boards/abstract_board";
+import {ConnectionMethod} from "./definitions";
 
 var buzzerSound = {
     context: null,
@@ -100,8 +104,6 @@ var colors = {
     orange: "#f5a623"
 }
 
-
-
 var gyroscope3D = (function() {
 
     var instance;
@@ -188,53 +190,10 @@ var gyroscope3D = (function() {
 
 })();
 
-
-
-function QuickStore(rwidentifier, rwpassword) {
-    var url = 'https://cloud.quick-pi.org';
-    var connected = (rwidentifier === undefined);
-
-    function post(path, data, callback) {
-        $.ajax({
-            type: 'POST',
-            url: url + path,
-            crossDomain: true,
-            data: data,
-            dataType: 'json',
-            success: callback
-        });
-    }
-
-    return {
-        connected: rwpassword,
-        read: function(identifier, key, callback) {
-            var data = {
-                    prefix: identifier,
-                    key: key
-            };
-            post('/api/data/read', data, callback);
-        },
-
-        write: function(identifier, key, value, callback) {
-            if (identifier != rwidentifier)
-            {
-                callback({
-                    sucess: false,
-                    message: "Écriture sur un identifiant en lecture seule : " + identifier,
-                });
-            }
-            else {
-                var data = {
-                    prefix: identifier,
-                    password: rwpassword,
-                    key: key,
-                    value: JSON.stringify(value)
-                };
-                post('/api/data/write', data, callback);
-            }
-        }
-    }
-}
+const boards: {[board: string]: AbstractBoard} = {
+    galaxia: galaxiaBoard,
+    quickpi: quickPiBoard,
+};
 
 // This is a template of library for use with quickAlgo.
 var getContext = function (display, infos, curLevel) {
@@ -243,7 +202,7 @@ var getContext = function (display, infos, curLevel) {
     var introControls = null;
 
     // Create a base context
-    var context = quickAlgoContext(display, infos);
+    var context = window.quickAlgoContext(display, infos);
 
     // we set the lib involved to Quick-Pi
     context.title = "Quick-Pi";
@@ -256,6 +215,12 @@ var getContext = function (display, infos, curLevel) {
     // Some data can be made accessible by the library through the context object
     context.quickpi = {};
 
+    const mainBoard: AbstractBoard = boards[context.infos.quickPiBoard ?? 'quickpi'];
+    if (!mainBoard) {
+        throw `This main board doesn't exist: "${context.infos.quickPiBoard}"`;
+    }
+
+    mainBoard.setStrings(strings);
 
     // List of concepts to be included by conceptViewer
     context.getConceptList = function() {
@@ -386,71 +351,7 @@ var getContext = function (display, infos, curLevel) {
         return conceptList;
     }
 
-    var boardDefinitions = [
-        {
-            name: "grovepi",
-            friendlyName: strings.messages.grovehat,
-            image: "grovepihat.png",
-            adc: "grovepi",
-            portTypes: {
-                "D": [5, 16, 18, 22, 24, 26],
-                "A": [0, 2, 4, 6],
-                "i2c": ["i2c"],
-            },
-            default: [
-                { type: "screen", suggestedName: strings.messages.sensorNameScreen + "1", port: "i2c", subType: "16x2lcd" },
-                { type: "led", suggestedName: strings.messages.sensorNameLed + "1", port: 'D5', subType: "blue" },
-                { type: "servo", suggestedName: strings.messages.sensorNameServo + "1", port: "D16" },
-                { type: "range", suggestedName: strings.messages.sensorNameDistance + "1", port :"D18", subType: "ultrasonic"},
-                { type: "button", suggestedName: strings.messages.sensorNameButton + "1", port: "D22" },
-                { type: "humidity", suggestedName: strings.messages.sensorNameHumidity + "1", port: "D24"},
-                { type: "buzzer", suggestedName: strings.messages.sensorNameBuzzer + "1", port: "D26", subType: "active"},
-                { type: "temperature", suggestedName: strings.messages.sensorNameTemperature + "1", port: 'A0', subType: "groveanalog" },
-                { type: "potentiometer", suggestedName: strings.messages.sensorNamePotentiometer + "1", port :"A4"},
-                { type: "light", suggestedName: strings.messages.sensorNameLight + "1", port :"A6"},
-            ]
-        },
-        {
-            name: "quickpi",
-            friendlyName: strings.messages.quickpihat,
-            image: "quickpihat.png",
-            adc: "ads1015",
-            portTypes: {
-                "D": [5, 16, 24],
-                "A": [0],
-            },
-            builtinSensors: [
-                { type: "screen", subType: "oled128x32", port: "i2c",  suggestedName: strings.messages.sensorNameScreen + "1", },
-                { type: "led", subType: "red", port: "D4", suggestedName: strings.messages.sensorNameRedLed + "1", },
-                { type: "led", subType: "green", port: "D17", suggestedName: strings.messages.sensorNameGreenLed + "1", },
-                { type: "led", subType: "blue", port: "D27",  suggestedName: strings.messages.sensorNameBlueLed + "1", },
-                { type: "irtrans", port: "D22",  suggestedName: strings.messages.sensorNameIrTrans + "1", },
-                { type: "irrecv", port: "D23", suggestedName: strings.messages.sensorNameIrRecv + "1", },
-                { type: "sound", port: "A1", suggestedName: strings.messages.sensorNameMicrophone + "1", },
-                { type: "buzzer", subType: "passive", port: "D12", suggestedName: strings.messages.sensorNameBuzzer + "1", },
-                { type: "accelerometer", subType: "BMI160", port: "i2c", suggestedName: strings.messages.sensorNameAccelerometer + "1", },
-                { type: "gyroscope", subType: "BMI160", port: "i2c", suggestedName: strings.messages.sensorNameGyroscope  + "1", },
-                { type: "magnetometer", subType: "LSM303C", port: "i2c", suggestedName: strings.messages.sensorNameMagnetometer + "1", },
-                { type: "temperature", subType: "BMI160", port: "i2c", suggestedName: strings.messages.sensorNameTemperature + "1", },
-                { type: "range", subType: "vl53l0x", port: "i2c", suggestedName: strings.messages.sensorNameDistance + "1", },
-                { type: "button", port: "D26", suggestedName: strings.messages.sensorNameButton + "1", },
-                { type: "light", port: "A2", suggestedName: strings.messages.sensorNameLight + "1", },
-                { type: "stick", port: "D7", suggestedName: strings.messages.sensorNameStick + "1", }
-            ],
-        },
-        {
-            name: "pinohat",
-            image: "pinohat.png",
-            friendlyName: strings.messages.pinohat,
-            adc: ["ads1015", "none"],
-            portTypes: {
-                "D": [5, 16, 24],
-                "A": [0],
-                "i2c": ["i2c"],
-            },
-        }
-    ]
-
+    const boardDefinitions = mainBoard.getBoardDefinitions();
 
     var sensorDefinitions = [
         /******************************** */
@@ -2624,9 +2525,8 @@ var getContext = function (display, infos, curLevel) {
                 warnClientSensorStateChanged(sensor);
                 drawSensor(sensor);
             }
-            var board = context.infos.quickPiBoard == "galaxia" ? galaxiaBoard : null;
-            var galaxiaBoardUpdate = board.init('#virtualBoard', onUserEvent);
-            context.sensorStateListener = galaxiaBoardUpdate;
+
+            context.sensorStateListener = mainBoard.init('#virtualBoard', onUserEvent);
         }
 
         this.raphaelFactory.destroyAll();
@@ -2747,145 +2647,195 @@ var getContext = function (display, infos, curLevel) {
         };
 
         function getConnectionDialogHTML() {
-            var html = "<div id=\"quickpiViewer\" class=\"content connectPi qpi\" style=\"display: block;\">" +
-            "<div class=\"content\">"+
-        // var connectionDialogHTML = "<div class=\"content connectPi qpi\">" +
-            "   <div class=\"panel-heading\">" +
-            "       <h2 class=\"sectionTitle\">" +
-            "           <span class=\"iconTag\"><i class=\"icon fas fa-list-ul\"></i></span>" +
-                        strings.messages.raspiConfig +
-            "       </h2>" +
-            "       <div class=\"exit\" id=\"picancel\"><i class=\"icon fas fa-times\"></i></div>" +
-            "   </div>" +
-            "   <div class=\"panel-body\">" +
-            // "       <div id=\"piconnectionmainui\">" +
-            "<div class=\"navigation\">" +
-            "<div class=\"navigationContent\"> " +
-            // "<label for=\"showNavigationContent\" class=\"showNavigationContent\">" + strings.messages.selectOption + "</label>" +
-            "<input type=\"checkbox\" id=\"showNavigationContent\" role=\"button\">" +
+            const allConnectionMethods: {name: ConnectionMethod, icon: string, label: string}[] = [
+                {name: ConnectionMethod.Local, icon: 'fas fa-location-arrow', label: strings.messages.local},
+                {name: ConnectionMethod.Wifi, icon: 'fa fa-wifi', label: 'WiFi'},
+                {name: ConnectionMethod.Usb, icon: 'fab fa-usb', label: 'USB'},
+                {name: ConnectionMethod.Bluetooth, icon: 'fab fa-bluetooth-b', label: 'Bluetooth'},
+                {name: ConnectionMethod.WebSerial, icon: 'fab fa-webserial', label: 'WebSerial'},
+            ];
 
-            "<ul>" +
-            "   <li id=\"qpi-portsnames\">" + strings.messages.display + "</li>" +
-            "   <li id=\"qpi-components\">" + strings.messages.components  + "</li>" +
-            "   <li id=\"qpi-change-board\">" + strings.messages.changeBoard  + "</li>" +
-            "   <li id=\"qpi-connection\" class=\"selected\">" + strings.messages.connection + "</li>" +
-            "</ul>" +
-            "   </div>" +
-            "</div> " +
-            " <div class=\"viewer\">"+
-                "<div id=\"qpi-uiblock-portsnames\" class=\"hiddenContent viewerInlineContent\" >" +
-                    strings.messages.displayPrompt +
-                    "<div class=\"switchRadio btn-group\" id=\"pi-displayconf\">" +
-                        "<button type=\"button\" class=\"btn active\" id=\"picomponentname\"><i class=\"fas fa-microchip icon\"></i>" + strings.messages.componentNames + "</button>" +
-                        "<button type=\"button\" class=\"btn\" id=\"piportname\"><i class=\"fas fa-plug icon\"></i>" + strings.messages.portNames + "</button>" +
-                    "</div>" +
-                    "<div id='example_sensor'>" +
-                        "<span id='name'>"+sensorDefinitions[17].suggestedName+"1</span>"+
-                        "<span id='port'>"+sensorDefinitions[17].portType+"5</span>"+
-                        "<img src="+getImg(sensorDefinitions[17].selectorImages[0])+"></span>"+
-                    "</div>" +
-                "</div>" +
+            const availableConnectionMethods = mainBoard.getAvailableConnectionMethods();
 
-                "<div id=\"qpi-uiblock-components\" class=\"hiddenContent viewerInlineContent\" >" +                    
-
-                    "<div id=\"tabs\">" +
-                        "<div id=\"tabs_back\"></div>" +
-                        "<div id='remove_tab' class='tab selected'>"+strings.messages.removeSensor+"</div>"+
-                        "<div id='add_tab' class='tab'>"+strings.messages.add+"</div>"+
-                    "</div>" +
-                    "<div id=\"remove_cont\">" +
-                        "<div id=\"sensorGrid\">" +
-                        "</div>" +
-                        "<div class='buttonContainer' >"+
-                            "<button id=\"piremovesensor\" class=\"btn\"><i class=\"fas fa-trash icon\"></i>" + strings.messages.removeSensor + "</button>" +
-                        "</div>" +
-                    "</div>" +
-                    "<div id=\"add_cont\" class='hiddenContent' >" +
-                        "<div id=\"addSensorGrid\">" +
-                        "</div>" +
-                        "<div class='buttonContainer' >"+
-                            "<button id=\"piaddsensor\" class=\"btn\"><i class=\"fas fa-plus icon\"></i>" + strings.messages.add + "</button>" +
-                        "</div>" +
-                    "</div>"+
-                "</div>" +
-
-            "       <div id=\"qpi-uiblock-change-board\" class=\"hiddenContent viewerInlineContent\">" +
-            "           <div class=\"panel-body\">" +
-            "               <div id=boardlist>" +
-            "               </div>" +
-            "               <div panel-body-usbbt>" +
-            "                   <label id=\"piconnectionlabel\"></label>" +
-            "               </div>" +
-            "           </div>" +
-            "       </div>" +
-
-
-            "       <div id=\"qpi-uiblock-connection\" class=\"hiddenContent viewerInlineContent\">" +
-
-            "           <div class=\"switchRadio btn-group\" id=\"piconsel\">" +
-            "               <button type=\"button\" class=\"btn\" id=\"piconlocal\"><i class=\"fas fa-location-arrow icon\"></i>" + strings.messages.local + "</button>" +
-            "               <button type=\"button\" class=\"btn active\" id=\"piconwifi\"><i class=\"fa fa-wifi icon\"></i>WiFi</button>" +
-            "               <button type=\"button\" class=\"btn\" id=\"piconusb\"><i class=\"fab fa-usb icon\"></i>USB</button>" +
-            "               <button type=\"button\" class=\"btn\" id=\"piconbt\"><i class=\"fab fa-bluetooth-b icon\"></i>Bluetooth</button>" +
-            "           </div>" +
-            "           <div id=\"pischoolcon\">" +
-            "               <div class=\"form-group\">" +
-            "                   <label id=\"pischoolkeylabel\">" + strings.messages.schoolKey + "</label>" +
-            "                   <div class=\"input-group\">" +
-            "                       <div class=\"input-group-prepend\">Aa</div>" +
-            "                       <input type=\"text\" id=\"schoolkey\" class=\"form-control\">" +
-            "                   </div>" +
-            "               </div>" +
-            "               <div class=\"form-group\">" +
-            "                   <label id=\"pilistlabel\">" + strings.messages.connectList + "</label>" +
-            "                   <div class=\"input-group\">" +
-            "                       <button class=\"input-group-prepend\" id=pigetlist disabled>" + strings.messages.getPiList + "</button>" +
-            "                       <select id=\"pilist\" class=\"custom-select\" disabled>" +
-            "                       </select>" +
-            "                   </div>" +
-            "               </div>" +
-            "               <div class=\"form-group\">" +
-            "                   <label id=\"piiplabel\">" + strings.messages.enterIpAddress + "</label>" +
-            "                   <div class=\"input-group\">" +
-            "                       <div class=\"input-group-prepend\">123</div>" +
-            "                       <input id=piaddress type=\"text\" class=\"form-control\">" +
-            "                   </div>" +
-            "               </div>" +
-            "               <div>" +
-            "                   <input id=\"piusetunnel\" disabled type=\"checkbox\">" + strings.messages.connectTroughtTunnel +
-            "               </div>" +
-            "           </div>" +
-            "           <div id=\"panel-body-usbbt\">" +
-            "               <label id=\"piconnectionlabel\"></label>" +
-            "           </div>" +
-            "           <div id=\"panel-body-local\">" +
-            "               <label id=\"piconnectionlabellocal\"></label>" +
-            "               <div id=\"piconnectolocalhost\">" +
-            "                   <input type=\"radio\" id=\"piconnectolocalhostcheckbox\" name=\"pilocalconnectiontype\" value=\"localhost\">" +
-                                    strings.messages.connectToLocalhost +
-            "               </div>" +
-            "               <div id=\"piconnectocurrenturl\">" +
-            "                   <input type=\"radio\" id=\"piconnectocurrenturlcheckbox\" name=\"pilocalconnectiontype\" value=\"currenturl\">" +
-                                    strings.messages.connectToWindowLocation +
-            "               </div>" +
-            "           </div>" +
-            "           <div class=\"inlineButtons\">" +
-            "               <button id=\"piconnectok\" class=\"btn\">" +
-            "               <i id=\"piconnectprogressicon\" class=\"fas fa-spinner fa-spin icon\"></i>" +
-            "               <i id=\"piconnectwifiicon\" class=\"fa fa-wifi icon\"></i>" + 
-                                strings.messages.connectToDevice +
-            "               </button>" +
-            "               <button id=\"pirelease\" class=\"btn\"><i class=\"fa fa-times icon\"></i>" + strings.messages.disconnectFromDevice + "</button>" +
-            "           </div>" +
-
-            "       </div>" +
-            "   </div>" +
-
-             "   </div>" +
-            "   </div>" +
-
-            "</div>";
-            return html
+            return `
+                <div id="quickpiViewer" class="content connectPi qpi" style="display: block;">
+                   <div class="content">
+                      <div class="panel-heading">
+                         <h2 class="sectionTitle">
+                            <span class="iconTag">
+                            <i class="icon fas fa-list-ul">
+                            </i>
+                            </span>
+                            ${strings.messages.raspiConfig}       
+                         </h2>
+                         <div class="exit" id="picancel">
+                            <i class="icon fas fa-times">
+                            </i>
+                         </div>
+                      </div>
+                      <div class="panel-body">
+                         <div class="navigation">
+                            <div class="navigationContent">
+                               <input type="checkbox" id="showNavigationContent" role="button">
+                               <ul>
+                                  <li id="qpi-portsnames">
+                                     ${strings.messages.display}
+                                  </li>
+                                  <li id="qpi-components">
+                                     ${strings.messages.components}
+                                  </li>
+                                  ${boardDefinitions.length > 1 ? `
+                                  <li id="qpi-change-board">${strings.messages.changeBoard}</li>
+                                  ` : ''}
+                                  <li id="qpi-connection" class="selected">
+                                     ${strings.messages.connection}
+                                  </li>
+                               </ul>
+                            </div>
+                         </div>
+                         <div class="viewer">
+                            <div id="qpi-uiblock-portsnames" class="hiddenContent viewerInlineContent" >
+                               ${strings.messages.displayPrompt}
+                               <div class="switchRadio btn-group" id="pi-displayconf">
+                                  <button type="button" class="btn active" id="picomponentname">
+                                  <i class="fas fa-microchip icon">
+                                  </i>
+                                  ${strings.messages.componentNames}</button>
+                                  <button type="button" class="btn" id="piportname">
+                                  <i class="fas fa-plug icon">
+                                  </i>
+                                  ${strings.messages.portNames}</button>
+                               </div>
+                               <div id='example_sensor'>
+                                  <span id='name'>
+                                  ${sensorDefinitions[17].suggestedName}1</span>
+                                  <span id='port'>
+                                  ${sensorDefinitions[17].portType}5</span>
+                                  <img src=${getImg(sensorDefinitions[17].selectorImages[0])}>
+                                  </span>
+                               </div>
+                            </div>
+                            <div id="qpi-uiblock-components" class="hiddenContent viewerInlineContent" >
+                               <div id="tabs">
+                                  <div id="tabs_back"></div>
+                                  <div id='remove_tab' class='tab selected'>
+                                     ${strings.messages.removeSensor}
+                                  </div>
+                                  <div id='add_tab' class='tab'>
+                                     ${strings.messages.add}
+                                  </div>
+                               </div>
+                               <div id="remove_cont">
+                                  <div id="sensorGrid"></div>
+                                  <div class='buttonContainer' >
+                                     <button id="piremovesensor" class="btn">
+                                     <i class="fas fa-trash icon">
+                                     </i>
+                                     ${strings.messages.removeSensor}</button>
+                                  </div>
+                               </div>
+                               <div id="add_cont" class='hiddenContent' >
+                                  <div id="addSensorGrid"></div>
+                                  <div class='buttonContainer' >
+                                     <button id="piaddsensor" class="btn">
+                                     <i class="fas fa-plus icon">
+                                     </i>
+                                     ${strings.messages.add}</button>
+                                  </div>
+                               </div>
+                            </div>
+                            <div id="qpi-uiblock-change-board" class="hiddenContent viewerInlineContent">
+                               <div class="panel-body">
+                                  <div id=boardlist>
+                                  </div>
+                                  <div panel-body-usbbt>
+                                     <label id="piconnectionlabel">
+                                     </label>
+                                  </div>
+                               </div>
+                            </div>
+                            <div id="qpi-uiblock-connection" class="hiddenContent viewerInlineContent">
+                               <div class="switchRadio btn-group" id="piconsel">
+                                  ${allConnectionMethods
+                                      .filter(connectionMethod => availableConnectionMethods.includes(connectionMethod.name))
+                                      .map(connectionMethod => `
+                                          <button type="button" class="btn" id="picon${connectionMethod.name}">
+                                             <i class="${connectionMethod.icon} icon"></i>
+                                              ${connectionMethod.label}
+                                          </button>`
+                                      )
+                                  }
+                               </div>
+                               <div id="pischoolcon">
+                                  <div class="form-group">
+                                     <label id="pischoolkeylabel">
+                                     ${strings.messages.schoolKey}</label>
+                                     <div class="input-group">
+                                        <div class="input-group-prepend">
+                                           Aa
+                                        </div>
+                                        <input type="text" id="schoolkey" class="form-control">
+                                     </div>
+                                  </div>
+                                  <div class="form-group">
+                                     <label id="pilistlabel">
+                                     ${strings.messages.connectList}</label>
+                                     <div class="input-group">
+                                        <button class="input-group-prepend" id=pigetlist disabled>
+                                        ${strings.messages.getPiList}</button>
+                                        <select id="pilist" class="custom-select" disabled>
+                                        </select>
+                                     </div>
+                                  </div>
+                                  <div class="form-group">
+                                     <label id="piiplabel">
+                                     ${strings.messages.enterIpAddress}</label>
+                                     <div class="input-group">
+                                        <div class="input-group-prepend">
+                                           123
+                                        </div>
+                                        <input id=piaddress type="text" class="form-control">
+                                     </div>
+                                  </div>
+                                  <div>
+                                     <input id="piusetunnel" disabled type="checkbox">
+                                     ${strings.messages.connectTroughtTunnel}               
+                                  </div>
+                               </div>
+                               <div id="panel-body-usbbt">
+                                  <label id="piconnectionlabel">
+                                  </label>
+                               </div>
+                               <div id="panel-body-local">
+                                  <label id="piconnectionlabellocal">
+                                  </label>
+                                  <div id="piconnectolocalhost">
+                                     <input type="radio" id="piconnectolocalhostcheckbox" name="pilocalconnectiontype" value="localhost">
+                                     ${strings.messages.connectToLocalhost}               
+                                  </div>
+                                  <div id="piconnectocurrenturl">
+                                     <input type="radio" id="piconnectocurrenturlcheckbox" name="pilocalconnectiontype" value="currenturl">
+                                     ${strings.messages.connectToWindowLocation}               
+                                  </div>
+                               </div>
+                               <div class="inlineButtons">
+                                  <button id="piconnectok" class="btn">
+                                  <i id="piconnectprogressicon" class="fas fa-spinner fa-spin icon">
+                                  </i>
+                                  <i id="piconnectwifiicon" class="fa fa-wifi icon">
+                                  </i>
+                                  ${strings.messages.connectToDevice}               </button>
+                                  <button id="pirelease" class="btn">
+                                  <i class="fa fa-times icon">
+                                  </i>
+                                  ${strings.messages.disconnectFromDevice}</button>
+                               </div>
+                            </div>
+                         </div>
+                      </div>
+                   </div>
+                </div>
+                `;
         }
 
         function showConfig() {
@@ -4291,7 +4241,7 @@ var getContext = function (display, infos, curLevel) {
         //                 subType: sensorDefinition.subType,
         //                 port: port,
         //                 name: name
-        //             });                    
+        //             });
 
         //         // } else {
         //         //     infos.quickPiSensors.push({
@@ -4299,7 +4249,7 @@ var getContext = function (display, infos, curLevel) {
         //         //         subType: sensorDefinition.subType,
         //         //         port: port,
         //         //         name: name
-        //         //     });                    
+        //         //     });
         //         // }
 
 
@@ -4820,7 +4770,7 @@ var getContext = function (display, infos, curLevel) {
         var bbox = timelabel.getBBox();
         textStart = bbox.x + bbox.width + 3;
 
-        var timelabel = paper.text(textStart, context.timeLineY, '\uf00e');      
+        var timelabel = paper.text(textStart, context.timeLineY, '\uf00e');
         timelabel.node.style.fontFamily = '"Font Awesome 5 Free"';
         timelabel.node.style.fontWeight = "bold";
         timelabel.node.style.MozUserSelect = "none";
@@ -4837,7 +4787,7 @@ var getContext = function (display, infos, curLevel) {
         {
             var originalzoom = context.quickPiZoom;
             context.quickPiZoom += 0.3;
-        
+
             if (context.quickPiZoom < 1)
                 context.quickPiZoom = 1;
 
@@ -4849,7 +4799,7 @@ var getContext = function (display, infos, curLevel) {
         var bbox = timelabel.getBBox();
         textStart = bbox.x + bbox.width + 3;
 
-        var timelabel = paper.text(textStart, context.timeLineY, '\uf010');      
+        var timelabel = paper.text(textStart, context.timeLineY, '\uf010');
         timelabel.node.style.fontFamily = '"Font Awesome 5 Free"';
         timelabel.node.style.fontWeight = "bold";
         timelabel.node.style.MozUserSelect = "none";
@@ -4866,7 +4816,7 @@ var getContext = function (display, infos, curLevel) {
         {
             var originalzoom = context.quickPiZoom;
             context.quickPiZoom -= 0.3;
-        
+
             if (context.quickPiZoom < 1)
                 context.quickPiZoom = 1;
 
@@ -4875,7 +4825,7 @@ var getContext = function (display, infos, curLevel) {
         });
 
 
-        
+
         for (; i <= context.maxTime; i += step) {
             var x = context.timelineStartx + (i * context.pixelsPerTime);
 
@@ -4901,12 +4851,12 @@ var getContext = function (display, infos, curLevel) {
                                             "stroke": "lightgray",
                                              "opacity": 0.2,
                                              'z-index': 100,
- 
+
                                             });
 
             context.sensorStates.push(timelinedivisor);
         }
-        if (!context.timeLineHoverLine || isElementRemoved(context.timeLineHoverLine)) {    
+        if (!context.timeLineHoverLine || isElementRemoved(context.timeLineHoverLine)) {
             context.timeLineHoverLine = paper.rect(0, 0, 0, 0);
         }
 
@@ -4916,13 +4866,13 @@ var getContext = function (display, infos, curLevel) {
                                              "opacity": 0
         });
 
-        
+
         if (context.timeLineHoverPath) {
             context.timeLineHoverPath.remove();
         }
 
         context.timeLineHoverPath = paper.rect(context.timelineStartx, 0, context.maxTime * context.pixelsPerTime, context.timeLineY);
-        
+
         context.timeLineHoverPath.attr({
             "fill": "lightgray",
             "stroke": "none",
@@ -4954,12 +4904,12 @@ var getContext = function (display, infos, curLevel) {
             $('#screentooltip').css("padding", "3px");
             $('#screentooltip').css("z-index", "1000");
 
-                        
+
             $('#screentooltip').css("left", event.clientX + 2).css("top", event.clientY + 2);
 
             $('#screentooltip').text(ms.toString() + "ms");
 
-            
+
             for(var sensorName in context.gradingStatesBySensor) {
                 // Cycle through each sensor from the grading states
                 var sensor = findSensorByName(sensorName);
@@ -5023,19 +4973,19 @@ var getContext = function (display, infos, curLevel) {
 
                 drawSensor(sensor);
             }
-            
+
         });
 
 
         if (!context.loopsForever) {
             var endx = context.timelineStartx + (context.maxTime * context.pixelsPerTime);
             var x = context.timelineStartx + (i * context.pixelsPerTime);
-            var timelabel = paper.text(x, context.timeLineY, '\uf11e');      
+            var timelabel = paper.text(x, context.timeLineY, '\uf11e');
             timelabel.node.style.fontFamily = '"Font Awesome 5 Free"';
             timelabel.node.style.fontWeight = "bold";
             timelabel.node.style.MozUserSelect = "none";
             timelabel.node.style.WebkitUserSelect = "none";
-    
+
 
             timelabel.attr({ "font-size": "20" + "px", 'text-anchor': 'middle', 'font-weight': 'bold', fill: "gray" });
             context.timelineText.push(timelabel);
@@ -5219,13 +5169,13 @@ var getContext = function (display, infos, curLevel) {
             for (var i = 0; i < 3; i++) {
                 var startx = context.timelineStartx + (startTime * context.pixelsPerTime);
                 var stateLenght = (endTime - startTime) * context.pixelsPerTime;
-        
+
                 var yspace = context.timeLineSlotHeight / 3;
                 var ypositiontop = sensor.drawInfo.y + (yspace * i)
                 var ypositionbottom = ypositiontop + yspace;
-        
+
                 var offset = (ypositionbottom - ypositiontop) * findSensorDefinition(sensor).getPercentageFromState(state[i], sensor);
-                
+
                 if (type == "expected" || type == "finnish") {
                     color = "lightgrey";
                     strokewidth = 4;
@@ -5260,7 +5210,7 @@ var getContext = function (display, infos, curLevel) {
 
                     if (sensor.timelinelastxlabel == null)
                         sensor.timelinelastxlabel = [0, 0, 0];
-                
+
                     if ((startx) - sensor.timelinelastxlabel[i] > 40)
                     {
                         var sensorDef = findSensorDefinition(sensor);
@@ -5294,7 +5244,7 @@ var getContext = function (display, infos, curLevel) {
             }
                 sensor.lastAnalogState = state == null ? [0, 0, 0] : state;
             }
-            
+
 
         } else
         if (isAnalog || sensor.showAsAnalog) {
@@ -5331,7 +5281,7 @@ var getContext = function (display, infos, curLevel) {
 
                 if (!sensor.timelinelastxlabel)
                     sensor.timelinelastxlabel = 0;
-                
+
                 if (!sensor.timelinelastxlabel)
                     sensor.timelinelastxlabel = 0;
 
@@ -5351,7 +5301,7 @@ var getContext = function (display, infos, curLevel) {
                     }
                     else {
                         y = ypositiontop + offset + 10;
-                        
+
                         sensor.timelinestateup = true;
                     }
 
@@ -5387,7 +5337,7 @@ var getContext = function (display, infos, curLevel) {
                 "\uf061",
                 "\uf111",
             ]
-            
+
 
             var spacing = context.timeLineSlotHeight / 5;
             for (var i = 0; i < 5; i++)
@@ -5436,7 +5386,7 @@ var getContext = function (display, infos, curLevel) {
                             "fill": color,
                             "font-size": (strokewidth * 2) + "px"
                         });
-        
+
                         sensor.stateArrow.node.style.fontFamily = '"Font Awesome 5 Free"';
                         sensor.stateArrow.node.style.fontWeight = "bold";
                     }
@@ -5445,7 +5395,7 @@ var getContext = function (display, infos, curLevel) {
 
         } else if (sensor.type == "screen" && state) {
             var sensorDef = findSensorDefinition(sensor);
-            if (type != "actual" || !sensor.lastScreenState || !sensorDef.compareState(sensor.lastScreenState, state)) 
+            if (type != "actual" || !sensor.lastScreenState || !sensorDef.compareState(sensor.lastScreenState, state))
             {
                 sensor.lastScreenState = state;
                 if (state.isDrawingData) {
@@ -5485,7 +5435,7 @@ var getContext = function (display, infos, curLevel) {
                             canvas.height = 32 * 2;
                             $('#screentooltip').append(canvas);
 
-                            
+
                             $(canvas).css("position", "absolute");
                             $(canvas).css("z-index", "1500");
                             $(canvas).css("left", 3).css("top", 3);
@@ -5498,7 +5448,7 @@ var getContext = function (display, infos, curLevel) {
                             } else {
                                 screenDrawing.renderToCanvas(state, canvas, 2);
                             }
-      
+
                             sensor.showingTooltip = true;
                         }
                     };
@@ -5561,7 +5511,7 @@ var getContext = function (display, infos, curLevel) {
             }
         } else if (sensor.type == "cloudstore") {
             var sensorDef = findSensorDefinition(sensor);
-            if (type != "actual" || !sensor.lastScreenState || !sensorDef.compareState(sensor.lastScreenState, state)) 
+            if (type != "actual" || !sensor.lastScreenState || !sensorDef.compareState(sensor.lastScreenState, state))
             {
                 sensor.lastScreenState = state;
                     var stateBubble = paper.text(startx, ypositionmiddle + 10, '\uf044');
@@ -5619,7 +5569,7 @@ var getContext = function (display, infos, curLevel) {
 
                 drawnElements.push(stateBubble);
                 context.sensorStates.push(stateBubble);
-                
+
             } else {
                 deleteLastDrawnElements = false;
             }
@@ -6072,7 +6022,7 @@ var getContext = function (display, infos, curLevel) {
         var imgh = h / 2;
         var imgw = imgh;
 
-        var imgx = x - (imgw / 2) + (w / 2); 
+        var imgx = x - (imgw / 2) + (w / 2);
         var imgy = y + (h - imgh) / 2;
 
         var namex = x + (w / 2);
@@ -6094,13 +6044,13 @@ var getContext = function (display, infos, curLevel) {
             if (context.compactLayout)
                 imgx = x + 5;
             else
-                imgx = x - (imgw / 4) + (w / 4); 
+                imgx = x - (imgw / 4) + (w / 4);
 
             var dx = w*0.03;
             imgx = cx - imgw - dx;
 
             state1x =  (imgx + imgw) + 10;
-            state1y = y + h/2; 
+            state1y = y + h/2;
             stateanchor = 'start';
 
             imgy += h*0.05;
@@ -6119,7 +6069,7 @@ var getContext = function (display, infos, curLevel) {
         var portx = state1x;
         var porty = imgy;
 
-        
+
 
         var portsize = sensor.drawInfo.height * 0.11;
 
@@ -6131,12 +6081,12 @@ var getContext = function (display, infos, curLevel) {
         var namesize = sensor.drawInfo.height * 0.15;
         statesize = namesize;
         portsize = namesize;
-        
+
         var maxNameSize = 25;
         var maxStateSize = 20;
         // console.log(context.compactLayout,statesize)
 
-        
+
 
         var drawPortText = true;
         var drawName = true;
@@ -6316,8 +6266,8 @@ var getContext = function (display, infos, curLevel) {
 
             sensor.focusrect.unclick();
             sensor.focusrect.click(ledMatrixListener(imgx, imgy, imgw, imgh, sensor));
-        } 
-        else if (sensor.type == "buzzer") { 
+        }
+        else if (sensor.type == "buzzer") {
             if(typeof sensor.state == 'number' &&
                sensor.state != 0 &&
                sensor.state != 1) {
@@ -6332,26 +6282,26 @@ var getContext = function (display, infos, curLevel) {
                 if(sensor.muteBtn) {
                     sensor.muteBtn.remove();
                 }
-                
+
 
                 // var muteBtnSize = w * 0.15;
                 var muteBtnSize = imgw * 0.3;
                 sensor.muteBtn = paper.text(
-                    imgx + imgw*0.8, 
-                    imgy + imgh*0.8, 
+                    imgx + imgw*0.8,
+                    imgy + imgh*0.8,
                     buzzerSound.isMuted(sensor.name) ? "\uf6a9" : "\uf028"
                 );
-                sensor.muteBtn.node.style.fontWeight = "bold";           
-                sensor.muteBtn.node.style.cursor = "default";           
+                sensor.muteBtn.node.style.fontWeight = "bold";
+                sensor.muteBtn.node.style.cursor = "default";
                 sensor.muteBtn.node.style.MozUserSelect = "none";
                 sensor.muteBtn.node.style.WebkitUserSelect = "none";
                 sensor.muteBtn.attr({
-                    "font-size": muteBtnSize + "px",                
+                    "font-size": muteBtnSize + "px",
                     fill: buzzerSound.isMuted(sensor.name) ? "lightgray" : "#468DDF",
                     "font-family": '"Font Awesome 5 Free"',
                     'text-anchor': 'start',
                     "cursor": "pointer"
-                });     
+                });
                 var bbox = sensor.muteBtn.getBBox();
 
                 sensor.muteBtn.click(function () {
@@ -6363,7 +6313,7 @@ var getContext = function (display, infos, curLevel) {
                     drawSensor(sensor);
                 });
                 sensor.muteBtn.toFront();
-            }            
+            }
 
 
             if (!sensor.buzzeron || isElementRemoved(sensor.buzzeron))
@@ -6438,7 +6388,7 @@ var getContext = function (display, infos, curLevel) {
                 }
             }
 
-        } 
+        }
         else if (sensor.type == "button") {
             if (sensor.stateText)
                 sensor.stateText.remove();
@@ -6546,7 +6496,7 @@ var getContext = function (display, infos, curLevel) {
                 // sensor.focusrect.node.ontouchstart = sensor.focusrect.node.onmousedown;
                 // sensor.focusrect.node.ontouchend = sensor.focusrect.node.onmouseup;
             }
-        } 
+        }
         else if (sensor.type == "screen") {
             if (sensor.stateText) {
                 sensor.stateText.remove();
@@ -6561,8 +6511,8 @@ var getContext = function (display, infos, curLevel) {
             }
             if(w < 150) {
                 screenScale = 0.5;
-            }     
-            // console.log(screenScale,w,h)        
+            }
+            // console.log(screenScale,w,h)
 
             var screenScalerSize = {
                 width: 128 * screenScale,
@@ -6571,10 +6521,10 @@ var getContext = function (display, infos, curLevel) {
             borderSize = borderSize * screenScale;
 
             imgw = screenScalerSize.width + borderSize * 2;
-            imgh = screenScalerSize.height + borderSize * 2;            
-            imgx = x - (imgw / 2) + (w / 2); 
+            imgh = screenScalerSize.height + borderSize * 2;
+            imgx = x - (imgw / 2) + (w / 2);
 
-            imgy = y + (h - imgh)/2 + h*0.05;            
+            imgy = y + (h - imgh)/2 + h*0.05;
 
             portx = imgx + imgw + borderSize;
             porty = imgy + imgh / 3;
@@ -6599,14 +6549,14 @@ var getContext = function (display, infos, curLevel) {
                         isElementRemoved(sensor.screenrect) ||
                         !sensor.canvasNode) {
                         sensor.screenrect = paper.rect(imgx, imgy, screenScalerSize.width, screenScalerSize.height);
-        
+
                         sensor.canvasNode = document.createElementNS("http://www.w3.org/2000/svg", 'foreignObject');
                         sensor.canvasNode.setAttribute("x",imgx + borderSize); //Set rect data
                         sensor.canvasNode.setAttribute("y",imgy + borderSize); //Set rect data
                         sensor.canvasNode.setAttribute("width", screenScalerSize.width); //Set rect data
                         sensor.canvasNode.setAttribute("height", screenScalerSize.height); //Set rect data
                         paper.canvas.appendChild(sensor.canvasNode);
-        
+
                         sensor.canvas = document.createElement("canvas");
                         sensor.canvas.id = "screencanvas";
                         sensor.canvas.width = screenScalerSize.width;
@@ -6626,9 +6576,9 @@ var getContext = function (display, infos, curLevel) {
                         "width": 128,
                         "height": 32,
                     });
-        
+
                     sensor.screenrect.attr({ "opacity": 0 });
-        
+
                     context.initScreenDrawing(sensor);
                     //sensor.screenDrawing.copyToCanvas(sensor.canvas, screenScale);
                     screenDrawing.renderToCanvas(sensor.state, sensor.canvas, screenScale);
@@ -6653,7 +6603,7 @@ var getContext = function (display, infos, curLevel) {
                     sensor.stateText.attr("")
                 }
             }
-        } 
+        }
         else if (sensor.type == "temperature") {
             if (sensor.stateText)
                 sensor.stateText.remove();
@@ -6676,7 +6626,7 @@ var getContext = function (display, infos, curLevel) {
                 "width": imgw,
                 "height": imgh,
                 "opacity": fadeopacity,
-                
+
             });
             sensor.img2.attr({
                 "x": imgx,
@@ -6719,7 +6669,7 @@ var getContext = function (display, infos, curLevel) {
                 removeSlider(sensor);
             }
 
-        } 
+        }
         else if (sensor.type == "servo") {
             if (sensor.stateText)
                 sensor.stateText.remove();
@@ -6788,7 +6738,7 @@ var getContext = function (display, infos, curLevel) {
 
                 removeSlider(sensor);
             }
-        } 
+        }
         else if (sensor.type == "potentiometer") {
             if (sensor.stateText)
                 sensor.stateText.remove();
@@ -6916,7 +6866,7 @@ var getContext = function (display, infos, curLevel) {
 
                 removeSlider(sensor);
             }
-        } 
+        }
         else if (sensor.type == "light") {
             if (sensor.stateText)
                 sensor.stateText.remove();
@@ -6974,7 +6924,7 @@ var getContext = function (display, infos, curLevel) {
 
                 removeSlider(sensor);
             }
-        } 
+        }
         else if (sensor.type == "humidity") {
             if (sensor.stateText)
                 sensor.stateText.remove();
@@ -7003,7 +6953,7 @@ var getContext = function (display, infos, curLevel) {
 
                 removeSlider(sensor);
             }
-        } 
+        }
         else if (sensor.type == "accelerometer") {
             if (sensor.stateText)
                 sensor.stateText.remove();
@@ -7052,7 +7002,7 @@ var getContext = function (display, infos, curLevel) {
 
                 removeSlider(sensor);
             }
-        } 
+        }
         else if (sensor.type == "gyroscope") {
             if (!sensor.state) {
                 sensor.state = [0, 0, 0];
@@ -7087,14 +7037,14 @@ var getContext = function (display, infos, curLevel) {
                 if (!sensor.screenrect || isElementRemoved(sensor.screenrect)) {
                     sensor.screenrect = paper.rect(imgx, imgy, imgw, imgh);
                     sensor.screenrect.attr({ "opacity": 0 });
-    
+
                     sensor.canvasNode = document.createElementNS("http://www.w3.org/2000/svg", 'foreignObject');
                     sensor.canvasNode.setAttribute("x", imgx);
                     sensor.canvasNode.setAttribute("y", imgy);
                     sensor.canvasNode.setAttribute("width", imgw);
                     sensor.canvasNode.setAttribute("height", imgh);
                     paper.canvas.appendChild(sensor.canvasNode);
-    
+
                     sensor.canvas = document.createElement("canvas");
                     sensor.canvas.width = imgw;
                     sensor.canvas.height = imgh;
@@ -7103,9 +7053,9 @@ var getContext = function (display, infos, curLevel) {
 
                 var sensorCtx = sensor.canvas.getContext('2d');
                 sensorCtx.clearRect(0, 0, imgw, imgh);
-                
-                sensorCtx.drawImage(img3d.render(                
-                    sensor.state[0], 
+
+                sensorCtx.drawImage(img3d.render(
+                    sensor.state[0],
                     sensor.state[2],
                     sensor.state[1]
                 ), 0, 0);
@@ -7142,11 +7092,11 @@ var getContext = function (display, infos, curLevel) {
                     sensor.focusrect.click(function () {
                         sensorInConnectedModeError();
                     });
-    
+
                     removeSlider(sensor);
-                }                            
-            }            
-        } 
+                }
+            }
+        }
         else if (sensor.type == "magnetometer") {
             if (sensor.stateText)
                 sensor.stateText.remove();
@@ -7205,7 +7155,7 @@ var getContext = function (display, infos, curLevel) {
 
                 removeSlider(sensor);
             }
-        } 
+        }
         else if (sensor.type == "sound") {
             if (sensor.stateText)
                 sensor.stateText.remove();
@@ -7240,7 +7190,7 @@ var getContext = function (display, infos, curLevel) {
                 removeSlider(sensor);
             }
 
-        } 
+        }
         else if (sensor.type == "irtrans") {
             if (sensor.stateText)
                 sensor.stateText.remove();
@@ -7363,7 +7313,7 @@ var getContext = function (display, infos, curLevel) {
 
                 findSensorDefinition(sensor).setLiveState(sensor, sensor.state, function(x) {});
             }
-        } 
+        }
         else if (sensor.type == "irrecv") {
             if (sensor.stateText)
                 sensor.stateText.remove();
@@ -7545,7 +7495,7 @@ var getContext = function (display, infos, curLevel) {
                 sensor.focusrect.node.ontouchstart = sensor.focusrect.node.onmousedown;
                 sensor.focusrect.node.ontouchend = sensor.focusrect.node.onmouseup;
             }*/
-        } 
+        }
         else if (sensor.type == "stick") {
             if (sensor.stateText)
                 sensor.stateText.remove();
@@ -10443,6 +10393,5 @@ function hideSlider(sensor) {
 }
 
 export {
-  QuickStore,
   getContext,
 }

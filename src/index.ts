@@ -1,9 +1,9 @@
-import {getQuickPiConnection} from './galaxia/galaxia';
+import {getQuickPiConnection} from './boards/galaxia/galaxia';
 import {
-  QuickStore,
   getContext,
-} from './quickpi/blocklyQuickPi_lib';
+} from './blocklyQuickPi_lib';
 import {quickPiLocalLanguageStrings} from './lang/language_strings';
+import {QuickStore} from './quickpi_store';
 
 import "./style.scss"
 

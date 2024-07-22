@@ -93,7 +93,7 @@ export default { // TODO
     setLedMatrixOne: "setLedMatrixOne",
 
     isButtonPressed: "isButtonPressed",
-    isButtonPressedWithName : "isButtonPressed",
+    isButtonPressedWithName: "isButtonPressed",
     waitForButton: "waitForButton",
     buttonWasPressed: "buttonWasPressed",
 
@@ -258,8 +258,7 @@ export default { // TODO
     //Continous servo
     setContinousServoDirection: "setContinousServoDirection(servo, direction)",
   },
-  constant: {
-  },
+  constant: {},
 
   startingBlockName: "Programma", // Name for the starting block
   messages: {
