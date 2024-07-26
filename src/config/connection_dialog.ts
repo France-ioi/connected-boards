@@ -7,7 +7,7 @@ export function getConnectionDialogHTML(availableConnectionMethods: ConnectionMe
     {name: ConnectionMethod.Wifi, icon: 'fa fa-wifi', label: 'WiFi'},
     {name: ConnectionMethod.Usb, icon: 'fab fa-usb', label: 'USB'},
     {name: ConnectionMethod.Bluetooth, icon: 'fab fa-bluetooth-b', label: 'Bluetooth'},
-    {name: ConnectionMethod.WebSerial, icon: 'fab fa-webserial', label: 'WebSerial'},
+    {name: ConnectionMethod.WebSerial, icon: 'fa fa-network-wired', label: 'WebSerial'},
   ];
 
   return `

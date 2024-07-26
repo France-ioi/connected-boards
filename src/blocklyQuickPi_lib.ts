@@ -2321,6 +2321,10 @@ var getContext = function (display, infos, curLevel) {
         $('#pihatsetup').hide();
         $('#piconnect').css('background-color', '#F9A423');
         $('#piconnecttext').show();
+
+        if (context.sensorStateListener) {
+            context.sensorStateListener('disconnected');
+        }
     }
 
 
@@ -2362,10 +2366,12 @@ var getContext = function (display, infos, curLevel) {
     }
 
     function raspberryPiDisconnected(wasConnected, wrongversion) {
-        if (context.releasing || !wasConnected)
+        if (context.releasing || !wasConnected) {
             showasReleased();
-        else
+        }
+        else {
             showasDisconnected();
+        }
 
         window.task.displayedSubTask.context.offLineMode = true;
 

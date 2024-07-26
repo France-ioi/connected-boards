@@ -99,6 +99,7 @@ export const getGalaxiaConnection = function (userName, _onConnect, _onDisconnec
   }
 
   this.connect = async function (url) {
+    console.log('do connecting = true');
     this.resetProperties();
     this.connecting = true;
     try {
@@ -108,8 +109,6 @@ export const getGalaxiaConnection = function (userName, _onConnect, _onDisconnec
       _onDisconnect(false);
       return;
     }
-    this.connecting = false;
-    this.connected = true;
 
     this.serial.addEventListener('disconnect', () => {
       this.connected = false;
@@ -118,6 +117,11 @@ export const getGalaxiaConnection = function (userName, _onConnect, _onDisconnec
 
     this.serialStartRead(this.serial);
     await this.transferPythonLib();
+
+    this.connecting = false;
+    this.connected = true;
+    console.log('do connected');
+
     this.onConnect();
   }
 

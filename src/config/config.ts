@@ -475,8 +475,6 @@ export function showConfig({context, strings, mainBoard}) {
       $('#pirelease').attr('disabled', null);
     }
 
-    $('#piconnectok').attr('disabled', 'disabled');
-
     $('#piconnectionlabel').hide();
 
     $('#piaddress').on('input', function (e) {
@@ -484,10 +482,12 @@ export function showConfig({context, strings, mainBoard}) {
       if (context.offLineMode) {
         var content = $('#piaddress').val();
 
-        if (content)
+        if (content) {
           $('#piconnectok').attr('disabled', null);
-        else
+        }
+        else {
           $('#piconnectok').attr('disabled', 'disabled');
+        }
       }
     });
 
@@ -694,12 +694,11 @@ export function showConfig({context, strings, mainBoard}) {
     function onPiconWifiClick() {
       context.inUSBConnection = false;
       context.inBTConnection = false;
-
+      $("#piconwifi").addClass('active');
       cleanUSBBTIP();
 
       if (!context.quickPiConnection.isConnected()) {
         setSessionStorage('connectionMethod', "WIFI");
-        $("#piconwifi").addClass('active');
         $('#panel-body-local').hide();
         $('#pischoolcon').show();
         $('#piconnectionlabel').hide();
@@ -707,6 +706,8 @@ export function showConfig({context, strings, mainBoard}) {
     }
 
     function onPiconUsbClick() {
+      $("#piconusb").addClass('active');
+
       if (!context.quickPiConnection.isConnected()) {
         setSessionStorage('connectionMethod', "USB");
         $('#piconnectok').attr('disabled', 'disabled');
@@ -714,7 +715,6 @@ export function showConfig({context, strings, mainBoard}) {
         $('#piconnectionlabel').show();
         $('#piconnectionlabel').html(strings.messages.cantConnectoToUSB)
 
-        $("#piconusb").addClass('active');
         $('#pischoolcon').hide();
         $('#piaddress').val("192.168.233.1");
 
@@ -745,6 +745,8 @@ export function showConfig({context, strings, mainBoard}) {
     }
 
     function onPiconBtClick() {
+      $("#piconbt").addClass('active');
+
       $('#piconnectionlabel').show();
       if (!context.quickPiConnection.isConnected()) {
         setSessionStorage('connectionMethod', "BT");
@@ -753,7 +755,6 @@ export function showConfig({context, strings, mainBoard}) {
         $('#piconnectionlabel').show();
         $('#piconnectionlabel').html(strings.messages.cantConnectoToBT)
 
-        $("#piconbt").addClass('active');
         $('#pischoolcon').hide();
 
         $('#piaddress').val("192.168.233.2");
@@ -790,7 +791,7 @@ export function showConfig({context, strings, mainBoard}) {
       $("#piconweb_serial").addClass('active');
       $('#pischoolcon').hide();
 
-      if (!context.quickPiConnection.isConnected()) {
+      if (!context.quickPiConnection.isConnected() && !context.quickPiConnection.isConnecting()) {
         setSessionStorage('connectionMethod', "web_serial");
         $('#piconnectok').attr('disabled', null);
 
@@ -798,6 +799,8 @@ export function showConfig({context, strings, mainBoard}) {
         context.inBTConnection = false;
       }
     }
+
+    $('#piconnectok').attr('disabled', 'disabled');
 
     $('#piconlocal').click(onPiconLocalClick);
     $('#piconwifi').click(onPiconWifiClick);
@@ -848,6 +851,10 @@ export function showConfig({context, strings, mainBoard}) {
       }
     } else {
       setSessionStorage('connectionMethod', availableConnectionMethods[0].toLocaleUpperCase());
+    }
+
+    if (context.quickPiConnection.isConnecting()) {
+      showasConnecting(context);
     }
 
     function populatePiList(jsonlist) {
