@@ -52,7 +52,7 @@ let sensorValues = {
 }
 
 let g_instance = null;
-export const getQuickPiConnection = function (userName, _onConnect, _onDisconnect, _onChangeBoard) {
+export const getGalaxiaConnection = function (userName, _onConnect, _onDisconnect, _onChangeBoard) {
   this.onConnect = _onConnect;
   this.onDisconnect = _onDisconnect;
 

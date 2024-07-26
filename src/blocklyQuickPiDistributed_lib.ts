@@ -76,16 +76,17 @@ var getContext = function (display, infos, curLevel) {
 
    if(window.quickAlgoInterface) {
       window.quickAlgoInterface.stepDelayMax = 500;
-  }
+   }
 
-   if (window.getQuickPiConnection) {
+   if (mainBoard.getConnection()) {
       var lockstring = getSessionStorage('lockstring');
       if (!lockstring) {
          lockstring = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
          setSessionStorage('lockstring', lockstring);
       }
 
-      context.quickPiConnection = getQuickPiConnection(lockstring, raspberryPiConnected, raspberryPiDisconnected, raspberryPiChangeBoard);
+      const getBoardConnection = mainBoard.getConnection();
+      context.quickPiConnection = getBoardConnection(lockstring, raspberryPiConnected, raspberryPiDisconnected, raspberryPiChangeBoard);
       context.quickPiConnection.onDistributedEvent = raspberryPiDistributedEvent;
    }
 

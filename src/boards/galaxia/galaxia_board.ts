@@ -1,5 +1,6 @@
 import {AbstractBoard} from "../abstract_board";
 import {BoardDefinition, ConnectionMethod} from "../../definitions";
+import {getGalaxiaConnection} from "./galaxia_connexion";
 
 interface GalaxiaBoardInnerState {
   connected?: boolean,
@@ -49,8 +50,8 @@ export class GalaxiaBoard extends AbstractBoard {
   async importGalaxia(selector) {
     const svgData = await this.fetchGalaxiaCard();
 
-    window.$(selector).html(svgData).css('user-select', 'none');
-    this.galaxiaSvg = window.$(selector + ' svg');
+    $(selector).html(svgData).css('user-select', 'none');
+    this.galaxiaSvg = $(selector + ' svg');
 
     this.initInteraction();
     this.displayInnerState();
@@ -199,6 +200,10 @@ export class GalaxiaBoard extends AbstractBoard {
     return [
       ConnectionMethod.WebSerial,
     ];
+  }
+
+  getConnection() {
+    return getGalaxiaConnection;
   }
 }
 

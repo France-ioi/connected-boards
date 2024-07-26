@@ -7,6 +7,8 @@ export abstract class AbstractBoard {
 
   abstract getAvailableConnectionMethods(): ConnectionMethod[]
 
+  abstract getConnection(): (userName: string, _onConnect: () => void, _onDisconnect: () => void, _onChangeBoard: () => void) => void
+
   init(selector, onUserEvent) {
   }
 
@@ -20,4 +22,5 @@ export abstract class AbstractBoard {
         return element;
     });
   }
+
 }

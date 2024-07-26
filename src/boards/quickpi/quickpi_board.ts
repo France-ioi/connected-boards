@@ -1,5 +1,6 @@
 import {AbstractBoard} from "../abstract_board";
 import {ConnectionMethod} from "../../definitions";
+import {getQuickPiConnection} from "./quickpi_connection";
 
 export class QuickPiBoard extends AbstractBoard {
   getBoardDefinitions() {
@@ -76,6 +77,10 @@ export class QuickPiBoard extends AbstractBoard {
       ConnectionMethod.Usb,
       ConnectionMethod.Bluetooth,
     ]
+  }
+
+  getConnection() {
+    return getQuickPiConnection;
   }
 }
 

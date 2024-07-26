@@ -5,7 +5,7 @@ import {AbstractBoard} from "./boards/abstract_board";
 import {buzzerSound} from "./buzzer_sound";
 import {gyroscope3D} from "./gyroscope3d";
 import {getSensorDefinitions} from "./sensor_definitions";
-import {showConfig} from "./config";
+import {showConfig} from "./config/config";
 import {getSessionStorage, setSessionStorage} from "./helpers/session_storage";
 import {SensorHandler} from "./sensor_handler";
 import {showasConnecting} from "./display";
@@ -187,9 +187,6 @@ var getContext = function (display, infos, curLevel) {
         window.quickAlgoInterface.stepDelayMin = 1;
     }
 
-
-
-
     var defaultQuickPiOptions = {
         disableConnection: false,
         increaseTimeAfterCalls: 5
@@ -230,14 +227,15 @@ var getContext = function (display, infos, curLevel) {
         return strings.messages.wrongState.format(failInfo.name, actualStateStr, expectedStateStr, failInfo.time);
     }
 
-    if(window.getQuickPiConnection) {
+    if (mainBoard.getConnection()) {
         var lockstring = getSessionStorage('lockstring');
         if(!lockstring) {
             lockstring = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
             setSessionStorage('lockstring', lockstring);
         }
 
-        context.quickPiConnection = getQuickPiConnection(lockstring, raspberryPiConnected, raspberryPiDisconnected, raspberryPiChangeBoard);
+        const getBoardConnection = mainBoard.getConnection();
+        context.quickPiConnection = getBoardConnection(lockstring, raspberryPiConnected, raspberryPiDisconnected, raspberryPiChangeBoard);
 
         context.quickPiConnection.isAvailable("localhost", function(available) {
             context.localhostAvailable = available;

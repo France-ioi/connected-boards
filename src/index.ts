@@ -1,4 +1,3 @@
-import {getQuickPiConnection} from './boards/galaxia/galaxia';
 import {
   getContext,
 } from './blocklyQuickPi_lib';
@@ -8,7 +7,6 @@ import {QuickStore} from './quickpi_store';
 import "./style.scss"
 
 const exportToWindow = {
-  getQuickPiConnection,
   quickPiLocalLanguageStrings,
   QuickStore,
   getContext,
@@ -19,7 +17,6 @@ for (let [name, object] of Object.entries(exportToWindow)) {
 }
 
 export {
-  getQuickPiConnection,
   quickPiLocalLanguageStrings,
   QuickStore,
   getContext,
