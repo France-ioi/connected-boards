@@ -1,3 +1,5 @@
+import {getSessionStorage, setSessionStorage} from "./helpers/session_storage";
+
 var getContext = function (display, infos, curLevel) {
    // Local language strings for each language
    var localLanguageStrings = {
@@ -75,22 +77,6 @@ var getContext = function (display, infos, curLevel) {
    if(window.quickAlgoInterface) {
       window.quickAlgoInterface.stepDelayMax = 500;
   }
-
-   function getSessionStorage(name) {
-      // Use a try in case it gets blocked
-      try {
-         return sessionStorage[name];
-      } catch (e) {
-         return null;
-      }
-   }
-
-   function setSessionStorage(name, value) {
-      // Use a try in case it gets blocked
-      try {
-         sessionStorage[name] = value;
-      } catch (e) { }
-   }
 
    if (window.getQuickPiConnection) {
       var lockstring = getSessionStorage('lockstring');

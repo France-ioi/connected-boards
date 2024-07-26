@@ -1,9 +1,13 @@
 declare global {
   interface Window {
     modulesPath: string;
-    $: any,
     currentOutput: any,
     exec: any,
+    zen3d: any,
+    displayHelper: {
+      popupMessageShown: boolean,
+      showPopupDialog: (popup: string, callback: () => void) => void,
+    }
   }
 }
 

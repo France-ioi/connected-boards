@@ -13,4 +13,11 @@ export abstract class AbstractBoard {
   setStrings(strings) {
     this.strings = strings;
   }
+
+  getCurrentBoard(board: string) {
+    return this.getBoardDefinitions().find(function (element) {
+      if (board === element.name)
+        return element;
+    });
+  }
 }

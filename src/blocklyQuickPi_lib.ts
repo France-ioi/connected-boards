@@ -2,193 +2,19 @@
 import {quickPiLocalLanguageStrings} from "./lang/language_strings";
 import {quickPiBoard} from "./boards/quickpi/quickpi_board";
 import {AbstractBoard} from "./boards/abstract_board";
-import {ConnectionMethod} from "./definitions";
+import {buzzerSound} from "./buzzer_sound";
+import {gyroscope3D} from "./gyroscope3d";
+import {getSensorDefinitions} from "./sensor_definitions";
+import {showConfig} from "./config";
+import {getSessionStorage, setSessionStorage} from "./helpers/session_storage";
+import {SensorHandler} from "./sensor_handler";
+import {showasConnecting} from "./display";
+import {getImg} from "./util";
 
-var buzzerSound = {
-    context: null,
-    default_freq: 200,
-    channels: {},
-    muted: {},
-
-    getContext: function() {
-        if(!this.context) {
-            this.context = ('AudioContext' in window) || ('webkitAudioContext' in window) ? new(window.AudioContext || window.webkitAudioContext)() : null;
-        }
-        return this.context;
-    },
-
-    startOscillator: function(freq) {
-        var o = this.context.createOscillator();
-        o.type = 'sine';
-        o.frequency.value = freq;
-        o.connect(this.context.destination);
-        o.start();
-        return o;
-    },
-
-
-    start: function(channel, freq=this.default_freq) {
-        if(!this.channels[channel]) {
-            this.channels[channel] = {
-                muted: false
-            }
-        }
-        if(this.channels[channel].freq === freq) {
-            return;
-        }
-        var context = this.getContext();
-        if(!context) {
-            return;
-        }
-        this.stop(channel);
-
-        if (freq == 0 || this.channels[channel].muted) {
-            return;
-        }
-        
-        this.channels[channel].oscillator = this.startOscillator(freq);
-        this.channels[channel].freq = freq;
-    },
-
-    stop: function(channel) {
-        if(this.channels[channel]) {
-            this.channels[channel].oscillator && this.channels[channel].oscillator.stop();
-            delete this.channels[channel].oscillator;
-            delete this.channels[channel].freq;
-        }
-    },
-
-    mute: function(channel) {
-        if(!this.channels[channel]) {
-            this.channels[channel] = {
-                muted: true
-            }
-            return;
-        }
-        this.channels[channel].muted = true;
-        this.channels[channel].oscillator && this.channels[channel].oscillator.stop();
-        delete this.channels[channel].oscillator;
-    },
-
-    unmute: function(channel) {
-        if(!this.channels[channel]) {
-            this.channels[channel] = {
-                muted: false
-            }
-            return;
-        }
-        this.channels[channel].muted = false;
-        if(this.channels[channel].freq) {
-            this.channels[channel].oscillator = this.startOscillator(this.channels[channel].freq);
-        }
-    },
-
-    isMuted: function(channel) {
-        if(this.channels[channel]) {
-            return this.channels[channel].muted;
-        }
-        return false;
-    },
-
-    stopAll: function() {
-        for(var channel in this.channels) {
-            if(this.channels.hasOwnProperty(channel)) {
-                this.stop(channel);
-            }
-        }
-    }
-}
-
-var colors = {
+const colors = {
     blue: "#4a90e2",
     orange: "#f5a623"
 }
-
-var gyroscope3D = (function() {
-
-    var instance;
-
-    function createInstance(width, height) {
-        var canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-
-        // debug code start
-        /*
-        canvas.style.zIndex = 99999;
-        canvas.style.position = 'fixed';
-        canvas.style.top = '0';
-        canvas.style.left = '0';
-        document.body.appendChild(canvas);
-        */
-        // debug code end
-
-        try {
-            var renderer = new zen3d.Renderer(canvas, { antialias: true, alpha: true });
-        } catch(e) {
-            return false;
-        }
-        
-        renderer.glCore.state.colorBuffer.setClear(0, 0, 0, 0);
-    
-        var scene = new zen3d.Scene();
-    
-        var lambert = new zen3d.LambertMaterial();
-        lambert.diffuse.setHex(0x468DDF);            
-       
-        var cube_geometry = new zen3d.CubeGeometry(10, 2, 10);
-        var cube = new zen3d.Mesh(cube_geometry, lambert);
-        cube.position.x = 0;
-        cube.position.y = 0;
-        cube.position.z = 0;
-        scene.add(cube);
-    
-        var ambientLight = new zen3d.AmbientLight(0xffffff, 2);
-        scene.add(ambientLight);
-    
-        var pointLight = new zen3d.PointLight(0xffffff, 1, 100);
-        pointLight.position.set(-20, 40, 10);
-        scene.add(pointLight);            
-    
-        var camera = new zen3d.Camera();
-        camera.position.set(0, 13, 13);
-        camera.lookAt(new zen3d.Vector3(0, 0, 0), new zen3d.Vector3(0, 1, 0));
-        camera.setPerspective(45 / 180 * Math.PI, width / height, 1, 1000);
-        scene.add(camera);    
-    
-    
-        return {
-            resize: function(width, height) {
-                camera.setPerspective(
-                    45 / 180 * Math.PI, 
-                    width / height, 
-                    1, 
-                    1000
-                );
-            },
-    
-            render: function(ax, ay, az) {
-                cube.euler.x = Math.PI * ax / 360;
-                cube.euler.y = Math.PI * ay / 360;
-                cube.euler.z = Math.PI * az / 360;
-                renderer.render(scene, camera);
-                return canvas;
-            }
-        }
-    }
-
-    return {
-        getInstance: function(width, height) {
-            if(!instance) {
-                instance = createInstance(width, height);
-            } else {
-                instance.resize(width, height)
-            }
-            return instance;
-        }
-    }
-
-})();
 
 const boards: {[board: string]: AbstractBoard} = {
     galaxia: galaxiaBoard,
@@ -208,7 +34,7 @@ var getContext = function (display, infos, curLevel) {
     context.title = "Quick-Pi";
 
     // Import our localLanguageStrings into the global scope
-    var strings = context.setLocalLanguageStrings(quickPiLocalLanguageStrings);
+    let strings = context.setLocalLanguageStrings(quickPiLocalLanguageStrings);
 
     context.disableAutoCompletion = false;
 
@@ -221,6 +47,8 @@ var getContext = function (display, infos, curLevel) {
     }
 
     mainBoard.setStrings(strings);
+
+    const sensorHandler = new SensorHandler(context, strings);
 
     // List of concepts to be included by conceptViewer
     context.getConceptList = function() {
@@ -353,969 +181,14 @@ var getContext = function (display, infos, curLevel) {
 
     const boardDefinitions = mainBoard.getBoardDefinitions();
 
-    var sensorDefinitions = [
-        /******************************** */
-        /*             Actuators          */
-        /**********************************/
-        {
-            name: "led",
-            suggestedName: strings.messages.sensorNameLed,
-            description: strings.messages.led,
-            isAnalog: false,
-            isSensor: false,
-            portType: "D",
-            getInitialState: function (sensor) {
-                return false;
-            },
-            selectorImages: ["ledon-red.png"],
-            valueType: "boolean",
-            pluggable: true,
-            getPercentageFromState: function (state) {
-                if (state)
-                    return 1;
-                else
-                    return 0;
-            },
-            getStateFromPercentage: function (percentage) {
-                if (percentage)
-                    return 1;
-                else
-                    return 0;
-            },
-            setLiveState: function (sensor, state, callback) {
-                var ledstate = state ? 1 : 0;
-                var command = "setLedState(\"" + sensor.name + "\"," + ledstate + ")";
-
-                context.quickPiConnection.sendCommand(command, callback);
-            },
-            getStateString: function(state) {
-                return state ? strings.messages.on.toUpperCase() : strings.messages.off.toUpperCase();
-            },
-            subTypes: [{
-                subType: "blue",
-                description: strings.messages.blueled,
-                selectorImages: ["ledon-blue.png"],
-                suggestedName: strings.messages.sensorNameBlueLed,
-            },
-            {
-                subType: "green",
-                description: strings.messages.greenled,
-                selectorImages: ["ledon-green.png"],
-                suggestedName: strings.messages.sensorNameGreenLed,
-            },
-            {
-                subType: "orange",
-                description: strings.messages.orangeled,
-                selectorImages: ["ledon-orange.png"],
-                suggestedName: strings.messages.sensorNameOrangeLed,
-            },
-            {
-                subType: "red",
-                description: strings.messages.redled,
-                selectorImages: ["ledon-red.png"],
-                suggestedName: strings.messages.sensorNameRedLed,
-            }
-            ],
-        },
-        {
-            name: "ledmatrix",
-            suggestedName: strings.messages.sensorNameLedMatrix,
-            description: strings.messages.ledmatrix,
-            isAnalog: false,
-            isSensor: false,
-            portType: "D",
-            getInitialState: function (sensor) {
-                return [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]];
-            },
-            selectorImages: ["ledon-red.png"],
-            valueType: "boolean",
-            pluggable: true,
-            getPercentageFromState: function (state) {
-                if (state) {
-                    var total = 0;
-                    state.forEach(function(substate) {
-                        substate.forEach(function(v) {
-                            total += v;
-                        });
-                    });
-                    return total / 25;
-                }
-                return 0;
-            },
-            getStateFromPercentage: function (percentage) {
-                if(percentage > 0) {
-                    return [[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]];
-                }
-                return [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]];
-            },
-            setLiveState: function (sensor, state, callback) {
-                var command = "setLedMatrixState(\"" + sensor.name + "\"," + JSON.stringify(state) + ")";
-
-                context.quickPiConnection.sendCommand(command, callback);
-            },
-            getStateString: function(state) {
-                return '';
-            },
-        },
-        {
-            name: "buzzer",
-            suggestedName: strings.messages.sensorNameBuzzer,
-            description: strings.messages.buzzer,
-            isAnalog: false,
-            isSensor: false,
-            getInitialState: function(sensor) {
-                return false;
-            },
-            portType: "D",
-            selectorImages: ["buzzer-ringing.png"],
-            valueType: "boolean",
-            getPercentageFromState: function (state, sensor) {
-
-                if (sensor.showAsAnalog)
-                {
-                    return (state - sensor.minAnalog) / (sensor.maxAnalog - sensor.minAnalog);
-                } else {
-                    if (state)
-                        return 1;
-                    else
-                        return 0;
-                }
-            },
-            getStateFromPercentage: function (percentage) {
-                if (percentage)
-                    return 1;
-                else
-                    return 0;
-            },
-            setLiveState: function (sensor, state, callback) {
-                var ledstate = state ? 1 : 0;
-                var command = "setBuzzerState(\"" + sensor.name + "\"," + ledstate + ")";
-
-                context.quickPiConnection.sendCommand(command, callback);
-            },
-            getStateString: function(state) {
-
-                if(typeof state == 'number' && 
-                    state != 1 &&
-                    state != 0) {
-
-                        return state.toString() + "Hz";
-                }               
-                return state ? strings.messages.on.toUpperCase() : strings.messages.off.toUpperCase();
-            },
-            subTypes: [{
-                subType: "active",
-                description: strings.messages.grovebuzzer,
-                pluggable: true,
-            },
-            {
-                subType: "passive",
-                description: strings.messages.quickpibuzzer,
-            }],
-        },
-        {
-            name: "servo",
-            suggestedName: strings.messages.sensorNameServo,
-            description: strings.messages.servo,
-            isAnalog: true,
-            isSensor: false,
-            getInitialState: function(sensor) {
-                return 0;
-            },
-            portType: "D",
-            valueType: "number",
-            pluggable: true,
-            valueMin: 0,
-            valueMax: 180,
-            selectorImages: ["servo.png", "servo-pale.png", "servo-center.png"],
-            getPercentageFromState: function (state) {
-                return state / 180;
-            },
-            getStateFromPercentage: function (percentage) {
-                return Math.round(percentage * 180);
-            },
-            setLiveState: function (sensor, state, callback) {
-                var command = "setServoAngle(\"" + sensor.name + "\"," + state + ")";
-
-                context.quickPiConnection.sendCommand(command, callback);
-            },
-            getStateString: function(state) {
-                return "" + state + "°";
-            }
-        },
-        {
-            name: "screen",
-            suggestedName: strings.messages.sensorNameScreen,
-            description: strings.messages.screen,
-            isAnalog: false,
-            isSensor: false,
-            getInitialState: function(sensor) {
-                if (sensor.isDrawingScreen)
-                    return null;
-                else
-                    return {line1: "", line2: ""};
-            },
-            cellsAmount: function(paper) {
-                // console.log(paper.width)
-                if(context.board == 'grovepi') {
-                    return 2;
-                }
-                if(paper.width < 250) {
-                    return 4;
-                } else if(paper.width < 350) {
-                    return 3;
-                }
-
-                if (context.compactLayout)
-                    return 3;
-                else
-                    return 2;
-            },
-            portType: "i2c",
-            valueType: "object",
-            selectorImages: ["screen.png"],
-            compareState: function (state1, state2) {
-                // Both are null are equal
-                if (state1 == null && state2 == null)
-                    return true;
-
-                // If only one is null they are different
-                if ((state1 == null && state2) ||
-                    (state1 && state2 == null))
-                    return false;
-
-                if (state1.isDrawingData != 
-                    state2.isDrawingData)
-                    return false;
-
-                if (state1 && state1.isDrawingData) {
-                    // They are ImageData objects
-                    // The image data is RGBA so there are 4 bits per pixel
-
-                    var data1 = state1.getData(1).data;
-                    var data2 = state2.getData(1).data;
-
-                    for (var i = 0; i < data1.length; i+=4) {
-                        if (data1[i]  != data2[i] ||
-                            data1[i + 1]  != data2[i + 1] ||
-                            data1[i + 2]  != data2[i + 2] ||
-                            data1[i + 3]  != data2[i + 3])
-                            return false;
-                    }
-
-                    return true;
-                } else {
-
-                    // Otherwise compare the strings
-                    return (state1.line1 == state2.line1) &&
-                                ((state1.line2 == state2.line2) ||
-                                (!state1.line2 && !state2.line2));
-                }
-            },
-            setLiveState: function (sensor, state, callback) {
-                var line2 = state.line2;
-                if (!line2)
-                    line2 = "";
-
-                var command = "displayText(\"" + sensor.name + "\"," + state.line1 + "\", \"" + line2 + "\")";
-
-                context.quickPiConnection.sendCommand(command, callback);
-            },
-            getStateString: function(state) {
-                if(!state) { return '""'; }
-                
-                if (state.isDrawingData)
-                    return strings.messages.drawing;
-                else
-                    return '"' + state.line1 + (state.line2 ? " / " + state.line2 : "") + '"';
-            },
-            getWrongStateString: function(failInfo) {
-                if(!failInfo.expected ||
-                   !failInfo.expected.isDrawingData ||
-                   !failInfo.actual ||
-                   !failInfo.actual.isDrawingData) {
-                    return null; // Use default message
-                }
-                var data1 = failInfo.expected.getData(1).data;
-                var data2 = failInfo.actual.getData(1).data;
-                var nbDiff = 0;
-                for (var i = 0; i < data1.length; i+=4) {
-                    if(data1[i] != data2[i]) {
-                        nbDiff += 1;
-                    }
-                }
-                return strings.messages.wrongStateDrawing.format(failInfo.name, nbDiff, failInfo.time);
-            },
-            subTypes: [{
-                subType: "16x2lcd",
-                description: strings.messages.grove16x2lcd,
-                pluggable: true,
-            },
-            {
-                subType: "oled128x32",
-                description: strings.messages.oled128x32,
-            }],
-
-        },
-        {
-            name: "irtrans",
-            suggestedName: strings.messages.sensorNameIrTrans,
-            description: strings.messages.irtrans,
-            isAnalog: false,
-            isSensor: true,
-            portType: "D",
-            valueType: "number",
-            valueMin: 0,
-            valueMax: 60,
-            selectorImages: ["irtranson.png"],
-            getPercentageFromState: function (state) {
-                return state / 60;
-            },
-            getStateFromPercentage: function (percentage) {
-                return Math.round(percentage * 60);
-            },
-            setLiveState: function (sensor, state, callback) {
-                var ledstate = state ? 1 : 0;
-                var command = "setInfraredState(\"" + sensor.name + "\"," + ledstate + ")";
-
-                context.quickPiConnection.sendCommand(command, callback);
-            },
-        },
-        /******************************** */
-        /*             sensors            */
-        /**********************************/
-        {
-            name: "button",
-            suggestedName: strings.messages.sensorNameButton,
-            description: strings.messages.button,
-            isAnalog: false,
-            isSensor: true,
-            portType: "D",
-            valueType: "boolean",
-            pluggable: true,
-            selectorImages: ["buttonoff.png"],
-            getPercentageFromState: function (state) {
-                if (state)
-                    return 1;
-                else
-                    return 0;
-            },
-            getStateFromPercentage: function (percentage) {
-                if (percentage)
-                    return 1;
-                else
-                    return 0;
-            },
-            getLiveState: function (sensor, callback) {
-                context.quickPiConnection.sendCommand("isButtonPressed(\"" + sensor.name + "\")", function (retVal) {
-                    var intVal = parseInt(retVal, 10);
-                    callback(intVal != 0);
-                });
-            },
-        },
-        {
-            name: "stick",
-            suggestedName: strings.messages.sensorNameStick,
-            description: strings.messages.fivewaybutton,
-            isAnalog: false,
-            isSensor: true,
-            portType: "D",
-            valueType: "boolean",
-            selectorImages: ["stick.png"],
-            gpiosNames: ["up", "down", "left", "right", "center"],
-            gpios: [10, 9, 11, 8, 7],
-            getPercentageFromState: function (state) {
-                if (state)
-                    return 1;
-                else
-                    return 0;
-            },
-            getStateFromPercentage: function (percentage) {
-                if (percentage)
-                    return 1;
-                else
-                    return 0;
-            },
-            compareState: function (state1, state2) {
-                if (state1 == null && state2 == null)
-                    return true;
-
-                return state1[0] == state2[0] &&
-                        state1[1] == state2[1] &&
-                        state1[2] == state2[2] &&
-                        state1[3] == state2[3] &&
-                        state1[4] == state2[4];
-            },
-            getLiveState: function (sensor, callback) {
-                var cmd = "readStick(" + this.gpios.join() + ")";
-
-                context.quickPiConnection.sendCommand("readStick(" + this.gpios.join() + ")", function (retVal) {
-                    var array = JSON.parse(retVal);
-                    callback(array);
-                });
-            },
-            getButtonState: function(buttonname, state) {
-                if (state) {
-                    var buttonparts = buttonname.split(".");
-                    var actualbuttonmame = buttonname;
-                    if (buttonparts.length == 2) {
-                        actualbuttonmame = buttonparts[1];
-                    }
-
-                    var index = this.gpiosNames.indexOf(actualbuttonmame);
-
-                    if (index >= 0) {
-                        return state[index];
-                    }
-                }
-
-                return false;
-            },
-            cellsAmount: function(paper) {
-                return 2;
-            },
-        },
-        {
-            name: "temperature",
-            suggestedName: strings.messages.sensorNameTemperature,
-            description: strings.messages.tempsensor,
-            isAnalog: true,
-            isSensor: true,
-            portType: "A",
-            valueType: "number",
-            valueMin: 0,
-            valueMax: 60,
-            selectorImages: ["temperature-hot.png", "temperature-overlay.png"],
-            getPercentageFromState: function (state) {
-                return state / 60;
-            },
-            getStateFromPercentage: function (percentage) {
-                return Math.round(percentage * 60);
-            },
-            getLiveState: function (sensor, callback) {
-                context.quickPiConnection.sendCommand("readTemperature(\"" + sensor.name + "\")", function(val) {
-                    val = Math.round(val);
-                    callback(val);
-                });
-            },
-            subTypes: [{
-                subType: "groveanalog",
-                description: strings.messages.groveanalogtempsensor,
-                portType: "A",
-                pluggable: true,
-            },
-            {
-                subType: "BMI160",
-                description: strings.messages.quickpigyrotempsensor,
-                portType: "i2c",
-            },
-            {
-                subType: "DHT11",
-                description: strings.messages.dht11tempsensor,
-                portType: "D",
-                pluggable: true,
-            }],
-        },
-        {
-            name: "potentiometer",
-            suggestedName: strings.messages.sensorNamePotentiometer,
-            description: strings.messages.potentiometer,
-            isAnalog: true,
-            isSensor: true,
-            portType: "A",
-            valueType: "number",
-            pluggable: true,
-            valueMin: 0,
-            valueMax: 100,
-            selectorImages: ["potentiometer.png", "potentiometer-pale.png"],
-            getPercentageFromState: function (state) {
-                return state / 100;
-            },
-            getStateFromPercentage: function (percentage) {
-                return Math.round(percentage * 100);
-            },
-            getLiveState: function (sensor, callback) {
-                context.quickPiConnection.sendCommand("readRotaryAngle(\"" + sensor.name + "\")", function(val) {
-                    val = Math.round(val);
-                    callback(val);
-                });
-            },
-        },
-        {
-            name: "light",
-            suggestedName: strings.messages.sensorNameLight,
-            description: strings.messages.lightsensor,
-            isAnalog: true,
-            isSensor: true,
-            portType: "A",
-            valueType: "number",
-            pluggable: true,
-            valueMin: 0,
-            valueMax: 100,
-            selectorImages: ["light.png"],
-            getPercentageFromState: function (state) {
-                return state / 100;
-            },
-            getStateFromPercentage: function (percentage) {
-                return Math.round(percentage * 100);
-            },
-            getLiveState: function (sensor, callback) {
-                context.quickPiConnection.sendCommand("readLightIntensity(\"" + sensor.name + "\")", function(val) {
-                    val = Math.round(val);
-                    callback(val);
-                });
-            },
-        },
-        {
-            name: "range",
-            suggestedName: strings.messages.sensorNameDistance,
-            description: strings.messages.distancesensor,
-            isAnalog: true,
-            isSensor: true,
-            portType: "D",
-            valueType: "number",
-            valueMin: 0,
-            valueMax: 5000,
-            selectorImages: ["range.png"],
-            getPercentageFromState: function (state) {
-                return state / 500;
-            },
-            getStateFromPercentage: function (percentage) {
-                return Math.round(percentage * 500);
-            },
-            getLiveState: function (sensor, callback) {
-                context.quickPiConnection.sendCommand("readDistance(\"" + sensor.name + "\")", function(val) {
-                    val = Math.round(val);
-                    callback(val);
-                });
-            },
-            subTypes: [{
-                subType: "vl53l0x",
-                description: strings.messages.timeofflightranger,
-                portType: "i2c",
-            },
-            {
-                subType: "ultrasonic",
-                description: strings.messages.ultrasonicranger,
-                portType: "D",
-                pluggable: true,
-            }],
-
-        },
-        {
-            name: "humidity",
-            suggestedName: strings.messages.sensorNameHumidity,
-            description: strings.messages.humiditysensor,
-            isAnalog: true,
-            isSensor: true,
-            portType: "D",
-            valueType: "number",
-            pluggable: true,
-            valueMin: 0,
-            valueMax: 100,
-            selectorImages: ["humidity.png"],
-            getPercentageFromState: function (state) {
-                return state / 100;
-            },
-            getStateFromPercentage: function (percentage) {
-                return Math.round(percentage * 100);
-            },
-            getLiveState: function (sensor, callback) {
-                context.quickPiConnection.sendCommand("readHumidity(\"" + sensor.name + "\")", function(val) {
-                    val = Math.round(val);
-                    callback(val);
-                });
-            },
-        },
-        {
-            name: "sound",
-            suggestedName: strings.messages.sensorNameMicrophone,
-            description: strings.messages.soundsensor,
-            isAnalog: true,
-            isSensor: true,
-            portType: "A",
-            valueType: "number",
-            pluggable: true,
-            valueMin: 0,
-            valueMax: 100,
-            selectorImages: ["sound.png"],
-            getPercentageFromState: function (state) {
-                return state / 100;
-            },
-            getStateFromPercentage: function (percentage) {
-                return Math.round(percentage * 100);
-            },
-            getLiveState: function (sensor, callback) {
-                context.quickPiConnection.sendCommand("readSoundLevel(\"" + sensor.name + "\")", function(val) {
-                    val = Math.round(val);
-                    callback(val);
-                });
-            },
-        },
-        {
-            name: "accelerometer",
-            suggestedName: strings.messages.sensorNameAccelerometer,
-            description: strings.messages.accelerometerbmi160,
-            isAnalog: true,
-            isSensor: true,
-            portType: "i2c",
-            valueType: "object",
-            valueMin: 0,
-            valueMax: 100,
-            step: 0.1,
-            selectorImages: ["accel.png"],
-            getStateString: function (state) {
-                if (state == null)
-                    return "0m/s²";
-
-                if (Array.isArray(state))
-                {
-                    return "X: " + state[0] + "m/s² Y: " + state[1] + "m/s² Z: " + state[2] + "m/s²";
-                }
-                else {
-                    return state.toString() + "m/s²";
-                }
-            },
-            getPercentageFromState: function (state) {
-                var perc = ((state + 78.48) / 156.96)
-                // console.log(state,perc)
-                return perc;
-            },
-            getStateFromPercentage: function (percentage) {
-                var value = ((percentage * 156.96) - 78.48);
-                var state = parseFloat(value.toFixed(1));
-                // console.log(state)
-                return state;
-            },
-            getLiveState: function (sensor, callback) {
-                context.quickPiConnection.sendCommand("readAccelBMI160()", function(val) {
-                    var array = JSON.parse(val);
-                    callback(array);
-                });
-            },
-            cellsAmount: function(paper) {
-                return 2;
-            },
-        },
-        {
-            name: "gyroscope",
-            suggestedName: strings.messages.sensorNameGyroscope,
-            description: strings.messages.gyrobmi160,
-            isAnalog: true,
-            isSensor: true,
-            portType: "i2c",
-            valueType: "object",
-            valueMin: 0,
-            valueMax: 100,
-            selectorImages: ["gyro.png"],
-            getPercentageFromState: function (state) {
-                return (state + 125) / 250;
-            },
-            getStateFromPercentage: function (percentage) {
-                return Math.round(percentage * 250) - 125;
-            },
-            getLiveState: function (sensor, callback) {
-                context.quickPiConnection.sendCommand("readGyroBMI160()", function(val) {
-
-                    var array = JSON.parse(val);
-                    array[0] = Math.round(array[0]);
-                    array[1] = Math.round(array[1]);
-                    array[2] = Math.round(array[2]);
-                    callback(array);
-                });
-            },
-            cellsAmount: function(paper) {
-                return 2;
-            },
-        },
-        {
-            name: "magnetometer",
-            suggestedName: strings.messages.sensorNameMagnetometer,
-            description: strings.messages.maglsm303c,
-            isAnalog: true,
-            isSensor: true,
-            portType: "i2c",
-            valueType: "object",
-            valueMin: 0,
-            valueMax: 100,
-            selectorImages: ["mag.png"],
-            getPercentageFromState: function (state) {
-                return (state + 1600) / 3200;
-            },
-            getStateFromPercentage: function (percentage) {
-                return Math.round(percentage * 3200) - 1600;
-            },
-            getLiveState: function (sensor, callback) {
-                context.quickPiConnection.sendCommand("readMagnetometerLSM303C(False)", function(val) {
-
-                    var array = JSON.parse(val);
-
-                    array[0] = Math.round(array[0]);
-                    array[1] = Math.round(array[1]);
-                    array[2] = Math.round(array[2]);
-
-                    callback(array);
-                });
-            },
-            cellsAmount: function(paper) {
-                return 2;
-            },
-        },
-        {
-            name: "irrecv",
-            suggestedName: strings.messages.sensorNameIrRecv,
-            description: strings.messages.irreceiver,
-            isAnalog: false,
-            isSensor: true,
-            portType: "D",
-            valueType: "number",
-            valueMin: 0,
-            valueMax: 60,
-            selectorImages: ["irrecvon.png"],
-            getPercentageFromState: function (state) {
-                return state / 60;
-            },
-            getStateFromPercentage: function (percentage) {
-                return Math.round(percentage * 60);
-            },
-            getLiveState: function (sensor, callback) {
-                context.quickPiConnection.sendCommand("isButtonPressed(\"" + sensor.name + "\")", function (retVal) {
-                    var intVal = parseInt(retVal, 10);
-                    callback(intVal == 0);
-                });
-            },
-        },
-        /******************************** */
-        /*             dummy sensors      */
-        /**********************************/
-        {
-            name: "cloudstore",
-            suggestedName: strings.messages.sensorNameCloudStore,
-            description: strings.messages.cloudstore,
-            isAnalog: false,
-            isSensor: false,
-            // portType: "none",
-            portType: "D",
-            valueType: "object",
-            selectorImages: ["cloudstore.png"],
-            /*getInitialState: function(sensor) {
-                return {};
-            },*/
-
-            getWrongStateString: function(failInfo) {
-                /**
-                 * Call this function when more.length > less.length. It will find the key that is missing inside of the
-                 * less array
-                 * @param more The bigger array, containing one or more key more than less
-                 * @param less Less, the smaller array, he has a key or more missing
-                 */
-                function getMissingKey(more, less) {
-                    for (var i = 0; i < more.length; i++) {
-                        var found = false;
-                        for (var j = 0; j < less.length; j++) {
-                            if (more[i] === less[j]) {
-                                found = true;
-                                break;
-                            }
-                        }
-                        if (!found)
-                            return more[i];
-                    }
-                    // should never happen because length are different.
-                    return null;
-                }
-
-                // the type of a value in comparison.
-                var valueType = {
-                    // Primitive type are strings and integers
-                    PRIMITIVE: "primitive",
-                    ARRAY: "array",
-                    DICTIONARY: "dictionary",
-                    // if two values are of wrong type then this is returned
-                    WRONG_TYPE: "wrong_type"
-                };
-
-                /**
-                 * This method allow us to compare two keys of the cloud and their values
-                 * @param actual The actual key that we have
-                 * @param expected The expected key that we have
-                 * @return An object containing the type of the return and the key that differ
-                 */
-                function compareKeys(actual, expected) {
-                    function compareArrays(arr1, arr2) {
-                        if (arr1.length != arr2.length)
-                            return false;
-                        for (var i = 0; i < arr1.length; i++) {
-                            for (var j = 0; j < arr2.length; j++) {
-                                if (arr1[i] !== arr2[i])
-                                    return false;
-                            }
-                        }
-                        return true;
-                    }
-                    var actualKeys = Object.keys(actual);
-
-                    for (var i = 0; i < actualKeys.length; i++) {
-                        var actualVal = actual[actualKeys[i]];
-
-                        // they both have the same keys so we can do that.
-                        var expectedVal = expected[actualKeys[i]];
-
-                        if (isPrimitive(expectedVal)) {
-                            // if string with int for example
-                            if (typeof expectedVal !== typeof actualVal) {
-                                return {
-                                    type: valueType.WRONG_TYPE,
-                                    key: actualKeys[i]
-                                }
-                            }
-                            if (expectedVal !== actualVal) {
-                                return {
-                                    type: valueType.PRIMITIVE,
-                                    key: actualKeys[i]
-                                };
-                            }
-                        } else if (Array.isArray(expectedVal)) {
-                            if (!Array.isArray(actualVal)) {
-                                return {
-                                    type: valueType.WRONG_TYPE,
-                                    key: actualKeys[i]
-                                };
-                            }
-                            if (!compareArrays(expectedVal, actualVal)) {
-                                return {
-                                    type: valueType.ARRAY,
-                                    key: actualKeys[i]
-                                };
-                            }
-                            // if we are in a dictionary
-                            // method from: https://stackoverflow.com/questions/38304401/javascript-check-if-dictionary
-                        } else if (expectedVal.constructor == Object) {
-                            if (actualVal.constructor != Object) {
-                                return {
-                                    type: valueType.WRONG_TYPE,
-                                    key: actualKeys[i]
-                                };
-                            }
-                            if (!deepEqual(expectedVal, actualVal)) {
-                                return {
-                                    type: valueType.DICTIONARY,
-                                    key: actualKeys[i]
-                                };
-                            }
-                        }
-                    }
-                }
-
-                if(!failInfo.expected &&
-                    !failInfo.actual)
-                    return null;
-
-                var expected = failInfo.expected;
-                var actual = failInfo.actual;
-
-                var expectedKeys = Object.keys(expected);
-                var actualKeys = Object.keys(actual);
-
-                if (expectedKeys.length != actualKeys.length) {
-                    if (expectedKeys.length > actualKeys.length) {
-                        var missingKey = getMissingKey(expectedKeys, actualKeys);
-                        return strings.messages.cloudMissingKey.format(missingKey);
-                    } else {
-                        var additionalKey = getMissingKey(actualKeys, expectedKeys);
-                        return strings.messages.cloudMoreKey.format(additionalKey);
-                    }
-                }
-
-                // This will return a key that is missing inside of expectedKeys if there is one, otherwise it will return null.
-                var unexpectedKey = getMissingKey(actualKeys, expectedKeys);
-
-                if (unexpectedKey) {
-                    return strings.messages.cloudUnexpectedKeyCorrection.format(unexpectedKey);
-                }
-
-                var keyCompare = compareKeys(actual, expected);
-
-                switch (keyCompare.type) {
-                    case valueType.PRIMITIVE:
-                        return strings.messages.cloudPrimitiveWrongKey.format(keyCompare.key, expected[keyCompare.key], actual[keyCompare.key]);
-                    case valueType.WRONG_TYPE:
-                        var typeActual = typeof actual[keyCompare.key];
-                        var typeExpected = typeof expected[keyCompare.key];
-                        // we need to check if it is an array or a dictionary
-                        if (typeActual == "object") {
-                            if (Array.isArray(actual[keyCompare.key]))
-                                typeActual = "array";
-                        }
-                        if (typeExpected == "object") {
-                            if (Array.isArray(expected[keyCompare.key]))
-                                typeExpected = "array";
-                        }
-                        var typeActualTranslate = quickPiLocalLanguageStrings.fr.messages.cloudTypes[typeActual];
-                        var typeExpectedTranslate = quickPiLocalLanguageStrings.fr.messages.cloudTypes[typeExpected];
-                        return strings.messages.cloudWrongType.format(typeActualTranslate, keyCompare.key, typeExpectedTranslate);
-                    case valueType.ARRAY:
-                        return strings.messages.cloudArrayWrongKey.format(keyCompare.key);
-                    case valueType.DICTIONARY:
-                        return strings.messages.cloudDictionaryWrongKey.format(keyCompare.key);
-                }
-            },
-
-            compareState: function (state1, state2) {
-                return quickPiStore.compareState(state1, state2);
-            }
-        },
-        {
-            name: "clock",
-            description: strings.messages.cloudstore,
-            isAnalog: false,
-            isSensor: false,
-            portType: "none",
-            valueType: "object",
-            selectorImages: ["clock.png"],
-        },
-        {
-            name: "adder",
-            portType: "none"
-        }
-    ];
-
+    const sensorDefinitions = getSensorDefinitions(context, strings);
 
     if(window.quickAlgoInterface) {
         window.quickAlgoInterface.stepDelayMin = 1;
     }
 
 
-    function findSensorDefinition(sensor) {
-        // console.log(sensor)
-        var sensorDef = null;
-        for (var iType = 0; iType < sensorDefinitions.length; iType++) {
-            var type = sensorDefinitions[iType];
 
-            if (sensor.type == type.name) {
-                if (sensor.subType && type.subTypes) {
-
-                    for (var iSubType = 0; iSubType < type.subTypes.length; iSubType++) {
-                        var subType = type.subTypes[iSubType];
-
-                        if (subType.subType == sensor.subType) {
-                            sensorDef = $.extend({}, type, subType);
-                        }
-                    }
-                } else {
-                    sensorDef = type;
-                }
-            }
-        }
-
-        if(sensorDef && !sensorDef.compareState) {
-            sensorDef.compareState = function(state1, state2) {
-                return state1 == state2;
-            };
-        }
-
-        return sensorDef;
-    }
 
     var defaultQuickPiOptions = {
         disableConnection: false,
@@ -1338,7 +211,7 @@ var getContext = function (display, infos, curLevel) {
     function getWrongStateText(failInfo) {
         var actualStateStr = "" + failInfo.actual;
         var expectedStateStr = "" + failInfo.expected;
-        var sensorDef = findSensorDefinition(failInfo.sensor);
+        var sensorDef = sensorHandler.findSensorDefinition(failInfo.sensor);
         if(sensorDef) {
             if(sensorDef.isSensor) {
                 return strings.messages.wrongStateSensor.format(failInfo.name, failInfo.time);
@@ -1355,31 +228,6 @@ var getContext = function (display, infos, curLevel) {
             }
         }
         return strings.messages.wrongState.format(failInfo.name, actualStateStr, expectedStateStr, failInfo.time);
-    }
-
-    function getCurrentBoard() {
-        var found = boardDefinitions.find(function (element) {
-            if (context.board == element.name)
-                return element;
-        });
-
-        return found;
-    }
-
-    function getSessionStorage(name) {
-        // Use a try in case it gets blocked
-        try {
-            return sessionStorage[name];
-        } catch(e) {
-            return null;
-        }
-    }
-
-    function setSessionStorage(name, value) {
-        // Use a try in case it gets blocked
-        try {
-            sessionStorage[name] = value;
-        } catch(e) {}
     }
 
     if(window.getQuickPiConnection) {
@@ -1459,7 +307,7 @@ var getContext = function (display, infos, curLevel) {
         innerState = data;
 
         for (var name in data.sensors) {
-            var sensor = findSensorByName(name);
+            var sensor = sensorHandler.findSensorByName(name);
             var savedSensor = data.sensors[name];
             context.sensorsSaved[name] = savedSensor;
             reloadSensorFullState(sensor, savedSensor);
@@ -1468,7 +316,7 @@ var getContext = function (display, infos, curLevel) {
         context.timeLineStates = [];
         for (var i = 0; i < data.timeLineStates.length; i++) {
             var newTimeLineState = Object.assign({}, data.timeLineStates[i]);
-            newTimeLineState.sensor = findSensorByName(newTimeLineState.sensorName);
+            newTimeLineState.sensor = sensorHandler.findSensorByName(newTimeLineState.sensorName);
             context.timeLineStates.push(newTimeLineState);
         }
 
@@ -1522,8 +370,8 @@ var getContext = function (display, infos, curLevel) {
 
             for(var sensorName in context.gradingStatesBySensor) {
                 // Cycle through each sensor from the grading states
-                var sensor = findSensorByName(sensorName);
-                var sensorDef = findSensorDefinition(sensor);
+                var sensor = sensorHandler.findSensorByName(sensorName);
+                var sensorDef = sensorHandler.findSensorDefinition(sensor);
 
                 var expectedStates = context.gradingStatesBySensor[sensorName];
                 if(!expectedStates.length) { continue;}
@@ -1625,7 +473,7 @@ var getContext = function (display, infos, curLevel) {
             }
 
             if (sensor.type == "stick") {
-                var stickDefinition = findSensorDefinition(sensor);
+                var stickDefinition = sensorHandler.findSensorDefinition(sensor);
                 var firststick = true;
 
                 for (var iStick = 0; iStick < stickDefinition.gpiosNames.length; iStick++) {
@@ -1653,7 +501,7 @@ var getContext = function (display, infos, curLevel) {
             }
         }
 
-        var board = getCurrentBoard();
+        var board = mainBoard.getCurrentBoard(context.board);
         pythonSensorTable += "]; currentADC = \"" + board.adc + "\"";
 
         return pythonSensorTable;
@@ -1686,8 +534,8 @@ var getContext = function (display, infos, curLevel) {
 
     function sensorAssignPort(sensor)
     {
-        var board = getCurrentBoard();
-        var sensorDefinition = findSensorDefinition(sensor);
+        var board = mainBoard.getCurrentBoard(context.board);
+        var sensorDefinition = sensorHandler.findSensorDefinition(sensor);
 
         sensor.port = null;
 
@@ -1737,7 +585,7 @@ var getContext = function (display, infos, curLevel) {
 
         // Second try assign it a grove port
         if (!sensor.port) {
-            var sensorDefinition = findSensorDefinition(sensor);
+            var sensorDefinition = sensorHandler.findSensorDefinition(sensor);
             var pluggable = sensorDefinition.pluggable;
 
             if (sensorDefinition.subTypes) {
@@ -1875,7 +723,7 @@ var getContext = function (display, infos, curLevel) {
                         }
                     }
 
-                    var isAnalog = findSensorDefinition(sensor).isAnalog || sensor.showAsAnalog;
+                    var isAnalog = sensorHandler.findSensorDefinition(sensor).isAnalog || sensor.showAsAnalog;
 
                     if (isAnalog) {
                         sensor.maxAnalog = Number.MIN_VALUE;
@@ -1956,7 +804,7 @@ var getContext = function (display, infos, curLevel) {
             var sensor = infos.quickPiSensors[iSensor];
 
             // Set initial state
-            var sensorDef = findSensorDefinition(sensor);
+            var sensorDef = sensorHandler.findSensorDefinition(sensor);
             if(sensorDef && !sensorDef.isSensor && sensorDef.getInitialState) {
                 var initialState = sensorDef.getInitialState(sensor);
                 if (initialState != null)
@@ -2002,12 +850,12 @@ var getContext = function (display, infos, curLevel) {
     };
 
     function updateLiveSensor(sensor) {
-        if (findSensorDefinition(sensor).isSensor && findSensorDefinition(sensor).getLiveState) {
+        if (sensorHandler.findSensorDefinition(sensor).isSensor && sensorHandler.findSensorDefinition(sensor).getLiveState) {
             context.liveUpdateCount++;
 
             //console.log("updateLiveSensor " + sensor.name, context.liveUpdateCount);
 
-            findSensorDefinition(sensor).getLiveState(sensor, function (returnVal) {
+            sensorHandler.findSensorDefinition(sensor).getLiveState(sensor, function (returnVal) {
                 context.liveUpdateCount--;
 
                 //console.log("updateLiveSensor callback" + sensor.name, context.liveUpdateCount);
@@ -2306,7 +1154,7 @@ var getContext = function (display, infos, curLevel) {
             var nSensors = infos.quickPiSensors.length;
 
             infos.quickPiSensors.forEach(function (sensor) {
-                var cellsAmount = findSensorDefinition(sensor).cellsAmount;
+                var cellsAmount = sensorHandler.findSensorDefinition(sensor).cellsAmount;
                 if (cellsAmount) {
                     nSensors += cellsAmount(paper) - 1;
                 }
@@ -2359,7 +1207,7 @@ var getContext = function (display, infos, curLevel) {
 
                     var cellsAmount = null;
                     if (sensor)
-                         cellsAmount = findSensorDefinition(sensor).cellsAmount;
+                         cellsAmount = sensorHandler.findSensorDefinition(sensor).cellsAmount;
 
                     if (cellsAmount)
                         cells = cellsAmount(paper);
@@ -2391,7 +1239,7 @@ var getContext = function (display, infos, curLevel) {
                                     // continue
 
                                 cells = 1;
-                                cellsAmount = findSensorDefinition(newSensor).cellsAmount;
+                                cellsAmount = sensorHandler.findSensorDefinition(newSensor).cellsAmount;
                                 
                                 if (cellsAmount)
                                     cells = cellsAmount(paper);
@@ -2519,7 +1367,7 @@ var getContext = function (display, infos, curLevel) {
                 $('#virtualBoard').css('flex', '1 0 40%');
             }
             function onUserEvent(sensorName, state) {
-                var sensor = findSensorByName('button ' + sensorName);
+                var sensor = sensorHandler.findSensorByName('button ' + sensorName);
                 if(!sensor) { return; }
                 sensor.state = state;
                 warnClientSensorStateChanged(sensor);
@@ -2586,7 +1434,7 @@ var getContext = function (display, infos, curLevel) {
         showasReleased();
 
         if (context.quickPiConnection.isConnecting()) {
-            showasConnecting();
+            showasConnecting(context);
         }
 
         if (context.quickPiConnection.isConnected()) {
@@ -2595,6 +1443,12 @@ var getContext = function (display, infos, curLevel) {
             context.offLineMode = false;
         }
 
+        const showConfigSettings = {
+            context,
+            strings,
+            mainBoard,
+        };
+
         var showMenu = false;
         $('#toggle_menu, #simulator').click(function() {
             showMenu = !showMenu;
@@ -2602,7 +1456,7 @@ var getContext = function (display, infos, curLevel) {
         });
         $("#dropdown_menu #remote_control").click(function() {
             if(!context.quickPiConnection.isConnected()) { 
-                showConfig(); 
+                showConfig(showConfigSettings);
             }else{
                 showasConnected();
                 context.offLineMode = false;
@@ -2610,7 +1464,7 @@ var getContext = function (display, infos, curLevel) {
         });
         $("#dropdown_menu #install").click(function() {
             if(!context.quickPiConnection.isConnected()) { 
-                showConfig(); 
+                showConfig(showConfigSettings);
             }else{
                 context.blocklyHelper.reportValues = false;
 
@@ -2634,7 +1488,9 @@ var getContext = function (display, infos, curLevel) {
                 });
             }
         });
-        $('#pichangehat').click(showConfig);
+        $('#pichangehat').click(() => {
+            showConfig(showConfigSettings);
+        });
 
         function updateMenu() {
             if(showMenu){
@@ -2645,1089 +1501,6 @@ var getContext = function (display, infos, curLevel) {
                 $("#piui").removeClass("show");
             }
         };
-
-        function getConnectionDialogHTML() {
-            const allConnectionMethods: {name: ConnectionMethod, icon: string, label: string}[] = [
-                {name: ConnectionMethod.Local, icon: 'fas fa-location-arrow', label: strings.messages.local},
-                {name: ConnectionMethod.Wifi, icon: 'fa fa-wifi', label: 'WiFi'},
-                {name: ConnectionMethod.Usb, icon: 'fab fa-usb', label: 'USB'},
-                {name: ConnectionMethod.Bluetooth, icon: 'fab fa-bluetooth-b', label: 'Bluetooth'},
-                {name: ConnectionMethod.WebSerial, icon: 'fab fa-webserial', label: 'WebSerial'},
-            ];
-
-            const availableConnectionMethods = mainBoard.getAvailableConnectionMethods();
-
-            return `
-                <div id="quickpiViewer" class="content connectPi qpi" style="display: block;">
-                   <div class="content">
-                      <div class="panel-heading">
-                         <h2 class="sectionTitle">
-                            <span class="iconTag">
-                            <i class="icon fas fa-list-ul">
-                            </i>
-                            </span>
-                            ${strings.messages.raspiConfig}       
-                         </h2>
-                         <div class="exit" id="picancel">
-                            <i class="icon fas fa-times">
-                            </i>
-                         </div>
-                      </div>
-                      <div class="panel-body">
-                         <div class="navigation">
-                            <div class="navigationContent">
-                               <input type="checkbox" id="showNavigationContent" role="button">
-                               <ul>
-                                  <li id="qpi-portsnames">
-                                     ${strings.messages.display}
-                                  </li>
-                                  <li id="qpi-components">
-                                     ${strings.messages.components}
-                                  </li>
-                                  ${boardDefinitions.length > 1 ? `
-                                  <li id="qpi-change-board">${strings.messages.changeBoard}</li>
-                                  ` : ''}
-                                  <li id="qpi-connection" class="selected">
-                                     ${strings.messages.connection}
-                                  </li>
-                               </ul>
-                            </div>
-                         </div>
-                         <div class="viewer">
-                            <div id="qpi-uiblock-portsnames" class="hiddenContent viewerInlineContent" >
-                               ${strings.messages.displayPrompt}
-                               <div class="switchRadio btn-group" id="pi-displayconf">
-                                  <button type="button" class="btn active" id="picomponentname">
-                                  <i class="fas fa-microchip icon">
-                                  </i>
-                                  ${strings.messages.componentNames}</button>
-                                  <button type="button" class="btn" id="piportname">
-                                  <i class="fas fa-plug icon">
-                                  </i>
-                                  ${strings.messages.portNames}</button>
-                               </div>
-                               <div id='example_sensor'>
-                                  <span id='name'>
-                                  ${sensorDefinitions[17].suggestedName}1</span>
-                                  <span id='port'>
-                                  ${sensorDefinitions[17].portType}5</span>
-                                  <img src=${getImg(sensorDefinitions[17].selectorImages[0])}>
-                                  </span>
-                               </div>
-                            </div>
-                            <div id="qpi-uiblock-components" class="hiddenContent viewerInlineContent" >
-                               <div id="tabs">
-                                  <div id="tabs_back"></div>
-                                  <div id='remove_tab' class='tab selected'>
-                                     ${strings.messages.removeSensor}
-                                  </div>
-                                  <div id='add_tab' class='tab'>
-                                     ${strings.messages.add}
-                                  </div>
-                               </div>
-                               <div id="remove_cont">
-                                  <div id="sensorGrid"></div>
-                                  <div class='buttonContainer' >
-                                     <button id="piremovesensor" class="btn">
-                                     <i class="fas fa-trash icon">
-                                     </i>
-                                     ${strings.messages.removeSensor}</button>
-                                  </div>
-                               </div>
-                               <div id="add_cont" class='hiddenContent' >
-                                  <div id="addSensorGrid"></div>
-                                  <div class='buttonContainer' >
-                                     <button id="piaddsensor" class="btn">
-                                     <i class="fas fa-plus icon">
-                                     </i>
-                                     ${strings.messages.add}</button>
-                                  </div>
-                               </div>
-                            </div>
-                            <div id="qpi-uiblock-change-board" class="hiddenContent viewerInlineContent">
-                               <div class="panel-body">
-                                  <div id=boardlist>
-                                  </div>
-                                  <div panel-body-usbbt>
-                                     <label id="piconnectionlabel">
-                                     </label>
-                                  </div>
-                               </div>
-                            </div>
-                            <div id="qpi-uiblock-connection" class="hiddenContent viewerInlineContent">
-                               <div class="switchRadio btn-group" id="piconsel">
-                                  ${allConnectionMethods
-                                      .filter(connectionMethod => availableConnectionMethods.includes(connectionMethod.name))
-                                      .map(connectionMethod => `
-                                          <button type="button" class="btn" id="picon${connectionMethod.name}">
-                                             <i class="${connectionMethod.icon} icon"></i>
-                                              ${connectionMethod.label}
-                                          </button>`
-                                      )
-                                  }
-                               </div>
-                               <div id="pischoolcon">
-                                  <div class="form-group">
-                                     <label id="pischoolkeylabel">
-                                     ${strings.messages.schoolKey}</label>
-                                     <div class="input-group">
-                                        <div class="input-group-prepend">
-                                           Aa
-                                        </div>
-                                        <input type="text" id="schoolkey" class="form-control">
-                                     </div>
-                                  </div>
-                                  <div class="form-group">
-                                     <label id="pilistlabel">
-                                     ${strings.messages.connectList}</label>
-                                     <div class="input-group">
-                                        <button class="input-group-prepend" id=pigetlist disabled>
-                                        ${strings.messages.getPiList}</button>
-                                        <select id="pilist" class="custom-select" disabled>
-                                        </select>
-                                     </div>
-                                  </div>
-                                  <div class="form-group">
-                                     <label id="piiplabel">
-                                     ${strings.messages.enterIpAddress}</label>
-                                     <div class="input-group">
-                                        <div class="input-group-prepend">
-                                           123
-                                        </div>
-                                        <input id=piaddress type="text" class="form-control">
-                                     </div>
-                                  </div>
-                                  <div>
-                                     <input id="piusetunnel" disabled type="checkbox">
-                                     ${strings.messages.connectTroughtTunnel}               
-                                  </div>
-                               </div>
-                               <div id="panel-body-usbbt">
-                                  <label id="piconnectionlabel">
-                                  </label>
-                               </div>
-                               <div id="panel-body-local">
-                                  <label id="piconnectionlabellocal">
-                                  </label>
-                                  <div id="piconnectolocalhost">
-                                     <input type="radio" id="piconnectolocalhostcheckbox" name="pilocalconnectiontype" value="localhost">
-                                     ${strings.messages.connectToLocalhost}               
-                                  </div>
-                                  <div id="piconnectocurrenturl">
-                                     <input type="radio" id="piconnectocurrenturlcheckbox" name="pilocalconnectiontype" value="currenturl">
-                                     ${strings.messages.connectToWindowLocation}               
-                                  </div>
-                               </div>
-                               <div class="inlineButtons">
-                                  <button id="piconnectok" class="btn">
-                                  <i id="piconnectprogressicon" class="fas fa-spinner fa-spin icon">
-                                  </i>
-                                  <i id="piconnectwifiicon" class="fa fa-wifi icon">
-                                  </i>
-                                  ${strings.messages.connectToDevice}               </button>
-                                  <button id="pirelease" class="btn">
-                                  <i class="fa fa-times icon">
-                                  </i>
-                                  ${strings.messages.disconnectFromDevice}</button>
-                               </div>
-                            </div>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-                `;
-        }
-
-        function showConfig() {
-            var connectionDialogHTML = getConnectionDialogHTML();
-
-            window.displayHelper.showPopupDialog(connectionDialogHTML, function () {
-                $(".simple-dialog").addClass("config");
-                $('#popupMessage .navigationContent ul li').removeClass('selected');
-                $('#popupMessage .navigationContent ul li[id=qpi-connection]').addClass('selected');
-                $('#showNavigationContent').prop('checked', false);
-
-                $('[id^=qpi-uiblock]').addClass("hiddenContent");
-                $('#qpi-uiblock-connection').removeClass("hiddenContent");
-
-                $("#piconnectprogressicon").hide();
-
-                for (var i = 0; i < boardDefinitions.length; i++) {
-                    let board = boardDefinitions[i];
-                    var image = document.createElement('img');
-                    image.src = getImg(board.image);
-
-                    $('#boardlist').append(image).append("&nbsp;&nbsp;");
-
-                    image.onclick = function () {
-                        $('#popupMessage').hide();
-                        window.displayHelper.popupMessageShown = false;
-
-                        context.changeBoard(board.name);
-                    }
-                }
-
-                for (var i = 0; i < infos.quickPiSensors.length; i++) {
-                    var sensor = infos.quickPiSensors[i];
-                    var sensorDefinition = findSensorDefinition(sensor) ;
-                    if(sensor.type == "adder")
-                        continue
-
-                    addGridElement("sensorGrid",0,sensor.name,sensor.name,sensorDefinition.selectorImages[0],sensor.port);
-                }
-
-                updateAddGrid();
-
-                var usedPorts = [];
-                var toRemove = [];
-                var toAdd = [];
-
-                function updateAddGrid() {
-                    // console.log("updateAddGrid")
-                    $("#addSensorGrid").empty();
-                    for (var iSensorDef = 0; iSensorDef < sensorDefinitions.length; iSensorDef++) {
-                        var sensorDefinition = sensorDefinitions[iSensorDef];
-                        var id = sensorDefinition.name;
-                        // console.log("new",id)
-                        var name = sensorDefinition.description;
-                        if (sensorDefinition.subTypes) {
-                            for (var iSubType = 0; iSubType < sensorDefinition.subTypes.length; iSubType++) {
-                                var sub = sensorDefinition.subTypes[iSubType];
-                                if (!sensorDefinition.pluggable && !sub.pluggable)
-                                    continue;
-                                id = sensorDefinition.name+"_"+sub.subType;
-                                var name = sub.description;
-                                var img = (sub.selectorImages) ? sub.selectorImages[0] : sensorDefinition.selectorImages[0]
-                                // console.log(1,id)
-                                addGridElement("addSensorGrid",1,id,name,img,"");
-                                // console.log("+",id)
-                            }
-                        } else {
-                            if (!sensorDefinition.pluggable || !sensorDefinition.selectorImages)
-                                continue;
-
-                                // console.log("+",id)
-                            addGridElement("addSensorGrid",1,id,name,sensorDefinition.selectorImages[0],"");
-                        }
-                    }
-
-                    var board = getCurrentBoard();
-                    if (board.builtinSensors) {
-                        for (var i = 0; i < board.builtinSensors.length; i++) {
-                            var sensor = board.builtinSensors[i];
-                            var sensorDefinition = findSensorDefinition(sensor);
-
-                            if (context.findSensor(sensor.type, sensor.port, false))
-                                continue;
-
-                            var id = sensorDefinition.name + "_";
-                            if (sensor.subType)
-                                id += sensor.subType;
-                            id += "_" + sensor.port;
-
-                            var name = sensorDefinition.description + " " + strings.messages.builtin;
-                            var img = sensorDefinition.selectorImages[0];
-                            addGridElement("addSensorGrid",1,id,name,img,"");
-                                // console.log(3,id)
-                        }
-                    }
-
-                    $("#addSensorGrid .sensorElement").click(function() {
-                        var id = $(this).attr('id');
-                        var sensorID = id.replace("qpi-add-sensor-parent-", "");
-                        if($(this).hasClass("selected")){
-                            changePort(sensorID,false);
-                        }else{
-                            showPortDialog(sensorID);
-                        }
-                        changeSelect(id);
-                    });
-                };
-
-                function addGridElement(gridID,add,idName,name,img,port) {
-                    // console.log(add,idName,name,img)
-                    var idType = (add) ? "add" : "remove";
-                    $('#'+gridID).append(
-                        "<span class=\"sensorElement\" id=\"qpi-"+idType+"-sensor-parent-" + idName + "\">" +
-                            "<div class='name'>" +name +"</div>"+
-                            getSensorImg(img)+
-                            "<div class=\"sensorInfo\">" +
-                                "<span class='port'>"+port +"</span>"+
-                                "<input type=\"checkbox\" id=\"qpi-"+idType+"-sensor-"+idName +"\"></input>"+
-                            "</div>" +
-                        "</span>"
-                    );
-                };
-
-                function getSensorImg(img) {
-                    var html = "";
-                    html += "<img class=\"sensorImage\" src=" +getImg(img) +">";
-                    switch(img){
-                    case "servo.png":
-                        html += "<img class=\"sensorImage\" src=" +getImg("servo-pale.png") +">";
-                        html += "<img class=\"sensorImage\" src=" +getImg("servo-center.png") +">";
-                        break;
-                    case "potentiometer.png":
-                        html += "<img class=\"sensorImage\" src=" +getImg("potentiometer-pale.png") +">";
-                        break;
-                    case "mag.png":
-                        html += "<img class=\"sensorImage\" src=" +getImg("mag-needle.png") +">";
-                        break;
-                    }
-                    return html
-                };
-
-
-                $("#tabs .tab").click(function() {
-                    var id = $(this).attr("id");
-                    clickTab(id);
-                });
-                function clickTab(id) {
-                    // console.log("click tab"+id)
-                    var el = $("#"+id);
-                    if(el.hasClass("selected")){
-                        return
-                    }
-                    if(id == "remove_tab" && toAdd.length > 0 ||
-                        id == "add_tab" && toRemove.length > 0){
-                        showConfirmDialog(function() {
-                            unselectSensors();
-                            clickTab(id)
-                        });
-                        return
-                    }
-                    el.addClass("selected");
-                    if(id == "remove_tab"){
-                        $("#add_tab").removeClass("selected");
-                        $("#remove_cont").removeClass("hiddenContent");
-                        $("#add_cont").addClass("hiddenContent");
-                        unselectSensors("add");
-                    }else{
-                        $("#remove_tab").removeClass("selected");
-                        $("#add_cont").removeClass("hiddenContent");
-                        $("#remove_cont").addClass("hiddenContent");
-                        unselectSensors("remove");
-                    }
-                };
-                $("#sensorGrid .sensorElement").click(function() {
-                    var id = $(this).attr('id');
-                    changeSelect(id);
-                });
-
-                function changeSelect(id) {
-                    var add = id.includes("qpi-add");
-                    var arr = (add) ? toAdd : toRemove;
-                    var ele = $("#"+id);
-                    var inp = ele.children(".sensorInfo").children("input");
-                    if(ele.hasClass("selected")){
-                        ele.removeClass("selected");
-                        inp.prop("checked",false);
-                        if(arr.includes(id)){
-                            var index = arr.indexOf(id);
-                            arr.splice(index,1);
-                        }
-                    }else{
-                        ele.addClass("selected");
-                        inp.prop("checked",true);
-                        if(!arr.includes(id)){
-                            arr.push(id);
-                        }
-                    }
-                    // console.log(arr)
-                };
-
-                function unselectSensors(type) {
-                    if(!type){
-                        unselectSensors("add");
-                        unselectSensors("remove");
-                        return
-                    }
-                    var arr = (type == "add") ? toAdd : toRemove;
-                    var clone = Beav.Object.clone(arr);
-                    for(var id of clone){
-                        changeSelect(id);
-                        if(type == "add"){
-                            var elID = id.replace("qpi-add-sensor-parent-","");
-                            changePort(elID,false);
-                        }
-                    }
-                };
-
-                if(infos.customSensors){
-                    // $('#piaddsensor').click(clickAdder);
-                    $('#piaddsensor').click(addSensors);
-                }else{
-                    $('#piaddsensor').hide();
-                }
-                $('#piremovesensor').click(function () {
-                    //$('#popupMessage').hide();
-                    //window.displayHelper.popupMessageShown = false;
-
-                    var removed = false;
-
-                    $('[id^=qpi-remove-sensor-]').each(function(index) {
-                        if ($(this).is(':checked'))
-                        {
-                            var sensorName = $(this).attr('id').replace("qpi-remove-sensor-", "");
-                            var sensor = findSensorByName(sensorName);
-
-                            $("#qpi-remove-sensor-parent-" + sensorName).remove();
-
-                            for (var i = 0; i < infos.quickPiSensors.length; i++) {
-                                if (infos.quickPiSensors[i] === sensor) {
-                                    sensor.removed = true;
-                                    infos.quickPiSensors.splice(i, 1);
-                                }
-                            }
-
-                            removed = true;
-                            // console.log(sensorName);
-                        }
-                    });
-
-                    if (removed) {
-                        context.recreateDisplay = true;
-                        context.resetDisplay();
-                        updateAddGrid();
-                    }
-                });
-
-                function addSensors() {
-                    var added = false;
-
-                    $('[id^=qpi-add-sensor-]').each(function(index) {
-                        if ($(this).is(':checked'))
-                        {
-                            var id = $(this).attr('id');
-                            var sensorID = id.replace("qpi-add-sensor-", "");
-                            var params = sensorID.split("_");
-                            // console.log(params)
-                            var dummysensor = { type: params[0] };
-                            if (params.length == 2)
-                                dummysensor.subType = params[1];
-
-                            var sensorDefinition = findSensorDefinition(dummysensor);
-
-                            var port = $("#qpi-add-sensor-parent-"+sensorID+" .port").text();
-                            var name = getNewSensorSuggestedName(sensorDefinition.suggestedName);
-
-                            infos.quickPiSensors.push({
-                                type: sensorDefinition.name,
-                                subType: sensorDefinition.subType,
-                                port: port,
-                                name: name
-                            });
-
-                            added = true;
-
-
-                        }
-                    });
-
-                    if (added) {
-                        context.resetSensorTable();
-                        // context.recreateDisplay = true;
-                        context.resetDisplay();
-                        updateAddGrid();
-                        $('#popupMessage').hide();
-                        window.displayHelper.popupMessageShown = false;
-                    }
-                };
-
-                function showMenu (id) {
-                    $('#popupMessage .navigationContent ul li').removeClass('selected');
-                    $('#popupMessage .navigationContent ul li[id=qpi-'+ id +']').addClass('selected');
-                    $('#showNavigationContent').prop('checked', false);
-                    $('#piconnectionlabel').hide();
-
-                    $('[id^=qpi-uiblock]').addClass("hiddenContent");
-                    $('#qpi-uiblock-' + id).removeClass("hiddenContent");
-                };
-
-                function showPortDialog(id) {
-                    // removePortDialog();
-                    var back = $("<div id='port_dialog_back'></div>");
-                    var dial = $("<div id='port_dialog'></div>");
-
-                    var params = id.split("_");
-                    var builtinport = false;
-                    var dummysensor = { type: params[0] };
-                    if (params.length >= 2)
-                        if (params[1])
-                            dummysensor.subType = params[1];
-                    if (params.length >= 3)
-                        builtinport = params[2];
-                    var sensorDefinition = findSensorDefinition(dummysensor);
-                    // console.log(params);
-
-                    var html = "<div id='port_field'><span>"+strings.messages.port+"</span><select id='port_select' class=\"custom-select\">";
-                    // var portSelect = document.getElementById("selector-sensor-port");
-                    // $('#selector-sensor-port').empty();
-                    var hasPorts = false;
-                    if (builtinport) {
-                        html += "<option value="+builtinport+">"+builtinport+"</option>";
-                        hasPorts = true;
-                    } else {
-                        var ports = getCurrentBoard().portTypes[sensorDefinition.portType];
-                        // console.log(id,ports)
-                        if (sensorDefinition.portType == "i2c")
-                        {
-                            ports = ["i2c"];
-                        }
-
-                        for (var iPort = 0; iPort < ports.length; iPort++) {
-                            var port = sensorDefinition.portType + ports[iPort];
-                            if (sensorDefinition.portType == "i2c")
-                                port = "i2c";
-
-                            if (!isPortUsed(sensorDefinition.name, port) && !usedPorts.includes(port)) {
-                                html += "<option value="+port+">"+port+"</option>";
-                                // var option = document.createElement('option');
-                                hasPorts = true;
-                            }
-                        }
-                    }
-                    html += "</select><label id=\"selector-label\"></label></div>";
-                    html += "<div id='buttons'><button id=\"validate\"><i class='icon fas fa-check'></i>"+strings.messages.validate+"</button>";
-                    html += "<button id=\"cancel\"><i class='icon fas fa-times'></i>"+strings.messages.cancel+"</button></div>";
-                    dial.html(html);
-                    $("#popupMessage").after(back,dial);
-
-                    if (!hasPorts) {
-                        $('#buttons #validate').attr("disabled", true);
-
-                        var object_function = strings.messages.actuator;
-                        if (sensorDefinition.isSensor)
-                            object_function = strings.messages.sensor;
-
-                        $('#selector-label').text(strings.messages.noPortsAvailable.format(object_function, sensorDefinition.portType));
-                        $('#selector-label').show();
-                        $('#port_field span, #port_field select').hide();
-                    }
-                    else {
-                        $('#buttons #validate').attr("disabled", false);
-                        $('#selector-label').hide();
-                        $('#port_field span, #port_field select').show();
-                    }
-
-                    $("#port_dialog #cancel").click(function() {
-                        removePortDialog();
-                        var elID = "qpi-add-sensor-parent-"+id;
-                        changeSelect(elID);
-                        changePort(id,false);
-                    });
-
-                    $("#port_dialog #validate").click(function() {
-                        var port = $("#port_select").val();
-                        var elID = "qpi-add-sensor-parent-"+id;
-                        changePort(id,port);
-                        removePortDialog();
-                        // console.log(port)
-                    });
-
-                    // $("#port_select").focusout(function(){console.log("focusout")})
-                    // $("#port_select").change(function(){console.log("change")})
-                };
-
-                function changePort(id,port) {
-                    var elID = "qpi-add-sensor-parent-"+id;
-                    if(port){
-                        $("#"+elID+" .port").text(port);
-                        if(!usedPorts.includes(port)){
-                            usedPorts.push(port);
-                        }
-                    }else{
-                        var currPort = $("#"+elID+" .port").text();
-                        var ind = usedPorts.indexOf(currPort);
-                        if(ind >= 0){
-                            usedPorts.splice(ind,1);
-                        }
-                        $("#"+elID+" .port").text("");
-                    }
-                };
-
-                function removePortDialog() {
-                    $("#port_dialog_back, #port_dialog").remove();
-                };
-
-                function showConfirmDialog(cb) {
-                    var back = $("<div id='port_dialog_back'></div>");
-                    var dial = $("<div id='port_dialog'></div>");
-                    html = "<span>"+strings.messages.areYouSure+"</span>";
-                    html += "<div id='buttons'><button id=\"yes\">"+strings.messages.yes+"</button>";
-                    html += "<button id=\"no\">"+strings.messages.no+"</button></div>";
-                    dial.html(html);
-
-                    $("#popupMessage").after(back,dial);
-
-                    $("#port_dialog #no").click(function() {
-                        removePortDialog();
-                    });
-                    $("#port_dialog #yes").click(function() {
-                        if(cb)
-                            cb();
-                        removePortDialog();
-                    });
-                };
-
-                $('#qpi-portsnames').click(clickMenu("portsnames"));
-                $('#qpi-components').click(clickMenu("components"));
-                $('#qpi-change-board').click(clickMenu("change-board"));
-                $('#qpi-connection').click(clickMenu("connection"));
-
-                function clickMenu(id) {
-                    return function() {
-                        if(id != "components"){
-                           if(toAdd.length > 0 || toRemove.length > 0){
-                                showConfirmDialog(function() {
-                                    unselectSensors();
-                                    clickMenu(id)();
-                                });
-                                return
-                            }
-                        }
-                        showMenu(id);
-                    }
-                };
-
-                if (context.offLineMode) {
-                    $('#pirelease').attr('disabled', true);
-                }
-                else {
-                    $('#pirelease').attr('disabled', false);
-                }
-
-                $('#piconnectok').attr('disabled', true);
-
-                $('#piconnectionlabel').hide();
-
-                if (context.quickPiConnection.isConnected()) {
-                    if (getSessionStorage('connectionMethod') == "USB") {
-                        $('#piconwifi').removeClass('active');
-                        $('#piconusb').addClass('active');
-                        $('#pischoolcon').hide();
-                        $('#piaddress').val("192.168.233.1");
-
-                        $('#piconnectok').attr('disabled', true);
-                        $('#piconnectionlabel').show();
-                        $('#piconnectionlabel').text(strings.messages.canConnectoToUSB)
-
-                        context.inUSBConnection = true;
-                        context.inBTConnection = false;
-                    } else if (getSessionStorage('connectionMethod') == "BT") {
-                        $('#piconwifi').removeClass('active');
-                        $('#piconbt').addClass('active');
-                        $('#pischoolcon').hide();
-
-                        $('#piaddress').val("192.168.233.2");
-
-                        $('#piconnectok').attr('disabled', true);
-                        $('#piconnectionlabel').show();
-                        $('#piconnectionlabel').text(strings.messages.canConnectoToBT)
-
-                        context.inUSBConnection = false;
-                        context.inBTConnection = true;
-                    } else if (getSessionStorage('connectionMethod') == "LOCAL") {
-                        $('#piconlocal').trigger("click");
-                    }
-                } else {
-                    setSessionStorage('connectionMethod', "WIFI");
-                }
-
-                $('#piaddress').on('input', function (e) {
-
-                    if (context.offLineMode)
-                    {
-                        var content = $('#piaddress').val();
-
-                        if (content)
-                            $('#piconnectok').attr('disabled', false);
-                        else
-                            $('#piconnectok').attr('disabled', true);
-                    }
-                });
-
-
-                if (getSessionStorage('pilist')) {
-                    populatePiList(JSON.parse(getSessionStorage('pilist')));
-                }
-
-                if (getSessionStorage('raspberryPiIpAddress')) {
-                    $('#piaddress').val(getSessionStorage('raspberryPiIpAddress'));
-                    $('#piaddress').trigger("input");
-                }
-
-                if (getSessionStorage('schoolkey')) {
-                    $('#schoolkey').val(getSessionStorage('schoolkey'));
-                    $('#pigetlist').attr("disabled", false);
-                }
-
-                function setLocalIp()
-                {
-                    var localvalue = $('input[name=pilocalconnectiontype]:checked').val()
-
-                    if (localvalue == "localhost") {
-                        $('#piaddress').val("localhost");
-                        $('#piaddress').trigger("input");
-                    } else {
-                        $('#piaddress').val(window.location.hostname);
-                        $('#piaddress').trigger("input");
-                    }
-                }
-
-                $('input[type=radio][name=pilocalconnectiontype]').change(function() {
-                    setLocalIp();
-                });
-
-                function cleanUSBBTIP()
-                {
-                    var ipaddress = $('#piaddress').val();
-
-                    if (ipaddress == "192.168.233.1" ||
-                        ipaddress == "192.168.233.2" ||
-                        ipaddress == "localhost" ||
-                        ipaddress == window.location.hostname)
-                    {
-                            $('#piaddress').val("");
-                            $('#piaddress').trigger("input");
-
-                            var schoolkey = $('#schoolkey').val();
-                            if (schoolkey.length > 1)
-                                $('#pigetlist').trigger("click");
-                    }
-                }
-
-                cleanUSBBTIP();
-
-                $('#panel-body-local').hide();
-
-                if (context.localhostAvailable || context.windowLocationAvailable)
-                {
-                    if (!context.quickPiConnection.isConnected() ||
-                        getSessionStorage('connectionMethod') == "LOCAL")
-                    {
-                        $('#piconsel .btn').removeClass('active');
-                        $('#piconlocal').addClass('active');
-
-
-                        $('#pischoolcon').hide();
-                        $('#piconnectionlabel').hide();
-                        $('#panel-body-local').show();
-                        setSessionStorage('connectionMethod', "LOCAL");
-
-                        if (context.localhostAvailable &&
-                            context.windowLocationAvailable)
-                        {
-                            $("#piconnectolocalhostcheckbox").prop("checked", true);
-
-                            setLocalIp();
-                        } else if (context.localhostAvailable) {
-                            $('#piconnectolocalhost').hide();
-                            $('#piconnectocurrenturlcheckbox').hide();
-
-                            setLocalIp();
-                        } else if (context.windowLocationAvailable) {
-                            $('#piconnectocurrenturl').hide();
-                            $('#piconnectolocalhostcheckbox').hide();
-
-                            setLocalIp();
-                        }
-                    }
-                }
-                else
-                {
-                    $('#panel-body-local').hide();
-                    $("#piconlocal").hide();
-                }
-
-
-                $('#piconnectok').click(function () {
-                    context.inUSBConnection = false;
-                    context.inBTConnection = false;
-
-                    $('#piconnectok').attr("disabled", true);
-                    $("#piconnectprogressicon").show();
-                    $("#piconnectwifiicon").hide();
-
-                    // $('#popupMessage').hide();
-                    // window.displayHelper.popupMessageShown = false;
-
-                    if ($('#piusetunnel').is(":checked")) {
-
-                        var piname = $("#pilist option:selected").text().split("-")[0].trim();
-
-                        var url = "ws://api.quick-pi.org/client/" +
-                            $('#schoolkey').val()  + "-" +
-                            piname +
-                            "/api/v1/commands";
-
-                        setSessionStorage('quickPiUrl', url);
-                        context.quickPiConnection.connect(url);
-
-                    } else {
-                        var ipaddress = $('#piaddress').val();
-                        setSessionStorage('raspberryPiIpAddress', ipaddress);
-
-                        showasConnecting();
-                        var url = "ws://" + ipaddress + ":5000/api/v1/commands";
-                        setSessionStorage('quickPiUrl', url);
-
-                        context.quickPiConnection.connect(url);
-                    }
-                });
-
-                $('#pirelease').click(function () {
-                    context.inUSBConnection = false;
-                    context.inBTConnection = false;
-
-                    // $('#popupMessage').hide();
-                    // window.displayHelper.popupMessageShown = false;
-
-                    // IF connected release lock
-                    context.releasing = true;
-                    context.quickPiConnection.releaseLock();
-                });
-
-                $('#picancel').click(exitConfig);
-
-                function exitConfig() {
-                    if(toAdd.length > 0 || toRemove.length > 0){
-                        showConfirmDialog(function() {
-                            unselectSensors();
-                            exitConfig();
-                        });
-                        return
-                    }
-                    context.inUSBConnection = false;
-                    context.inBTConnection = false;
-
-                    $('#popupMessage').hide();
-                    window.displayHelper.popupMessageShown = false;
-                }
-
-                $('#schoolkey').on('input', function (e) {
-                    var schoolkey = $('#schoolkey').val();
-                    setSessionStorage('schoolkey', schoolkey);
-
-                    if (schoolkey)
-                        $('#pigetlist').attr("disabled", false);
-                    else
-                        $('#pigetlist').attr("disabled", true);
-                });
-
-
-                $('#pigetlist').click(function () {
-                    var schoolkey = $('#schoolkey').val();
-
-                    fetch('http://www.france-ioi.org/QuickPi/list.php?school=' + schoolkey)
-                        .then(function (response) {
-                            return response.json();
-                        })
-                        .then(function (jsonlist) {
-                            populatePiList(jsonlist);
-                        });
-                });
-
-                // Select device connexion methods
-                $('#piconsel .btn').click(function () {
-                    if (!context.quickPiConnection.isConnected()) {
-                        if (!$(this).hasClass('active')) {
-                            $('#piconsel .btn').removeClass('active');
-                            $(this).addClass('active');
-                        }
-                    }
-                });
-
-                $('#piconlocal').click(function () {
-                    context.inUSBConnection = false;
-                    context.inBTConnection = false;
-
-                    cleanUSBBTIP();
-
-                    if (!context.quickPiConnection.isConnected()) {
-                        setLocalIp();
-                        setSessionStorage('connectionMethod', "LOCAL");
-                        $(this).addClass('active');
-                        $('#panel-body-local').show();
-                        $('#pischoolcon').hide();
-                        $('#piconnectionlabel').hide();
-
-                        $(this).addClass('active');
-                    }
-
-                });
-
-                $('#piconwifi').click(function () {
-                    context.inUSBConnection = false;
-                    context.inBTConnection = false;
-
-                    cleanUSBBTIP();
-
-                    if (!context.quickPiConnection.isConnected()) {
-                        setSessionStorage('connectionMethod', "WIFI");
-                        $(this).addClass('active');
-                        $('#panel-body-local').hide();
-                        $('#pischoolcon').show();
-                        $('#piconnectionlabel').hide();
-                    }
-
-                });
-
-                $('#piconusb').click(function () {
-                    if (!context.quickPiConnection.isConnected()) {
-                        setSessionStorage('connectionMethod', "USB");
-                        $('#piconnectok').attr('disabled', true);
-                        $('#panel-body-local').hide();
-                        $('#piconnectionlabel').show();
-                        $('#piconnectionlabel').html(strings.messages.cantConnectoToUSB)
-
-                        $(this).addClass('active');
-                        $('#pischoolcon').hide();
-                        $('#piaddress').val("192.168.233.1");
-
-                        context.inUSBConnection = true;
-                        context.inBTConnection = false;
-
-                        function updateUSBAvailability(available) {
-
-                            if  (context.inUSBConnection && context.offLineMode) {
-                                if (available) {
-                                    $('#piconnectok').attr('disabled', false);
-
-                                    $('#piconnectionlabel').text(strings.messages.canConnectoToUSB)
-                                } else {
-                                    $('#piconnectok').attr('disabled', true);
-
-                                    $('#piconnectionlabel').html(strings.messages.cantConnectoToUSB)
-                                }
-
-                                setTimeout(function() {
-                                    context.quickPiConnection.isAvailable("192.168.233.1", updateUSBAvailability);
-                                }, 1000);
-                            }
-                        }
-
-                        updateUSBAvailability(false);
-
-
-                    }
-                });
-
-                $('#piconbt').click(function () {
-                    $('#piconnectionlabel').show();
-                    if (!context.quickPiConnection.isConnected()) {
-                        setSessionStorage('connectionMethod', "BT");
-                        $('#piconnectok').attr('disabled', true);
-                        $('#panel-body-local').hide();
-                        $('#piconnectionlabel').show();
-                        $('#piconnectionlabel').html(strings.messages.cantConnectoToBT)
-
-                        $(this).addClass('active');
-                        $('#pischoolcon').hide();
-
-                        $('#piaddress').val("192.168.233.2");
-
-                        context.inUSBConnection = false;
-                        context.inBTConnection = true;
-
-                        function updateBTAvailability(available) {
-
-                            if  (context.inBTConnection && context.offLineMode) {
-                                if (available) {
-                                    $('#piconnectok').attr('disabled', false);
-
-                                    $('#piconnectionlabel').text(strings.messages.canConnectoToBT)
-                                } else {
-                                    $('#piconnectok').attr('disabled', true);
-
-                                    $('#piconnectionlabel').html(strings.messages.cantConnectoToBT)
-                                }
-
-                                setTimeout(function() {
-                                    context.quickPiConnection.isAvailable("192.168.233.2", updateBTAvailability);
-                                }, 1000);
-                            }
-                        }
-
-                        updateBTAvailability(false);
-                    }
-                });
-
-                function populatePiList(jsonlist) {
-                    setSessionStorage('pilist', JSON.stringify(jsonlist));
-
-                    var select = document.getElementById("pilist");
-                    var first = true;
-
-                    $('#pilist').empty();
-                    $('#piusetunnel').attr('disabled', true);
-
-                    for (var i = 0; i < jsonlist.length; i++) {
-                        var pi = jsonlist[i];
-
-                        var el = document.createElement("option");
-
-                        var minutes = Math.round(jsonlist[i].seconds_since_ping / 60);
-                        var timeago = "";
-
-                        if (minutes < 60)
-                            timeago = strings.messages.minutesago.format(minutes);
-                        else
-                            timeago = strings.messages.hoursago;
-
-
-                        el.textContent = jsonlist[i].name + " - " + timeago;
-                        el.value = jsonlist[i].ip;
-
-                        select.appendChild(el);
-
-                        if (first) {
-                            $('#piaddress').val(jsonlist[i].ip);
-                            $('#piaddress').trigger("input");
-                            first = false;
-                            $('#pilist').prop('disabled', false);
-
-                            $('#piusetunnel').attr('disabled', false);
-                        }
-                    }
-                }
-
-                $('#pilist').on('change', function () {
-                    $("#piaddress").val(this.value);
-                });
-
-                updatePiComponentButtons();
-
-                $('#picomponentname').click(function () {
-                    context.useportforname = false;
-                    updatePiComponentButtons();
-                    //context.recreateDisplay = true;
-                    context.resetDisplay();
-                });
-
-                $('#piportname').click(function () {
-                    context.useportforname = true;
-                    updatePiComponentButtons();
-                    //context.recreateDisplay = true;
-                    context.resetDisplay();
-                });
-
-                function updatePiComponentButtons() {
-                    if (context.useportforname) {
-                        $('#piportname').addClass('active');
-                        $('#picomponentname').removeClass('active');
-                        $('#example_sensor #port').show();
-                        $('#example_sensor #name').hide();
-                    } else {
-                        $('#picomponentname').addClass('active');
-                        $('#piportname').removeClass('active');
-                        $('#example_sensor #name').show();
-                        $('#example_sensor #port').hide();
-                    }
-                }
-            });
-        }
-
 
         // $('#pichangehat').click(function () {
         //     console.log("chooseBoard")
@@ -3816,7 +1589,7 @@ var getContext = function (display, infos, curLevel) {
 
                         if (sensor.type == "stick")
                         {
-                            var gpios = findSensorDefinition(sensor).gpios;
+                            var gpios = sensorHandler.findSensorDefinition(sensor).gpios;
                             var cols = addNewRow();
 
                             cols[0].appendChild(document.createTextNode(sensor.type));
@@ -3920,7 +1693,7 @@ var getContext = function (display, infos, curLevel) {
 
         if (parseInt(getSessionStorage('autoConnect'))) {
             if (!context.quickPiConnection.isConnected() && !context.quickPiConnection.isConnecting()) {
-                $('#piconnect').attr("disabled", true);
+                $('#piconnect').attr('disabled', 'disabled');
                 context.quickPiConnection.connect(getSessionStorage('quickPiUrl'));
             }
         }
@@ -3934,7 +1707,7 @@ var getContext = function (display, infos, curLevel) {
     }
 
     function addDefaultBoardSensors() {
-        var board = getCurrentBoard();
+        var board = mainBoard.getCurrentBoard(context.board);
         var boardDefaultSensors = board.default;
 
         if (!boardDefaultSensors)
@@ -3979,26 +1752,6 @@ var getContext = function (display, infos, curLevel) {
         }
         // console.log(infos.quickPiSensors)
 
-    };
-
-    function getNewSensorSuggestedName(name) {
-        var maxvalue = 0;
-
-        for (var i = 0; i < infos.quickPiSensors.length; i++) {
-            var sensor = infos.quickPiSensors[i];
-
-            var firstdigit = sensor.name.search(/\d/);
-            if (firstdigit > 0) {
-                var namepart = sensor.name.substring(0, firstdigit);
-                var numberpart = parseInt(sensor.name.substring(firstdigit), 10);
-
-                if (name == namepart && numberpart > maxvalue) {
-                    maxvalue = numberpart;
-                }
-            }
-        }
-
-        return name + (maxvalue + 1);
     }
 
     function drawCustomSensorAdder(x, y, w, h, fontsize) {
@@ -4118,11 +1871,11 @@ var getContext = function (display, infos, curLevel) {
         //         }
         //     }
 
-        //     var board = getCurrentBoard();
+        //     var board = mainBoard.getCurrentBoard(context.board);
         //     if (board.builtinSensors) {
         //         for (var i = 0; i < board.builtinSensors.length; i++) {
         //             var sensor = board.builtinSensors[i];
-        //             var sensorDefinition = findSensorDefinition(sensor);
+        //             var sensorDefinition = sensorHandler.findSensorDefinition(sensor);
 
         //             if (context.findSensor(sensor.type, sensor.port, false))
         //                 continue;
@@ -4154,7 +1907,7 @@ var getContext = function (display, infos, curLevel) {
         //         if (values.length >= 3)
         //             builtinport = values[2];
 
-        //         var sensorDefinition = findSensorDefinition(dummysensor);
+        //         var sensorDefinition = sensorHandler.findSensorDefinition(dummysensor);
 
         //         var imageContainer = document.getElementById("selector-image-container");
         //         while (imageContainer.firstChild) {
@@ -4181,7 +1934,7 @@ var getContext = function (display, infos, curLevel) {
         //             portSelect.appendChild(option);
         //             hasPorts = true;
         //         } else {
-        //             var ports = getCurrentBoard().portTypes[sensorDefinition.portType];
+        //             var ports = mainBoard.getCurrentBoard(context.board).portTypes[sensorDefinition.portType];
         //             if (sensorDefinition.portType == "i2c")
         //             {
         //                 ports = ["i2c"];
@@ -4205,7 +1958,7 @@ var getContext = function (display, infos, curLevel) {
 
 
         //         if (!hasPorts) {
-        //             $('#selector-add-button').attr("disabled", true);
+        //             $('#selector-add-button').attr('disabled', 'disabled');
 
         //             var object_function = strings.messages.actuator;
         //             if (sensorDefinition.isSensor)
@@ -4215,7 +1968,7 @@ var getContext = function (display, infos, curLevel) {
         //             $('#selector-label').show();
         //         }
         //         else {
-        //             $('#selector-add-button').attr("disabled", false);
+        //             $('#selector-add-button').attr('disabled', null);
         //             $('#selector-label').hide();
         //         }
         //     });
@@ -4228,7 +1981,7 @@ var getContext = function (display, infos, curLevel) {
         //         if (values.length == 2)
         //             dummysensor.subType = values[1];
 
-        //         var sensorDefinition = findSensorDefinition(dummysensor);
+        //         var sensorDefinition = sensorHandler.findSensorDefinition(dummysensor);
 
 
         //         var port = $("#selector-sensor-port option:selected").text();
@@ -4340,11 +2093,11 @@ var getContext = function (display, infos, curLevel) {
                 }
             }
 
-            var board = getCurrentBoard();
+            var board = mainBoard.getCurrentBoard(context.board);
             if (board.builtinSensors) {
                 for (var i = 0; i < board.builtinSensors.length; i++) {
                     var sensor = board.builtinSensors[i];
-                    var sensorDefinition = findSensorDefinition(sensor);
+                    var sensorDefinition = sensorHandler.findSensorDefinition(sensor);
 
                     if (context.findSensor(sensor.type, sensor.port, false))
                         continue;
@@ -4377,7 +2130,7 @@ var getContext = function (display, infos, curLevel) {
                 if (values.length >= 3)
                     builtinport = values[2];
 
-                var sensorDefinition = findSensorDefinition(dummysensor);
+                var sensorDefinition = sensorHandler.findSensorDefinition(dummysensor);
 
                 var imageContainer = document.getElementById("selector-image-container");
                 while (imageContainer.firstChild) {
@@ -4404,7 +2157,7 @@ var getContext = function (display, infos, curLevel) {
                     portSelect.appendChild(option);
                     hasPorts = true;
                 } else {
-                    var ports = getCurrentBoard().portTypes[sensorDefinition.portType];
+                    var ports = mainBoard.getCurrentBoard(context.board).portTypes[sensorDefinition.portType];
                     // console.log(ports)
                     if (sensorDefinition.portType == "i2c")
                     {
@@ -4416,7 +2169,7 @@ var getContext = function (display, infos, curLevel) {
                         if (sensorDefinition.portType == "i2c")
                             port = "i2c";
 
-                        if (!isPortUsed(sensorDefinition.name, port)) {
+                        if (!sensorHandler.isPortUsed(sensorDefinition.name, port)) {
                             var option = document.createElement('option');
                             option.innerText = port;
                             option.value = port;
@@ -4429,7 +2182,7 @@ var getContext = function (display, infos, curLevel) {
 
 
                 if (!hasPorts) {
-                    $('#selector-add-button').attr("disabled", true);
+                    $('#selector-add-button').attr('disabled', 'disabled');
 
                     var object_function = strings.messages.actuator;
                     if (sensorDefinition.isSensor)
@@ -4439,7 +2192,7 @@ var getContext = function (display, infos, curLevel) {
                     $('#selector-label').show();
                 }
                 else {
-                    $('#selector-add-button').attr("disabled", false);
+                    $('#selector-add-button').attr('disabled', null);
                     $('#selector-label').hide();
                 }
             });
@@ -4452,11 +2205,11 @@ var getContext = function (display, infos, curLevel) {
                 if (values.length == 2)
                     dummysensor.subType = values[1];
 
-                var sensorDefinition = findSensorDefinition(dummysensor);
+                var sensorDefinition = sensorHandler.findSensorDefinition(dummysensor);
 
 
                 var port = $("#selector-sensor-port option:selected").text();
-                var name = getNewSensorSuggestedName(sensorDefinition.suggestedName);
+                var name = sensorHandler.getNewSensorSuggestedName(sensorDefinition.suggestedName);
 
                 // if(name == 'screen1') {
                     // prepend screen because squareSize func can't handle cells wrap
@@ -4493,24 +2246,7 @@ var getContext = function (display, infos, curLevel) {
                 window.displayHelper.popupMessageShown = false;
             });
         });
-    };
-
-    function isPortUsed(type, port) {
-        for (var i = 0; i < infos.quickPiSensors.length; i++) {
-            var sensor = infos.quickPiSensors[i];
-
-            if (port == "i2c")
-            {
-                if (sensor.type == type)
-                    return true;
-            } else {
-                if (sensor.port == port)
-                    return true;
-            }
-        }
-
-        return false;
-    };
+    }
 
     // Straight from stack overflow :)
     function squareSize(x, y, n, ratio) {
@@ -4579,16 +2315,6 @@ var getContext = function (display, infos, curLevel) {
         }
     }
 
-    function showasConnecting() {
-        $('#piconnectprogress').show();
-        $('#piinstallcheck').hide();
-        $('#piinstallprogresss').hide();
-
-        if(context.sensorStateListener) {
-            context.sensorStateListener('disconnected');
-        }
-    }
-
     function showasReleased() {
         $('#piconnectprogress').hide();
         $('#piinstallcheck').hide();
@@ -4632,7 +2358,7 @@ var getContext = function (display, infos, curLevel) {
 
         $("#piconnectprogressicon").hide();
         $("#piconnectwifiicon").show();
-        $("#pirelease").attr("disabled", false);
+        $("#pirelease").attr('disabled', null);
 
         startSensorPollInterval();
     }
@@ -4668,8 +2394,8 @@ var getContext = function (display, infos, curLevel) {
         }
 
         /// Dialog
-        $("#pirelease").attr("disabled", true);
-        $("#piconnectok").attr("disabled", false);
+        $("#pirelease").attr('disabled', 'disabled');
+        $("#piconnectok").attr('disabled', null);
 
     }
 
@@ -4912,8 +2638,8 @@ var getContext = function (display, infos, curLevel) {
 
             for(var sensorName in context.gradingStatesBySensor) {
                 // Cycle through each sensor from the grading states
-                var sensor = findSensorByName(sensorName);
-                var sensorDef = findSensorDefinition(sensor);
+                var sensor = sensorHandler.findSensorByName(sensorName);
+                var sensorDef = sensorHandler.findSensorDefinition(sensor);
 
                 var expectedStates = context.gradingStatesBySensor[sensorName];
                 if(!expectedStates.length) { continue;}
@@ -5155,7 +2881,7 @@ var getContext = function (display, infos, curLevel) {
             strokewidth = 4;
         }
 
-        var isAnalog = findSensorDefinition(sensor).isAnalog;
+        var isAnalog = sensorHandler.findSensorDefinition(sensor).isAnalog;
         var percentage = + state;
 
         var drawnElements = [];
@@ -5174,7 +2900,7 @@ var getContext = function (display, infos, curLevel) {
                 var ypositiontop = sensor.drawInfo.y + (yspace * i)
                 var ypositionbottom = ypositiontop + yspace;
 
-                var offset = (ypositionbottom - ypositiontop) * findSensorDefinition(sensor).getPercentageFromState(state[i], sensor);
+                var offset = (ypositionbottom - ypositiontop) * sensorHandler.findSensorDefinition(sensor).getPercentageFromState(state[i], sensor);
 
                 if (type == "expected" || type == "finnish") {
                     color = "lightgrey";
@@ -5191,7 +2917,7 @@ var getContext = function (display, infos, curLevel) {
                 if (sensor.lastAnalogState != null &&
                     sensor.lastAnalogState[i] != state[i]) {
 
-                    var oldStatePercentage = findSensorDefinition(sensor).getPercentageFromState(sensor.lastAnalogState[i], sensor);
+                    var oldStatePercentage = sensorHandler.findSensorDefinition(sensor).getPercentageFromState(sensor.lastAnalogState[i], sensor);
 
                     var previousOffset = (ypositionbottom - ypositiontop) * oldStatePercentage;
 
@@ -5213,7 +2939,7 @@ var getContext = function (display, infos, curLevel) {
 
                     if ((startx) - sensor.timelinelastxlabel[i] > 40)
                     {
-                        var sensorDef = findSensorDefinition(sensor);
+                        var sensorDef = sensorHandler.findSensorDefinition(sensor);
                         var stateText = state.toString();
                         if(sensorDef && sensorDef.getStateString) {
                             stateText = sensorDef.getStateString(state[i]);
@@ -5248,7 +2974,7 @@ var getContext = function (display, infos, curLevel) {
 
         } else
         if (isAnalog || sensor.showAsAnalog) {
-            var offset = (ypositionbottom - ypositiontop) * findSensorDefinition(sensor).getPercentageFromState(state, sensor);
+            var offset = (ypositionbottom - ypositiontop) * sensorHandler.findSensorDefinition(sensor).getPercentageFromState(state, sensor);
 
             if (type == "wrong") {
                 color = "red";
@@ -5261,7 +2987,7 @@ var getContext = function (display, infos, curLevel) {
 
             if (sensor.lastAnalogState != null
                 && sensor.lastAnalogState != state) {
-                var oldStatePercentage = findSensorDefinition(sensor).getPercentageFromState(sensor.lastAnalogState, sensor);
+                var oldStatePercentage = sensorHandler.findSensorDefinition(sensor).getPercentageFromState(sensor.lastAnalogState, sensor);
 
                 var previousOffset = (ypositionbottom - ypositiontop) * oldStatePercentage;
 
@@ -5287,7 +3013,7 @@ var getContext = function (display, infos, curLevel) {
 
                 if ((startx) - sensor.timelinelastxlabel > 5)
                 {
-                    var sensorDef = findSensorDefinition(sensor);
+                    var sensorDef = sensorHandler.findSensorDefinition(sensor);
                     var stateText = state.toString();
                     if(sensorDef && sensorDef.getStateString) {
                         stateText = sensorDef.getStateString(state);
@@ -5394,7 +3120,7 @@ var getContext = function (display, infos, curLevel) {
             }
 
         } else if (sensor.type == "screen" && state) {
-            var sensorDef = findSensorDefinition(sensor);
+            var sensorDef = sensorHandler.findSensorDefinition(sensor);
             if (type != "actual" || !sensor.lastScreenState || !sensorDef.compareState(sensor.lastScreenState, state))
             {
                 sensor.lastScreenState = state;
@@ -5510,7 +3236,7 @@ var getContext = function (display, infos, curLevel) {
                 deleteLastDrawnElements = false;
             }
         } else if (sensor.type == "cloudstore") {
-            var sensorDef = findSensorDefinition(sensor);
+            var sensorDef = sensorHandler.findSensorDefinition(sensor);
             if (type != "actual" || !sensor.lastScreenState || !sensorDef.compareState(sensor.lastScreenState, state))
             {
                 sensor.lastScreenState = state;
@@ -5639,11 +3365,6 @@ var getContext = function (display, infos, curLevel) {
         drawCurrentTime();
     }
 
-    function getImg(filename) {
-        // Get the path to an image stored in bebras-modules
-        return (window.modulesPath ? window.modulesPath : '../../modules/') + 'img/quickpi/' + filename;
-    }
-
     function createSlider(sensor, max, min, x, y, w, h, index) {
         // console.log("createSlider")
         var sliderobj = {};
@@ -5697,7 +3418,7 @@ var getContext = function (display, infos, curLevel) {
 
         sliderobj.plusset.click(function () {
             var step = 1;
-            var sensorDef = findSensorDefinition(sensor);
+            var sensorDef = sensorHandler.findSensorDefinition(sensor);
             if (sensorDef.step)
                 step = sensorDef.step;
 
@@ -5731,7 +3452,7 @@ var getContext = function (display, infos, curLevel) {
         sliderobj.minusset.click(function () {
 
             var step = 1;
-            var sensorDef = findSensorDefinition(sensor);
+            var sensorDef = sensorHandler.findSensorDefinition(sensor);
             if (sensorDef.step)
                 step = sensorDef.step;
 
@@ -5754,9 +3475,9 @@ var getContext = function (display, infos, curLevel) {
 
 
         if (Array.isArray(sensor.state)) {
-            var percentage = findSensorDefinition(sensor).getPercentageFromState(sensor.state[index], sensor);
+            var percentage = sensorHandler.findSensorDefinition(sensor).getPercentageFromState(sensor.state[index], sensor);
         } else {
-            var percentage = findSensorDefinition(sensor).getPercentageFromState(sensor.state, sensor);
+            var percentage = sensorHandler.findSensorDefinition(sensor).getPercentageFromState(sensor.state, sensor);
         }
 
 
@@ -5786,9 +3507,9 @@ var getContext = function (display, infos, curLevel) {
                 var percentage = 1 - ((newy - sliderobj.sliderdata.insiderecty) / sliderobj.sliderdata.scale);
 
                 if (Array.isArray(sensor.state)) {
-                    sensor.state[sliderobj.index] = findSensorDefinition(sensor).getStateFromPercentage(percentage);
+                    sensor.state[sliderobj.index] = sensorHandler.findSensorDefinition(sensor).getStateFromPercentage(percentage);
                 } else {
-                    sensor.state = findSensorDefinition(sensor).getStateFromPercentage(percentage);
+                    sensor.state = sensorHandler.findSensorDefinition(sensor).getStateFromPercentage(percentage);
                 }
                 warnClientSensorStateChanged(sensor);
                 drawSensor(sensor, true);
@@ -5816,7 +3537,7 @@ var getContext = function (display, infos, curLevel) {
                     if (sensor.sliders[i] == undefined)
                         continue;
 
-                    var percentage = findSensorDefinition(sensor).getPercentageFromState(sensor.state[i], sensor);
+                    var percentage = sensorHandler.findSensorDefinition(sensor).getPercentageFromState(sensor.state[i], sensor);
 
                     thumby = sensor.sliders[i].sliderdata.insiderecty +
                         sensor.sliders[i].sliderdata.insideheight -
@@ -5827,7 +3548,7 @@ var getContext = function (display, infos, curLevel) {
                     sensor.sliders[i].slider.toFront();
                 }
             } else {
-                var percentage = findSensorDefinition(sensor).getPercentageFromState(sensor.state, sensor);
+                var percentage = sensorHandler.findSensorDefinition(sensor).getPercentageFromState(sensor.state, sensor);
 
                 thumby = sensor.sliders[0].sliderdata.insiderecty +
                     sensor.sliders[0].sliderdata.insideheight -
@@ -5865,7 +3586,7 @@ var getContext = function (display, infos, curLevel) {
 
                 var percentage = 1 - ((newy - sensor.sliders[0].sliderdata.insiderecty) / sensor.sliders[0].sliderdata.scale);
 
-                sensor.state = findSensorDefinition(sensor).getStateFromPercentage(percentage);
+                sensor.state = sensorHandler.findSensorDefinition(sensor).getStateFromPercentage(percentage);
                 warnClientSensorStateChanged(sensor);
                 drawSensor(sensor, true);
 
@@ -6215,7 +3936,7 @@ var getContext = function (display, infos, curLevel) {
             if ((!context.runner || !context.runner.isRunning())
                 && !context.offLineMode) {
 
-                findSensorDefinition(sensor).setLiveState(sensor, sensor.state, function(x) {});
+                sensorHandler.findSensorDefinition(sensor).setLiveState(sensor, sensor.state, function(x) {});
             }
         } else if (sensor.type == "ledmatrix") {
             if (sensor.stateText)
@@ -6259,7 +3980,7 @@ var getContext = function (display, infos, curLevel) {
                     var i = Math.floor((e.offsetX - imgx) / (imgw/5));
                     var j = Math.floor((e.offsetY - imgy) / (imgh/5));
                     sensor.state[i][j] = !sensor.state[i][j] ? 1 : 0;
-                    findSensorDefinition(sensor).setLiveState(sensor, sensor.state, function() {});
+                    sensorHandler.findSensorDefinition(sensor).setLiveState(sensor, sensor.state, function() {});
                     drawSensor(sensor);
                 }
             }
@@ -6373,7 +4094,7 @@ var getContext = function (display, infos, curLevel) {
             if (sensor.stateText)
                 sensor.stateText.remove();
 
-            var stateText = findSensorDefinition(sensor).getStateString(sensor.state);
+            var stateText = sensorHandler.findSensorDefinition(sensor).getStateString(sensor.state);
 
             sensor.stateText = paper.text(state1x, state1y, stateText);
 
@@ -6381,7 +4102,7 @@ var getContext = function (display, infos, curLevel) {
             if ((!context.runner || !context.runner.isRunning())
                 && !context.offLineMode) {
 
-                var setLiveState = findSensorDefinition(sensor).setLiveState;
+                var setLiveState = sensorHandler.findSensorDefinition(sensor).setLiveState;
 
                 if (setLiveState) {
                     setLiveState(sensor, sensor.state, function(x) {});
@@ -6721,7 +4442,7 @@ var getContext = function (display, infos, curLevel) {
                 if (!sensor.updatetimeout) {
                     sensor.updatetimeout = setTimeout(function () {
 
-                        findSensorDefinition(sensor).setLiveState(sensor, sensor.state, function(x) {});
+                        sensorHandler.findSensorDefinition(sensor).setLiveState(sensor, sensor.state, function(x) {});
 
                         sensor.updatetimeout = null;
                     }, 100);
@@ -7311,7 +5032,7 @@ var getContext = function (display, infos, curLevel) {
             if ((!context.runner || !context.runner.isRunning())
                 && !context.offLineMode) {
 
-                findSensorDefinition(sensor).setLiveState(sensor, sensor.state, function(x) {});
+                sensorHandler.findSensorDefinition(sensor).setLiveState(sensor, sensor.state, function(x) {});
             }
         }
         else if (sensor.type == "irrecv") {
@@ -7458,12 +5179,12 @@ var getContext = function (display, infos, curLevel) {
 
                         $('#piirlearn').click(function () {
 
-                            $('#piirlearn').attr('disabled', true);
+                            $('#piirlearn').attr('disabled', 'disabled');
 
                             $("#piircode").text("");
                             context.quickPiConnection.sendCommand("readIRMessageCode(\"irrec1\", 10000)", function(retval)
                             {
-                                $('#piirlearn').attr('disabled', false);
+                                $('#piirlearn').attr('disabled', null);
                                 $("#piircode").text(retval);
                             });
                         });
@@ -7582,7 +5303,7 @@ var getContext = function (display, infos, curLevel) {
                 sensor.portText.remove();
 
             if (!context.autoGrading) {
-                var gpios = findSensorDefinition(sensor).gpios;
+                var gpios = sensorHandler.findSensorDefinition(sensor).gpios;
                 var min = 255;
                 var max = 0;
 
@@ -7936,7 +5657,7 @@ var getContext = function (display, infos, curLevel) {
     context.sensorsSaved = {};
 
     context.registerQuickPiEvent = function (name, newState, setInSensor = true, allowFail = false) {
-        var sensor = findSensorByName(name);
+        var sensor = sensorHandler.findSensorByName(name);
         if (!sensor) {
             context.success = false;
             throw (strings.messages.sensorNotFound.format(name));
@@ -7974,13 +5695,13 @@ var getContext = function (display, infos, curLevel) {
     }
 
     function drawNewStateChangesSensor(name, newState=null) {
-        var sensor = findSensorByName(name);
+        var sensor = sensorHandler.findSensorByName(name);
         if (!sensor) {
             context.success = false;
             throw (strings.messages.sensorNotFound.format(name));
         }
 
-        var sensorDef = findSensorDefinition(sensor);
+        var sensorDef = sensorHandler.findSensorDefinition(sensor);
         if(sensor.lastDrawnState !== null) {
             // Get all states between the last drawn time and now
             var expectedStates = context.getSensorExpectedState(name, sensor.lastDrawnTime, context.currentTime);
@@ -8164,7 +5885,7 @@ var getContext = function (display, infos, curLevel) {
     context.getSensorState = function (name) {
         var state = null;
 
-        var sensor = findSensorByName(name);
+        var sensor = sensorHandler.findSensorByName(name);
         if ((!context.display && !context.forceGradingWithoutDisplay) || context.autoGrading) {
             var stateTime = context.getSensorExpectedState(name);
 
@@ -8234,7 +5955,7 @@ var getContext = function (display, infos, curLevel) {
     };
 
     context.quickpi.changeSensorState = function (sensorName, sensorState, callback) {
-        var sensor = findSensorByName(sensorName);
+        var sensor = sensorHandler.findSensorByName(sensorName);
         sensor.state = sensorState;
         drawSensor(sensor);
         callback();
@@ -8276,7 +5997,7 @@ var getContext = function (display, infos, curLevel) {
     };
 
     context.quickpi.setLedMatrixOne = function (name, i, j, state, callback) {
-        var sensor = findSensorByName(name, true);
+        var sensor = sensorHandler.findSensorByName(name, true);
 
         if(i < 0 || i > 5 || j < 0 || j > 5) {
             throw "invalid led position";
@@ -8322,7 +6043,7 @@ var getContext = function (display, infos, curLevel) {
 
     context.quickpi.waitForButton = function (name, callback) {
         //        context.registerQuickPiEvent("button", "D22", "wait", false);
-        var sensor = findSensorByName(name, true);
+        var sensor = sensorHandler.findSensorByName(name, true);
 
         if (!context.display || context.autoGrading) {
 
@@ -8355,7 +6076,7 @@ var getContext = function (display, infos, curLevel) {
             var name = sensor.name;
         } else {
             var callback = arg2;
-            var sensor = findSensorByName(arg1, true);
+            var sensor = sensorHandler.findSensorByName(arg1, true);
             var name = arg1;
         }
 
@@ -8363,7 +6084,7 @@ var getContext = function (display, infos, curLevel) {
 
             if (sensor.type == "stick") {
                 var state = context.getSensorState(name);
-                var stickDefinition = findSensorDefinition(sensor);
+                var stickDefinition = sensorHandler.findSensorDefinition(sensor);
                 var buttonstate = stickDefinition.getButtonState(name, sensor.state);
 
 
@@ -8377,7 +6098,7 @@ var getContext = function (display, infos, curLevel) {
             var cb = context.runner.waitCallback(callback);
 
             if (sensor.type == "stick") {
-                var stickDefinition = findSensorDefinition(sensor);
+                var stickDefinition = sensorHandler.findSensorDefinition(sensor);
 
                 stickDefinition.getLiveState(sensor, function(returnVal) {
                     sensor.state = returnVal;
@@ -8389,7 +6110,7 @@ var getContext = function (display, infos, curLevel) {
                 });
 
             } else {
-                findSensorDefinition(sensor).getLiveState(sensor, function(returnVal) {
+                sensorHandler.findSensorDefinition(sensor).getLiveState(sensor, function(returnVal) {
                     sensor.state = returnVal != "0";
                     drawSensor(sensor);
                     cb(returnVal != "0");
@@ -8401,7 +6122,7 @@ var getContext = function (display, infos, curLevel) {
     context.quickpi.isButtonPressedWithName = context.quickpi.isButtonPressed;
 
     context.quickpi.buttonWasPressed = function (name, callback) {
-        var sensor = findSensorByName(name, true);
+        var sensor = sensorHandler.findSensorByName(name, true);
 
         if (!context.display || context.autoGrading || context.offLineMode) {
             var state = context.getSensorState(name);
@@ -8420,7 +6141,7 @@ var getContext = function (display, infos, curLevel) {
     };
 
     context.quickpi.setLedState = function (name, state, callback) {
-        var sensor = findSensorByName(name, true);
+        var sensor = sensorHandler.findSensorByName(name, true);
         var command = "setLedState(\"" + sensor.port + "\"," + (state ? "True" : "False") + ")";
 
         context.registerQuickPiEvent(name, state ? true : false);
@@ -8435,7 +6156,7 @@ var getContext = function (display, infos, curLevel) {
     };
 
     context.quickpi.setBuzzerState = function (name, state, callback) {
-        var sensor = findSensorByName(name, true);
+        var sensor = sensorHandler.findSensorByName(name, true);
 
         var command = "setBuzzerState(\"" + name + "\"," + (state ? "True" : "False") + ")";
 
@@ -8461,7 +6182,7 @@ var getContext = function (display, infos, curLevel) {
             var sensor = findSensorByType("buzzer");
         } else {
             var callback = arg2;
-            var sensor = findSensorByName(arg1, true);
+            var sensor = sensorHandler.findSensorByName(arg1, true);
         }
 
         var command = "isBuzzerOn(\"" + sensor.name + "\")";
@@ -8482,7 +6203,7 @@ var getContext = function (display, infos, curLevel) {
     context.quickpi.isBuzzerOnWithName = context.quickpi.isBuzzerOn;
 
     context.quickpi.setBuzzerNote = function (name, frequency, callback) {
-        var sensor = findSensorByName(name, true);
+        var sensor = sensorHandler.findSensorByName(name, true);
         var command = "setBuzzerNote(\"" + name + "\"," + frequency + ")";
 
         context.registerQuickPiEvent(name, frequency);
@@ -8505,7 +6226,7 @@ var getContext = function (display, infos, curLevel) {
     };
 
     context.quickpi.getBuzzerNote = function (name, callback) {
-        var sensor = findSensorByName(name, true);
+        var sensor = sensorHandler.findSensorByName(name, true);
 
         var command = "getBuzzerNote(\"" + name + "\")";
 
@@ -8524,7 +6245,7 @@ var getContext = function (display, infos, curLevel) {
 
 
     context.quickpi.setLedBrightness = function (name, level, callback) {
-        var sensor = findSensorByName(name, true);
+        var sensor = sensorHandler.findSensorByName(name, true);
 
         if (typeof level == "object")
         {
@@ -8546,7 +6267,7 @@ var getContext = function (display, infos, curLevel) {
 
 
     context.quickpi.getLedBrightness = function (name, callback) {
-        var sensor = findSensorByName(name, true);
+        var sensor = sensorHandler.findSensorByName(name, true);
 
         var command = "getLedBrightness(\"" + name + "\")";
 
@@ -8564,7 +6285,7 @@ var getContext = function (display, infos, curLevel) {
     };
 
     context.quickpi.setLedColors = function (name, r, g, b, callback) {
-        var sensor = findSensorByName(name, true);
+        var sensor = sensorHandler.findSensorByName(name, true);
 
         if (typeof r == "object")
         {
@@ -8599,7 +6320,7 @@ var getContext = function (display, infos, curLevel) {
             var sensor = findSensorByType("led");
         } else {
             var callback = arg2;
-            var sensor = findSensorByName(arg1, true);
+            var sensor = sensorHandler.findSensorByName(arg1, true);
         }
 
         var command = "getLedState(\"" + sensor.name + "\")";
@@ -8621,7 +6342,7 @@ var getContext = function (display, infos, curLevel) {
 
 
     context.quickpi.toggleLedState = function (name, callback) {
-        var sensor = findSensorByName(name, true);
+        var sensor = sensorHandler.findSensorByName(name, true);
 
         var command = "toggleLedState(\"" + name + "\")";
         var state = sensor.state;
@@ -8672,7 +6393,7 @@ var getContext = function (display, infos, curLevel) {
     context.quickpi.displayText2Lines = context.quickpi.displayText;
 
     context.quickpi.readTemperature = function (name, callback) {
-        var sensor = findSensorByName(name, true);
+        var sensor = sensorHandler.findSensorByName(name, true);
 
         if (!context.display || context.autoGrading || context.offLineMode) {
             var state = context.getSensorState(name);
@@ -8681,7 +6402,7 @@ var getContext = function (display, infos, curLevel) {
         } else {
             var cb = context.runner.waitCallback(callback);
 
-            findSensorDefinition(sensor).getLiveState(sensor, function(returnVal) {
+            sensorHandler.findSensorDefinition(sensor).getLiveState(sensor, function(returnVal) {
                 sensor.state = returnVal;
                 drawSensor(sensor);
                 cb(returnVal);
@@ -8701,7 +6422,7 @@ var getContext = function (display, infos, curLevel) {
 
 
     context.quickpi.setServoAngle = function (name, angle, callback) {
-        var sensor = findSensorByName(name, true);
+        var sensor = sensorHandler.findSensorByName(name, true);
 
         if (angle > 180)
             angle = 180;
@@ -8719,7 +6440,7 @@ var getContext = function (display, infos, curLevel) {
     };
 
     context.quickpi.getServoAngle = function (name, callback) {
-        var sensor = findSensorByName(name, true);
+        var sensor = sensorHandler.findSensorByName(name, true);
 
         var command = "getServoAngle(\"" + name + "\")";
 
@@ -8738,7 +6459,7 @@ var getContext = function (display, infos, curLevel) {
 
 
     context.quickpi.setContinousServoDirection = function (name, direction, callback) {
-        var sensor = findSensorByName(name, true);
+        var sensor = sensorHandler.findSensorByName(name, true);
 
         if (direction > 0)
             angle = 0;
@@ -8758,7 +6479,7 @@ var getContext = function (display, infos, curLevel) {
     };
 
     context.quickpi.readRotaryAngle = function (name, callback) {
-        var sensor = findSensorByName(name, true);
+        var sensor = sensorHandler.findSensorByName(name, true);
 
         if (!context.display || context.autoGrading || context.offLineMode) {
 
@@ -8768,7 +6489,7 @@ var getContext = function (display, infos, curLevel) {
 
             var cb = context.runner.waitCallback(callback);
 
-            findSensorDefinition(sensor).getLiveState(sensor, function(returnVal) {
+            sensorHandler.findSensorDefinition(sensor).getLiveState(sensor, function(returnVal) {
                 sensor.state = returnVal;
                 drawSensor(sensor);
                 cb(returnVal);
@@ -8778,7 +6499,7 @@ var getContext = function (display, infos, curLevel) {
 
 
     context.quickpi.readDistance = function (name, callback) {
-        var sensor = findSensorByName(name, true);
+        var sensor = sensorHandler.findSensorByName(name, true);
         if (!context.display || context.autoGrading || context.offLineMode) {
 
             var state = context.getSensorState(name);
@@ -8787,7 +6508,7 @@ var getContext = function (display, infos, curLevel) {
 
             var cb = context.runner.waitCallback(callback);
 
-            findSensorDefinition(sensor).getLiveState(sensor, function(returnVal) {
+            sensorHandler.findSensorDefinition(sensor).getLiveState(sensor, function(returnVal) {
                 sensor.state = returnVal;
                 drawSensor(sensor);
                 cb(returnVal);
@@ -8798,7 +6519,7 @@ var getContext = function (display, infos, curLevel) {
 
 
     context.quickpi.readLightIntensity = function (name, callback) {
-        var sensor = findSensorByName(name, true);
+        var sensor = sensorHandler.findSensorByName(name, true);
 
         if (!context.display || context.autoGrading || context.offLineMode) {
 
@@ -8807,7 +6528,7 @@ var getContext = function (display, infos, curLevel) {
         } else {
             var cb = context.runner.waitCallback(callback);
 
-            findSensorDefinition(sensor).getLiveState(sensor, function(returnVal) {
+            sensorHandler.findSensorDefinition(sensor).getLiveState(sensor, function(returnVal) {
                 sensor.state = returnVal;
 
                 drawSensor(sensor);
@@ -8817,7 +6538,7 @@ var getContext = function (display, infos, curLevel) {
     };
 
     context.quickpi.readHumidity = function (name, callback) {
-        var sensor = findSensorByName(name, true);
+        var sensor = sensorHandler.findSensorByName(name, true);
 
         if (!context.display || context.autoGrading || context.offLineMode) {
 
@@ -8827,7 +6548,7 @@ var getContext = function (display, infos, curLevel) {
 
             var cb = context.runner.waitCallback(callback);
 
-            findSensorDefinition(sensor).getLiveState(sensor, function(returnVal) {
+            sensorHandler.findSensorDefinition(sensor).getLiveState(sensor, function(returnVal) {
                 sensor.state = returnVal;
                 drawSensor(sensor);
                 cb(returnVal);
@@ -9186,7 +6907,7 @@ var getContext = function (display, infos, curLevel) {
 
 
     context.quickpi.readSoundLevel = function (name, callback) {
-        var sensor = findSensorByName(name, true);
+        var sensor = sensorHandler.findSensorByName(name, true);
 
         if (!context.display || context.autoGrading || context.offLineMode) {
             var state = context.getSensorState(name);
@@ -9195,7 +6916,7 @@ var getContext = function (display, infos, curLevel) {
         } else {
             var cb = context.runner.waitCallback(callback);
 
-            findSensorDefinition(sensor).getLiveState(sensor, function(returnVal) {
+            sensorHandler.findSensorDefinition(sensor).getLiveState(sensor, function(returnVal) {
                 sensor.state = returnVal;
                 drawSensor(sensor);
                 cb(returnVal);
@@ -9220,7 +6941,7 @@ var getContext = function (display, infos, curLevel) {
             var cb = context.runner.waitCallback(callback);
             var sensor = context.findSensor("magnetometer", "i2c");
 
-            findSensorDefinition(sensor).getLiveState(axis, function(returnVal) {
+            sensorHandler.findSensorDefinition(sensor).getLiveState(axis, function(returnVal) {
                 sensor.state = returnVal;
                 drawSensor(sensor);
 
@@ -9263,7 +6984,7 @@ var getContext = function (display, infos, curLevel) {
     };
 
     context.quickpi.readInfraredState = function (name, callback) {
-        var sensor = findSensorByName(name, true);
+        var sensor = sensorHandler.findSensorByName(name, true);
 
         if (!context.display || context.autoGrading || context.offLineMode) {
             var state = context.getSensorState(name);
@@ -9272,7 +6993,7 @@ var getContext = function (display, infos, curLevel) {
         } else {
             var cb = context.runner.waitCallback(callback);
 
-            findSensorDefinition(sensor).getLiveState(sensor, function(returnVal) {
+            sensorHandler.findSensorDefinition(sensor).getLiveState(sensor, function(returnVal) {
                 sensor.state = returnVal;
                 drawSensor(sensor);
                 cb(returnVal);
@@ -9281,7 +7002,7 @@ var getContext = function (display, infos, curLevel) {
     };
 
     context.quickpi.setInfraredState = function (name, state, callback) {
-        var sensor = findSensorByName(name, true);
+        var sensor = sensorHandler.findSensorByName(name, true);
 
         context.registerQuickPiEvent(name, state ? true : false);
 
@@ -9290,12 +7011,12 @@ var getContext = function (display, infos, curLevel) {
         } else {
             var cb = context.runner.waitCallback(callback);
 
-            findSensorDefinition(sensor).setLiveState(sensor, state, cb);
+            sensorHandler.findSensorDefinition(sensor).setLiveState(sensor, state, cb);
         }
     };
 
     context.quickpi.onButtonPressed = function (name, func, callback) {
-        var sensor = findSensorByName(name, true);
+        var sensor = sensorHandler.findSensorByName(name, true);
 
         context.waitForEvent(function (callback) {
             context.quickpi.isButtonPressed(name, callback)
@@ -9323,7 +7044,7 @@ var getContext = function (display, infos, curLevel) {
             var cb = context.runner.waitCallback(callback);
             var sensor = context.findSensor("gyroscope", "i2c");
 
-            findSensorDefinition(sensor).getLiveState(axis, function(returnVal) {
+            sensorHandler.findSensorDefinition(sensor).getLiveState(axis, function(returnVal) {
                 sensor.state = returnVal;
                 drawSensor(sensor);
 
@@ -9503,7 +7224,7 @@ var getContext = function (display, infos, curLevel) {
 
     
     context.quickpi.readIRMessage = function (name, timeout, callback) {
-        var sensor = findSensorByName(name, true);
+        var sensor = sensorHandler.findSensorByName(name, true);
 
         if (!context.display || context.autoGrading || context.offLineMode) {
             var state = context.getSensorState(name);
@@ -9539,7 +7260,7 @@ var getContext = function (display, infos, curLevel) {
     };
 
     context.quickpi.sendIRMessage = function (name, preset, callback) {
-        var sensor = findSensorByName(name, true);
+        var sensor = sensorHandler.findSensorByName(name, true);
 
         //context.registerQuickPiEvent(name, state ? true : false);
 
@@ -9555,7 +7276,7 @@ var getContext = function (display, infos, curLevel) {
     };
 
     context.quickpi.presetIRMessage = function (preset, data, callback) {
-        //var sensor = findSensorByName(name, true);
+        //var sensor = sensorHandler.findSensorByName(name, true);
 
         //context.registerQuickPiEvent(name, state ? true : false);
         if (!context.remoteIRcodes)
@@ -9616,7 +7337,7 @@ var getContext = function (display, infos, curLevel) {
                     var sensor = infos.quickPiSensors[i];
 
                     if (sensor.type == "stick") {
-                        var stickDefinition = findSensorDefinition(sensor);
+                        var stickDefinition = sensorHandler.findSensorDefinition(sensor);
 
                         for (var iStick = 0; iStick < stickDefinition.gpiosNames.length; iStick++) {
                             var name = sensor.name + "." + stickDefinition.gpiosNames[iStick];
@@ -9633,38 +7354,6 @@ var getContext = function (display, infos, curLevel) {
 
             return ports;
         }
-    }
-
-
-    function findSensorByName(name, error=false) {
-
-        if (isNaN(name.substring(0, 1)) && !isNaN(name.substring(1))) {
-            for (var i = 0; i < infos.quickPiSensors.length; i++) {
-                var sensor = infos.quickPiSensors[i];
-
-                if (sensor.port.toUpperCase() == name.toUpperCase()) {
-                    return sensor;
-                }
-            }
-        } else {
-            var firstname = name.split(".")[0];
-
-
-            for (var i = 0; i < infos.quickPiSensors.length; i++) {
-                var sensor = infos.quickPiSensors[i];
-
-                if (sensor.name.toUpperCase() == firstname.toUpperCase()) {
-                    return sensor;
-                }
-            }
-        }
-
-        if (error) {
-            context.success = false;
-            throw (strings.messages.sensorNotFound.format(name));
-        }
-
-        return null;
     }
 
     function findSensorByType(type) {
@@ -9694,7 +7383,7 @@ var getContext = function (display, infos, curLevel) {
 
     function getSensorSuggestedName(type, suggested) {
         if (suggested) {
-            if (!findSensorByName(suggested))
+            if (!sensorHandler.findSensorByName(suggested))
                 return suggested;
         }
 
@@ -9704,7 +7393,7 @@ var getContext = function (display, infos, curLevel) {
         do {
             i++;
             newName = type + i.toString();
-        } while (findSensorByName(newName));
+        } while (sensorHandler.findSensorByName(newName));
 
         return newName;
     }

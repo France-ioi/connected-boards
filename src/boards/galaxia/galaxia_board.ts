@@ -197,8 +197,8 @@ export class GalaxiaBoard extends AbstractBoard {
 
   getAvailableConnectionMethods(): ConnectionMethod[] {
     return [
-      ConnectionMethod.WebSerial
-    ]
+      ConnectionMethod.WebSerial,
+    ];
   }
 }
 
