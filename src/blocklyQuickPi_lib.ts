@@ -1360,9 +1360,13 @@ var getContext = function (display, infos, curLevel) {
             $('#grid').css('display', 'flex');
             if(context.infos.quickPiBoard == "microbit") {
                 $('#grid').css('flex-direction', 'column');
-                $('#virtualBoard').css('flex', '0 0 200px').css('height', '200px');
+                $('#virtualBoard')
+                  .css('flex', '0 0 200px')
+                  .css('height', '200px')
             } else {
-                $('#virtualBoard').css('flex', '1 0 40%');
+                $('#virtualBoard')
+                  .css('flex', '1 0 40%')
+                  .css('margin-right', '20px')
             }
             function onUserEvent(sensorName, state) {
                 var sensor = sensorHandler.findSensorByName('button ' + sensorName);
