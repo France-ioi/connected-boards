@@ -99,7 +99,6 @@ export const getGalaxiaConnection = function (userName, _onConnect, _onDisconnec
   }
 
   this.connect = async function (url) {
-    console.log('do connecting = true');
     this.resetProperties();
     this.connecting = true;
     try {
@@ -120,7 +119,6 @@ export const getGalaxiaConnection = function (userName, _onConnect, _onDisconnec
 
     this.connecting = false;
     this.connected = true;
-    console.log('do connected');
 
     this.onConnect();
   }
@@ -287,16 +285,31 @@ export const getGalaxiaConnection = function (userName, _onConnect, _onDisconnec
 
   window.exec = executeSerial.bind(this);
 
+  this.genericSendCommand = function (command, callback) {
+    executeSerial(`print(${command})`,
+      function (data) {
+        callback(JSON.stringify(JSON.parse(data)));
+      });
+  }
+
   this.sendCommand = function (command, callback) {
     if (command == "readAccelBMI160()") {
-      //callback(JSON.stringify([sensorValues.acx, sensorValues.acy, sensorValues.acz]));
-      if (DEBUG_SILENCE_SENSORS) {
-        return callback(JSON.stringify([0, 0, 0]))
-      }
-      executeSerial("print([accelerometer.get_x(), accelerometer.get_y(), accelerometer.get_z()])",
-        function (data) {
-          callback(JSON.stringify(JSON.parse(data).map(x => Math.round(x / 10) / 10)));
-        });
+      this.genericSendCommand(command, callback);
+
+      // callback(JSON.stringify([sensorValues.acx, sensorValues.acy, sensorValues.acz]));
+      // if (DEBUG_SILENCE_SENSORS) {
+      //   return callback(JSON.stringify([0, 0, 0]))
+      // }
+      // executeSerial("print([accelerometer.get_x(), accelerometer.get_y(), accelerometer.get_z()])",
+      //   function (data) {
+      //   console.log('old receive data', data);
+      //     callback(JSON.stringify(JSON.parse(data).map(x => Math.round(x / 10) / 10)));
+      //   });
+
+      // executeSerial("print(readAccelBMI160())",
+      //   function (data) {
+      //     callback(JSON.stringify(JSON.parse(data)));
+      //   });
     } else if (command == "setLedState(\"led\",1)" || command == "turnLedOn()") {
       if (DEBUG_SILENCE_SENSORS) {
         return callback(true);
@@ -393,14 +406,10 @@ from thingz import *
 #pwm7 = PWM(Pin(7), freq=50, duty_u16=0)
 p7 = Pin(7, Pin.OUT)
 
-`
+SERVO_MIN_DUTY = ${SERVO_MIN_DUTY}
+SERVO_MAX_DUTY = ${SERVO_MAX_DUTY}
 
-pythonLib += `
-SERVO_MIN_DUTY = ` + SERVO_MIN_DUTY + `
-SERVO_MAX_DUTY = ` + SERVO_MAX_DUTY + `
-`
-
-pythonLib += `def readAcceleration(axis):
+def readAcceleration(axis):
     if axis == "x":
         val = accelerometer.get_x()
     elif axis == "y":
