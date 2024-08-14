@@ -1,6 +1,6 @@
 import {ModuleDefinition} from "../module_definition";
 
-export function accelerometerModuleDefinition(context: any): ModuleDefinition {
+export function thingzAccelerometerModuleDefinition(context: any): ModuleDefinition {
   return {
     classDefinitions: {
       sensors: { // category name

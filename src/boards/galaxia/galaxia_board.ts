@@ -1,8 +1,10 @@
 import {AbstractBoard, BoardCustomBlocks} from "../abstract_board";
 import {BoardDefinition, ConnectionMethod} from "../../definitions";
 import {getGalaxiaConnection} from "./galaxia_connexion";
-import {accelerometerModuleDefinition} from "../../modules/thingz/accelerometer";
+import {thingzAccelerometerModuleDefinition} from "../../modules/thingz/accelerometer";
 import {quickpiModuleDefinition} from "../../modules/quickpi";
+import {thingzButtonsModuleDefinition} from "../../modules/thingz/buttons";
+import {deepMerge} from "../../util";
 
 interface GalaxiaBoardInnerState {
   connected?: boolean,
@@ -64,70 +66,79 @@ export class GalaxiaBoard extends AbstractBoard {
     this.galaxiaSvg.attr('width', "100%");
     this.galaxiaSvg.attr('height', "100%");
 
-    var buttonIds = ['a', 'b', 'sys'];
-    for (var i = 0; i < buttonIds.length; i++) {
-      var buttonId = buttonIds[i];
-      this.bindPushButton(buttonId);
+    let buttonIds = {
+      a: 'btnA',
+      b: 'btnB',
+      sys: 'btnSys',
+    };
+    
+    for (let [buttonId, buttonName] of Object.entries(buttonIds)) {
+      this.bindPushButton(buttonId, buttonName);
     }
-    var padIds = ['up', 'down', 'left', 'right'];
-    for (var i = 0; i < padIds.length; i++) {
-      var padId = padIds[i];
-      this.bindPadButton(padId);
+
+    let padIds = {
+      up: 'btnN',
+      down: 'btnS',
+      left: 'btnW',
+      right: 'btnE',
+    }
+    for (let [padId, padName] of Object.entries(padIds)) {
+      this.bindPadButton(padId, padName);
     }
   }
 
-  bindPushButton(buttonId) {
-    var that = this;
-    var buttons = this.galaxiaSvg.find('#button-' + buttonId + '-top, #button-' + buttonId + '-bot');
-    var buttonTop = buttons.filter('#button-' + buttonId + '-top');
-    var buttonBot = buttons.filter('#button-' + buttonId + '-bot');
-    var colorTop = buttons.filter('#button-' + buttonId + '-top').css('fill');
-    var colorBot = buttons.filter('#button-' + buttonId + '-bot').css('fill');
-    var buttonDown = function (isSet) {
+  bindPushButton(buttonId: string, buttonName: string) {
+    let that = this;
+    let buttons = this.galaxiaSvg.find('#button-' + buttonId + '-top, #button-' + buttonId + '-bot');
+    let buttonTop = buttons.filter('#button-' + buttonId + '-top');
+    let buttonBot = buttons.filter('#button-' + buttonId + '-bot');
+    let colorTop = buttons.filter('#button-' + buttonId + '-top').css('fill');
+    let colorBot = buttons.filter('#button-' + buttonId + '-bot').css('fill');
+    let buttonDown = function (isSet) {
       buttonTop.css('fill', 'transparent');
       buttonBot.css('fill', colorTop);
-      if (isSet !== true && !that.innerState[buttonId]) {
-        that.onUserEvent(buttonId, true);
+      if (isSet !== true && !that.innerState[buttonName]) {
+        that.onUserEvent(buttonName, true);
       }
-      that.innerState[buttonId] = true;
+      that.innerState[buttonName] = true;
     }
-    var buttonUp = function (isSet) {
+    let buttonUp = function (isSet) {
       buttonTop.css('fill', colorTop);
       buttonBot.css('fill', colorBot);
-      if (isSet !== true && that.innerState[buttonId]) {
-        that.onUserEvent(buttonId, false);
+      if (isSet !== true && that.innerState[buttonName]) {
+        that.onUserEvent(buttonName, false);
       }
-      that.innerState[buttonId] = false;
+      that.innerState[buttonName] = false;
     }
     buttons.mousedown(buttonDown);
     buttons.mouseup(buttonUp);
     buttons.mouseleave(buttonUp);
 
-    this.buttonStatesUpdators[buttonId] = {'down': buttonDown, 'up': buttonUp};
+    this.buttonStatesUpdators[buttonName] = {'down': buttonDown, 'up': buttonUp};
   }
 
-  bindPadButton(buttonId) {
-    var that = this;
-    var button = this.galaxiaSvg.find('#pad-' + buttonId);
+  bindPadButton(buttonId: string, buttonName: string) {
+    let that = this;
+    let button = this.galaxiaSvg.find('#pad-' + buttonId);
 
-    var buttonDown = function (isSet) {
+    let buttonDown = function (isSet) {
       button.css('fill-opacity', '1');
-      if (isSet !== true && !that.innerState[buttonId]) {
-        that.onUserEvent(buttonId, true);
+      if (isSet !== true && !that.innerState[buttonName]) {
+        that.onUserEvent(buttonName, true);
       }
-      that.innerState[buttonId] = true;
+      that.innerState[buttonName] = true;
     };
-    var buttonUp = function (isSet) {
+    let buttonUp = function (isSet) {
       button.css('fill-opacity', '0');
-      if (isSet !== true && that.innerState[buttonId]) {
-        that.onUserEvent(buttonId, false);
+      if (isSet !== true && that.innerState[buttonName]) {
+        that.onUserEvent(buttonName, false);
       }
-      that.innerState[buttonId] = false;
+      that.innerState[buttonName] = false;
     };
     button.mousedown(buttonDown);
     button.mouseup(buttonUp);
     button.mouseleave(buttonUp);
-    this.buttonStatesUpdators[buttonId] = {'down': buttonDown, 'up': buttonUp};
+    this.buttonStatesUpdators[buttonName] = {'down': buttonDown, 'up': buttonUp};
   }
 
   setLed(color) {
@@ -137,7 +148,7 @@ export class GalaxiaBoard extends AbstractBoard {
     if (this.ledColors[color] !== undefined) {
       color = this.ledColors[color];
     }
-    var led = this.galaxiaSvg.find('#led');
+    let led = this.galaxiaSvg.find('#led');
     led.css('fill', color);
   }
 
@@ -145,7 +156,7 @@ export class GalaxiaBoard extends AbstractBoard {
     if (!this.initialized) {
       return;
     }
-    var cable = this.galaxiaSvg.find('#cable');
+    let cable = this.galaxiaSvg.find('#cable');
     cable.toggle(isConnected);
   }
 
@@ -157,12 +168,11 @@ export class GalaxiaBoard extends AbstractBoard {
       this.innerState.connected = false;
       this.setConnected(false);
     } else if (sensor.name.substring(0, 3) == 'btn') {
-      var button = sensor.name.substring(3).toLowerCase();
-      this.innerState[button] = sensor.state;
+      this.innerState[sensor.name] = sensor.state;
       if (!this.initialized) {
         return;
       }
-      this.buttonStatesUpdators[button][sensor.state ? 'down' : 'up'](true);
+      this.buttonStatesUpdators[sensor.name][sensor.state ? 'down' : 'up'](true);
     } else if (sensor.type === 'led') {
       if (sensor.state) {
         this.innerState.led = sensor.subType || 'green';
@@ -175,7 +185,7 @@ export class GalaxiaBoard extends AbstractBoard {
 
   displayInnerState() {
     // The display might be reset so we need to keep it up to date
-    for (var id in this.buttonStatesUpdators) {
+    for (let id in this.buttonStatesUpdators) {
       this.buttonStatesUpdators[id][this.innerState[id] ? 'down' : 'up'](true);
     }
     this.setLed(this.innerState.led || 'transparent');
@@ -194,6 +204,14 @@ export class GalaxiaBoard extends AbstractBoard {
           "D": [5, 16, 24],
           "A": [0],
         },
+        builtinSensors: [
+          {type: "button", suggestedName: this.strings.messages.sensorNameButton + "A"},
+          {type: "button", suggestedName: this.strings.messages.sensorNameButton + "B"},
+          {type: "button", suggestedName: this.strings.messages.sensorNameButton + "N"},
+          {type: "button", suggestedName: this.strings.messages.sensorNameButton + "S"},
+          {type: "button", suggestedName: this.strings.messages.sensorNameButton + "W"},
+          {type: "button", suggestedName: this.strings.messages.sensorNameButton + "E"},
+        ],
       },
     ];
   }
@@ -210,17 +228,27 @@ export class GalaxiaBoard extends AbstractBoard {
 
   getCustomBlocks(context, strings): BoardCustomBlocks {
     const quickPiModule = quickpiModuleDefinition(context, strings);
-    const accelerometerModule = accelerometerModuleDefinition(context);
+    const accelerometerModule = thingzAccelerometerModuleDefinition(context);
+    const buttonModule = thingzButtonsModuleDefinition(context);
 
     return {
       customClasses: {
-        thingz: accelerometerModule.classDefinitions,
+        thingz: deepMerge(
+          accelerometerModule.classDefinitions,
+          buttonModule.classDefinitions,
+        ),
       },
       customClassInstances: {
-        thingz: accelerometerModule.classInstances,
+        thingz: deepMerge(
+          accelerometerModule.classInstances,
+          buttonModule.classInstances,
+        ),
       },
       customClassImplementations: {
-        thingz: accelerometerModule.classImplementations,
+        thingz: deepMerge(
+          accelerometerModule.classImplementations,
+          buttonModule.classImplementations,
+        ),
       },
 
       // Take functions because they are needed in Thingz implementation

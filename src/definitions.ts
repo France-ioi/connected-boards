@@ -42,16 +42,16 @@ export interface Sensor {
   type: string,
   subType?: string,
   suggestedName?: string,
-  port: string,
+  port?: string,
   state?: any,
   builtin?: boolean,
 }
 
 export interface BoardDefinition {
   name: string,
-  friendlyName: string,
-  image: string,
-  adc: string|string[],
+  friendlyName?: string,
+  image?: string,
+  adc?: string|string[],
   portTypes: {[type: string]: any[]},
   default?: Sensor[],
   builtinSensors?: Sensor[],

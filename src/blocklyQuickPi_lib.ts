@@ -1358,8 +1358,10 @@ var getContext = function (display, infos, curLevel) {
                   .css('margin-right', '20px')
             }
             function onUserEvent(sensorName, state) {
-                var sensor = sensorHandler.findSensorByName('button ' + sensorName);
-                if(!sensor) { return; }
+                let sensor = sensorHandler.findSensorByName(sensorName);
+                if(!sensor) {
+                    return;
+                }
                 sensor.state = state;
                 sensorHandler.warnClientSensorStateChanged(sensor);
                 sensorHandler.drawSensor(sensor);
@@ -3227,6 +3229,7 @@ var getContext = function (display, infos, curLevel) {
     }
 
     const customBlocks = mainBoard.getCustomBlocks(context, strings);
+    console.log('custom blocks', customBlocks);
     if (customBlocks.customBlocks) {
         context.customBlocks = customBlocks.customBlocks;
     }
@@ -3260,20 +3263,6 @@ var getContext = function (display, infos, curLevel) {
     }
 
     console.log('final context', context);
-
-    // context.thingz = {
-    //     Accel: {
-    //         get_x: function (self, callback) {
-    //             context.quickpi.readAcceleration('x', callback);
-    //         },
-    //         get_y: function (self, callback) {
-    //             context.quickpi.readAcceleration('y', callback);
-    //         },
-    //         get_z: function (self, callback) {
-    //             context.quickpi.readAcceleration('z', callback);
-    //         },
-    //     }
-    // }
 
     // Color indexes of block categories (as a hue in the range 0–420)
     context.provideBlocklyColours = function () {
