@@ -1,8 +1,6 @@
 import {ConnectionMethod} from "../definitions";
 import {getImg} from "../util";
 import {getSessionStorage, setSessionStorage} from "../helpers/session_storage";
-import {getSensorDefinitions} from "../sensor_definitions";
-import {SensorHandler} from "../sensor_handler";
 import {showasConnecting} from "../display";
 import {getConnectionDialogHTML} from "./connection_dialog";
 
@@ -14,8 +12,8 @@ export function showConfig({context, strings, mainBoard}) {
   }
 
   const boardDefinitions = mainBoard.getBoardDefinitions();
-  const sensorDefinitions = getSensorDefinitions(context, strings);
-  const sensorHandler = new SensorHandler(context, strings);
+  const sensorHandler = context.sensorHandler;
+  const sensorDefinitions = sensorHandler.getSensorDefinitions();
 
   const connectionDialogHTML = getConnectionDialogHTML(availableConnectionMethods, strings, boardDefinitions, sensorDefinitions);
 

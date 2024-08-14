@@ -1,5 +1,6 @@
-import {quickPiLocalLanguageStrings} from "./lang/language_strings";
-import {deepEqual, isPrimitive} from "./util";
+import {quickPiLocalLanguageStrings} from "../lang/language_strings";
+import {deepEqual, isPrimitive} from "../util";
+import {LocalQuickStore} from "./local_quickpi_store";
 
 export const getSensorDefinitions = function (context, strings) {
   return [
@@ -911,7 +912,7 @@ export const getSensorDefinitions = function (context, strings) {
       },
 
       compareState: function (state1, state2) {
-        return quickPiStore.compareState(state1, state2);
+        return LocalQuickStore.compareState(state1, state2);
       }
     },
     {

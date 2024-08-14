@@ -205,6 +205,15 @@ export class GalaxiaBoard extends AbstractBoard {
   getConnection() {
     return getGalaxiaConnection;
   }
+
+  // TODO: use this
+  getCustomBlocks() {
+    return {
+      customBlocks: {},
+      customClasses: {},
+      customClassInstances: {},
+    };
+  }
 }
 
 export const galaxiaBoard = new GalaxiaBoard();

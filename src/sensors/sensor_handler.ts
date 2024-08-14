@@ -1,14 +1,21 @@
 import {getSensorDefinitions} from "./sensor_definitions";
+import {SensorDrawer} from "./sensor_drawer";
 
 export class SensorHandler {
   private context;
   private strings;
   private sensorDefinitions;
+  private sensorDrawer;
 
   constructor(context, strings) {
     this.context = context;
     this.strings = strings;
     this.sensorDefinitions = getSensorDefinitions(context, strings);
+    this.sensorDrawer = new SensorDrawer(context, strings, this.sensorDefinitions, this);
+  }
+
+  getSensorDefinitions() {
+    return this.sensorDefinitions;
   }
 
   getNewSensorSuggestedName(name) {
@@ -105,5 +112,31 @@ export class SensorHandler {
     }
 
     return null;
+  }
+
+  findSensorByType(type: string) {
+    for (var i = 0; i < this.context.infos.quickPiSensors.length; i++) {
+      var sensor = this.context.infos.quickPiSensors[i];
+      if (sensor.type == type) {
+        return sensor;
+      }
+    }
+
+    return null;
+  }
+
+  drawSensor(sensor, juststate = false, donotmovefocusrect = false) {
+    this.sensorDrawer.drawSensor(sensor, juststate, donotmovefocusrect);
+  }
+
+  isElementRemoved(element) {
+    return !element.paper.canvas || !element.node.parentElement;
+  }
+
+  warnClientSensorStateChanged(sensor) {
+    var sensorStateCopy = JSON.parse(JSON.stringify(sensor.state));
+    if (this.context.dispatchContextEvent) {
+      this.context.dispatchContextEvent({type: 'quickpi/changeSensorState', payload: [sensor.name, sensorStateCopy], onlyLog: true});
+    }
   }
 }

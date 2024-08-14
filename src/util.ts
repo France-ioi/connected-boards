@@ -1,17 +1,5 @@
-export function getUrlParameter(sParam) {
-  var sPageURL = decodeURIComponent(window.location.search.substring(1));
-  var sURLVariables = sPageURL.split('&');
-
-  for (var i = 0; i < sURLVariables.length; i++) {
-    var sParameterName = sURLVariables[i].split('=');
-    if (sParameterName[0] === sParam) {
-      return sParameterName[1] === undefined ? true : sParameterName[1];
-    }
-  }
-}
-
 export function arrayContains(array, needle) {
-  for (var index in array) {
+  for (let index in array) {
     if (needle == array[index]) {
       return true;
     }
@@ -51,7 +39,7 @@ export function deepEqual(obj1, obj2) {
     return false;
 
   // compare objects with same number of keys
-  for (var key in obj1)
+  for (let key in obj1)
   {
     if (!(key in obj2)) return false; //other object doesn't have this prop
     if (!deepEqual(obj1[key], obj2[key])) return false;

@@ -22,5 +22,4 @@ export abstract class AbstractBoard {
         return element;
     });
   }
-
 }

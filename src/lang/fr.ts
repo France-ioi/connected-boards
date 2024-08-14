@@ -179,8 +179,11 @@ export default {
 
     //Continous servo
     setContinousServoDirection: "setContinousServoDirection",
+
+    "accelerometer.get_x": "accelerometer.get_x()",
   },
   description: {
+    "accelerometer.get_x": "accelerometer.get_x() retourne la valeur de l'accélération sur l'axe X",
     // Descriptions of the functions in Python (optional)
     turnLedOn: "turnLedOn() allume la LED",
     turnLedOff: "turnLedOff() éteint la LED",
