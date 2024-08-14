@@ -8,6 +8,7 @@ import {getSessionStorage, setSessionStorage} from "./helpers/session_storage";
 import {SensorHandler} from "./sensors/sensor_handler";
 import {showasConnecting} from "./display";
 import {LocalQuickStore} from "./sensors/local_quickpi_store";
+import {Sensor} from "./definitions";
 
 const boards: {[board: string]: AbstractBoard} = {
     galaxia: galaxiaBoard,
@@ -155,17 +156,16 @@ var getContext = function (display, infos, curLevel) {
             }
         ];
 
-        if(window.stringsLanguage == 'fr' || !strings.concepts) {
-            var conceptStrings = quickPiLocalLanguageStrings.fr.concepts;
-            var conceptIndex = 'quickpi.html';
-        } else {
-            var conceptStrings = strings.concepts;
-            var conceptIndex = 'quickpi_' + window.stringsLanguage + '.html';
+        let conceptStrings = strings.concepts;
+        let conceptIndex = 'quickpi_' + window.stringsLanguage + '.html';
+        if (window.stringsLanguage == 'fr' || !strings.concepts) {
+            conceptStrings = quickPiLocalLanguageStrings.fr.concepts;
+            conceptIndex = 'quickpi.html';
         }
-        var conceptBaseUrl = 'https://static4.castor-informatique.fr/help/'+conceptIndex;
+        let conceptBaseUrl = 'https://static4.castor-informatique.fr/help/'+conceptIndex;
 
-        for(var i = 0; i < quickPiConceptList.length; i++) {
-            var concept = quickPiConceptList[i];
+        for(let i = 0; i < quickPiConceptList.length; i++) {
+            let concept: any = quickPiConceptList[i];
             concept.name = conceptStrings[concept.id];
             concept.url = conceptBaseUrl + '#' + concept.id;
             if(!concept.language) { concept.language = 'all'; }
@@ -242,7 +242,7 @@ var getContext = function (display, infos, curLevel) {
 
     context.offLineMode = true;
     context.timeLineStates = [];
-    var innerState = {};
+    let innerState: any = {};
 
     var getSensorFullState = function (sensor) {
         return {
@@ -416,7 +416,7 @@ var getContext = function (display, infos, curLevel) {
                     }
                     if(!sensorDef.compareState(actualState.state, expectedStates[expectedIdx].state)) {
                         // Got an unexpected state change
-                        var newFailInfo = {
+                        let newFailInfo = {
                             sensor: sensor,
                             name: sensorName,
                             time: actualState.time,
@@ -888,7 +888,7 @@ var getContext = function (display, infos, curLevel) {
                 for (var i = 0; i < board.builtinSensors.length; i++) {
                     var sensor = board.builtinSensors[i];
 
-                    var newSensor = {
+                    var newSensor: any = {
                         "type": sensor.type,
                         "port": sensor.port,
                         "builtin": true,
@@ -938,7 +938,7 @@ var getContext = function (display, infos, curLevel) {
         additional.quickpiSensors = [];
         for (var i = 0; i < infos.quickPiSensors.length; i++) {
             var currentSensor = infos.quickPiSensors[i];
-            var savedSensor = {
+            var savedSensor: Sensor = {
                 type: currentSensor.type,
                 port: currentSensor.port,
                 name: currentSensor.name
@@ -966,7 +966,7 @@ var getContext = function (display, infos, curLevel) {
         if (!newSensors)
             return;
 
-        for (var i = 0; i < infos.quickPiSensors.length; i++) {
+        for (let i = 0; i < infos.quickPiSensors.length; i++) {
             var sensor = infos.quickPiSensors[i];
             sensor.removed = true;
         }
@@ -974,14 +974,14 @@ var getContext = function (display, infos, curLevel) {
         infos.quickPiSensors = [];
 
         for (var i = 0; i < newSensors.length; i++) {
-            var sensor = {
+            let sensor: Sensor = {
                 type: newSensors[i].type,
                 port: newSensors[i].port,
                 name: newSensors[i].name
             };
 
             if (newSensors[i].subType)
-                sensor.sybType = newSensors[i].subType;
+                sensor.subType = newSensors[i].subType;
 
             sensor.state = null;
             sensor.callsInTimeSlot = 0;
@@ -1566,7 +1566,7 @@ var getContext = function (display, infos, curLevel) {
                     "   -->" +
                     "   </div>" +
                     "</div>", function () {
-                    var table = document.getElementById("sensorTable");
+                    let table = document.getElementById("sensorTable") as HTMLTableElement;
                     for (var iSensor = 0; iSensor < infos.quickPiSensors.length; iSensor++) {
                         var sensor = infos.quickPiSensors[iSensor];
 
@@ -1705,7 +1705,7 @@ var getContext = function (display, infos, curLevel) {
             for (var i = 0; i < boardDefaultSensors.length; i++) {
                 var sensor = boardDefaultSensors[i];
 
-                let newSensor: any = {
+                let newSensor: Sensor = {
                     "type": sensor.type,
                     "port": sensor.port,
                     "builtin": true,
@@ -3238,20 +3238,6 @@ var getContext = function (display, infos, curLevel) {
         }
     }
 
-    function findSensorByType(type) {
-        var firstname = name.split(".")[0];
-
-
-        for (var i = 0; i < infos.quickPiSensors.length; i++) {
-            var sensor = infos.quickPiSensors[i];
-            if (sensor.type == type) {
-                return sensor;
-            }
-        }
-
-        return null;
-    }
-
     function findSensorByPort(port) {
         for (var i = 0; i < infos.quickPiSensors.length; i++) {
             var sensor = infos.quickPiSensors[i];
@@ -3891,9 +3877,9 @@ var getContext = function (display, infos, curLevel) {
 
     // Color indexes of block categories (as a hue in the range 0–420)
     context.provideBlocklyColours = function () {
-        Blockly.HSV_SATURATION = 0.65;
-        Blockly.HSV_VALUE = 0.80;
-        Blockly.Blocks.inputs.HUE = 50;
+        window.Blockly.HSV_SATURATION = 0.65;
+        window.Blockly.HSV_VALUE = 0.80;
+        window.Blockly.Blocks.inputs.HUE = 50;
 
         return {
             categories: {
@@ -3931,7 +3917,7 @@ var getContext = function (display, infos, curLevel) {
 
 // Register the library; change "template" by the name of your library in lowercase
 if (window.quickAlgoLibraries) {
-    quickAlgoLibraries.register('quickpi', getContext);
+    window.quickAlgoLibraries.register('quickpi', getContext);
 } else {
     if (!window.quickAlgoLibrariesList) { window.quickAlgoLibrariesList = []; }
     window.quickAlgoLibrariesList.push(['quickpi', getContext]);

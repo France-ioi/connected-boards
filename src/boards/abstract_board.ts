@@ -7,7 +7,7 @@ export abstract class AbstractBoard {
 
   abstract getAvailableConnectionMethods(): ConnectionMethod[]
 
-  abstract getConnection(): (userName: string, _onConnect: () => void, _onDisconnect: () => void, _onChangeBoard: () => void) => void
+  abstract getConnection(): (userName: string, _onConnect: () => void, _onDisconnect: (wasConnected: boolean, wrongversion: boolean) => void, _onChangeBoard: (board: string) => void) => void
 
   init(selector, onUserEvent) {
   }

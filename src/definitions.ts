@@ -12,14 +12,39 @@ declare global {
     task: any,
     localLanguageStrings: any,
     quickAlgoContext: (display: boolean, infos: any) => any,
+    Blockly: any,
+    quickAlgoLibraries: any,
+    quickAlgoLibrariesList: any,
+    quickAlgoResponsive: boolean,
+    stringsLanguage: any,
+    quickAlgoInterface: any,
   }
 }
 
 export interface Sensor {
+  callsInTimeSlot?: number,
+  drawInfo?: {
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+  },
+  focusrect?: any,
+  hasslider?: boolean,
+  img?: any,
+  lastDrawnState?: any,
+  lastDrawnTime?: number,
+  lastTimeIncrease?: number,
+  maxAnalog?: number,
+  minAnalog?: number,
+  name?: string,
+  nameText?: any,
   type: string,
   subType?: string,
-  suggestedName: string,
+  suggestedName?: string,
   port: string,
+  state?: any,
+  builtin?: boolean,
 }
 
 export interface BoardDefinition {
