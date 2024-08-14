@@ -17,10 +17,6 @@ const boards: {[board: string]: AbstractBoard} = {
 
 // This is a template of library for use with quickAlgo.
 var getContext = function (display, infos, curLevel) {
-
-    // Local language strings for each language
-    var introControls = null;
-
     // Create a base context
     var context = window.quickAlgoContext(display, infos);
 
@@ -183,7 +179,8 @@ var getContext = function (display, infos, curLevel) {
     var defaultQuickPiOptions = {
         disableConnection: false,
         increaseTimeAfterCalls: 5
-        };
+    };
+
     function getQuickPiOption(name) {
         if(name == 'disableConnection') {
             // TODO :: Legacy, remove when all tasks will have been updated
@@ -3201,43 +3198,6 @@ var getContext = function (display, infos, curLevel) {
        [2] https://developers.google.com/blockly/guides/create-custom-blocks/type-checks
     */
 
-
-    function getSensorNames(sensorType)
-    {
-        return function () {
-            var ports = [];
-            for (var i = 0; i < infos.quickPiSensors.length; i++) {
-                var sensor = infos.quickPiSensors[i];
-
-                if (sensor.type == sensorType) {
-                    ports.push([sensor.name, sensor.name]);
-                }
-            }
-
-            if (sensorType == "button") {
-                for (var i = 0; i < infos.quickPiSensors.length; i++) {
-                    var sensor = infos.quickPiSensors[i];
-
-                    if (sensor.type == "stick") {
-                        var stickDefinition = sensorHandler.findSensorDefinition(sensor);
-
-                        for (var iStick = 0; iStick < stickDefinition.gpiosNames.length; iStick++) {
-                            var name = sensor.name + "." + stickDefinition.gpiosNames[iStick];
-
-                            ports.push([name, name]);
-                        }
-                    }
-                }
-            }
-
-            if (ports.length == 0) {
-                ports.push(["none", "none"]);
-            }
-
-            return ports;
-        }
-    }
-
     function findSensorByPort(port) {
         for (var i = 0; i < infos.quickPiSensors.length; i++) {
             var sensor = infos.quickPiSensors[i];
@@ -3266,614 +3226,54 @@ var getContext = function (display, infos, curLevel) {
         return newName;
     }
 
-    // TODO: Move this to Galaxia
-    // TODO: Move to external file and then import them in Galaxia to be reusable
-    context.customClasses = {
-        thingz: { // module name
-            sensors: { // category name
-                Accel: [ // class name
-                    {name: "get_x", yieldsValue: true, blocklyJson: {output: "Number"}},
-                    {name: "get_y", yieldsValue: true, blocklyJson: {output: "Number"}},
-                    {name: "get_z", yieldsValue: true, blocklyJson: {output: "Number"}},
-                ],
-            },
-        },
-    };
-
-    context.customClassInstances = {
-        thingz: {
-            accelerometer: 'Accel',
+    const customBlocks = mainBoard.getCustomBlocks(context, strings);
+    if (customBlocks.customBlocks) {
+        context.customBlocks = customBlocks.customBlocks;
+    }
+    if (customBlocks.customClasses) {
+        context.customClasses = customBlocks.customClasses;
+    }
+    if (customBlocks.customClassInstances) {
+        context.customClassInstances = customBlocks.customClassInstances;
+    }
+    if (customBlocks.customBlockImplementations) {
+        for (let [moduleName, blocks] of Object.entries(customBlocks.customBlockImplementations)) {
+            if (!(moduleName in context)) {
+                context[moduleName] = {};
+            }
+            context[moduleName] = {
+                ...context[moduleName],
+                ...blocks,
+            }
         }
-    };
-
-    context.thingz = {
-        Accel: {
-            get_x: function (self, callback) {
-                context.quickpi.readAcceleration('x', callback);
-            },
-            get_y: function (self, callback) {
-                context.quickpi.readAcceleration('y', callback);
-            },
-            get_z: function (self, callback) {
-                context.quickpi.readAcceleration('z', callback);
-            },
+    }
+    if (customBlocks.customClassImplementations) {
+        for (let [moduleName, classes] of Object.entries(customBlocks.customClassImplementations)) {
+            if (!(moduleName in context)) {
+                context[moduleName] = {};
+            }
+            context[moduleName] = {
+                ...context[moduleName],
+                ...classes,
+            }
         }
     }
 
-    context.customBlocks = {
-        // Define our blocks for our namespace "template"
-        quickpi: {
-            // Categories are reflected in the Blockly menu
-            sensors: [
-                { name: "currentTime", yieldsValue: 'int' },
+    console.log('final context', context);
 
-                {
-                    name: "waitForButton", params: ["String"], blocklyJson: {
-                        "args0": [
-                            {
-                                "type": "field_dropdown", "name": "PARAM_0", "options": getSensorNames("button")
-                            }
-                        ]
-                    }
-                },
-                {
-                    name: "isButtonPressed", yieldsValue: 'bool'
-                },
-                {
-                    name: "isButtonPressedWithName", yieldsValue: 'bool', params: ["String"], blocklyJson: {
-                        "args0": [
-                            {
-                                "type": "field_dropdown", "name": "PARAM_0", "options": getSensorNames("button")
-                            },
-                        ]
-                    }
-                },
-                {
-                    name: "buttonWasPressed", yieldsValue: 'bool', params: ["String"], blocklyJson: {
-                        "args0": [
-                            {
-                                "type": "field_dropdown", "name": "PARAM_0", "options": getSensorNames("button")
-                            }
-                        ]
-                    }
-                },
-                {
-                    name: "onButtonPressed", params: ["String", "Statement"], blocklyInit() {
-                        return function () {
-                            this.setColour(context.blocklyHelper.getDefaultColours().categories["sensors"]);
-                            this.appendDummyInput("PARAM_0")
-                              .appendField(strings.label.onButtonPressed)
-                              .appendField(new window.Blockly.FieldDropdown(getSensorNames("button")), 'PARAM_0')
-                              .appendField(strings.label.onButtonPressedEnd);
-                            this.appendStatementInput("PARAM_1")
-                              .setCheck(null)
-                              .appendField(strings.label.onButtonPressedDo);
-                            this.setPreviousStatement(false);
-                            this.setNextStatement(false);
-                            this.setOutput(null);
-                        };
-                    },
-                    blocklyJson: {
-                        "args0": [
-                            {"type": "field_dropdown", "name": "PARAM_0", "options": getSensorNames("button")},
-                            { "type": "input_value", "name": "PARAM_1"},
-                        ]
-                    }
-                },
-                {
-                    name: "readTemperature", yieldsValue: 'int', params: ["String"], blocklyJson: {
-                        "args0": [
-                            {
-                                "type": "field_dropdown", "name": "PARAM_0", "options": getSensorNames("temperature")
-                            }
-                        ]
-                    }
-                },
-                {
-                    name: "readRotaryAngle", yieldsValue: 'int', params: ["String"], blocklyJson: {
-                        "args0": [
-                            {
-                                "type": "field_dropdown", "name": "PARAM_0", "options": getSensorNames("potentiometer")
-                            }
-                        ]
-                    }
-                },
-                {
-                    name: "readDistance", yieldsValue: 'int', params: ["String"], blocklyJson: {
-                        "args0": [
-                            {
-                                "type": "field_dropdown", "name": "PARAM_0", "options": getSensorNames("range")
-                            }
-                        ]
-                    }
-                },
-                {
-                    name: "readLightIntensity", yieldsValue: 'int', params: ["String"], blocklyJson: {
-                        "args0": [
-                            {
-                                "type": "field_dropdown", "name": "PARAM_0", "options": getSensorNames("light")
-                            }
-                        ]
-                    }
-                },
-                {
-                    name: "readHumidity", yieldsValue: 'int', params: ["String"], blocklyJson: {
-                        "args0": [
-                            {
-                                "type": "field_dropdown", "name": "PARAM_0", "options": getSensorNames("humidity")
-                            }
-                        ]
-                    }
-                },
-                {
-                    name: "readAcceleration", yieldsValue: 'int', params: ["String"], blocklyJson: {
-                        "args0": [
-                            {
-                                "type": "field_dropdown", "name": "PARAM_0", "options": [["x", "x"], ["y", "y"], ["z", "z"] ]
-                            }
-                        ]
-                    }
-                },
-                {
-                    name: "computeRotation", yieldsValue: 'int', params: ["String"], blocklyJson: {
-                        "args0": [
-                            {
-                                "type": "field_dropdown", "name": "PARAM_0", "options": [["pitch", "pitch"], ["roll", "roll"]]
-                            }
-                        ]
-                    }
-                },
-                {
-                    name: "readSoundLevel", yieldsValue: 'int', params: ["String"], blocklyJson: {
-                        "args0": [
-                            {
-                                "type": "field_dropdown", "name": "PARAM_0", "options": getSensorNames("sound")
-                            }
-                        ]
-                    }
-                },
-                {
-                    name: "readMagneticForce", yieldsValue: 'int', params: ["String"], blocklyJson: {
-                        "args0": [
-                            {
-                                "type": "field_dropdown", "name": "PARAM_0", "options": [["x", "x"], ["y", "y"], ["z", "z"] ]
-                            }
-                        ]
-                    }
-                },
-                {
-                    name: "computeCompassHeading", yieldsValue: 'int'
-                },
-                {
-                    name: "readInfraredState", yieldsValue: 'bool', params: ["String"], blocklyJson: {
-                        "args0": [
-                            {
-                                "type": "field_dropdown", "name": "PARAM_0", "options": getSensorNames("irrecv")
-                            }
-                        ]
-                    }
-                },
-                {
-                    name: "readIRMessage", yieldsValue: 'string', params: ["String", "Number"], blocklyJson: {
-                        "args0": [
-                            { "type": "field_dropdown", "name": "PARAM_0", "options": getSensorNames("irrecv") },
-                            { "type": "input_value", "name": "PARAM_1"},
-                        ]
-                    },
-                    blocklyXml: "<block type='readIRMessage'>" +
-                        "<value name='PARAM_1'><shadow type='math_number'><field name='NUM'>10000</field></shadow></value>" +
-                        "</block>"
-                },
-                {
-                    name: "readAngularVelocity", yieldsValue: 'int', params: ["String"], blocklyJson: {
-                        "args0": [
-                            {
-                                "type": "field_dropdown", "name": "PARAM_0", "options": [["x", "x"], ["y", "y"], ["z", "z"] ]
-                            }
-                        ]
-                    }
-                },
-                {
-                    name: "setGyroZeroAngle"
-                },
-                {
-                    name: "computeRotationGyro", yieldsValue: 'int', params: ["String"], blocklyJson: {
-                        "args0": [
-                            {
-                                "type": "field_dropdown", "name": "PARAM_0", "options": [["x", "x"], ["y", "y"], ["z", "z"] ]
-                            }
-                        ]
-                    }
-                },
-
-            ],
-            actuator: [
-                { name: "turnLedOn" },
-                { name: "turnLedOff" },
-                { name: "turnBuzzerOn" },
-                { name: "turnBuzzerOff" },
-                {
-                    name: "setLedState", params: ["String", "Number"], blocklyJson: {
-                        "args0": [
-                            {
-                                "type": "field_dropdown", "name": "PARAM_0", "options": getSensorNames("led")
-                            },
-                            { "type": "field_dropdown", "name": "PARAM_1", "options": [[strings.messages.on.toUpperCase(), "1"], [strings.messages.off.toUpperCase(), "0"]] },
-                        ]
-                    }
-                },
-                {
-                    name: "setLedMatrixOne", params: ["String", "Number", "Number", "Number"], blocklyJson: {
-                        "args0": [
-                            {
-                                "type": "field_dropdown", "name": "PARAM_0", "options": getSensorNames("led")
-                            },
-                            { "type": "input_value", "name": "PARAM_1" },
-                            { "type": "input_value", "name": "PARAM_2" },
-                            { "type": "field_dropdown", "name": "PARAM_3", "options": [[strings.messages.on.toUpperCase(), "1"], [strings.messages.off.toUpperCase(), "0"]] },
-                        ]
-                    }
-                },
-                {
-                    name: "setBuzzerState", params: ["String", "Number"], blocklyJson: {
-                        "args0": [
-                            {
-                                "type": "field_dropdown", "name": "PARAM_0", "options": getSensorNames("buzzer")
-                            },
-                            { "type": "field_dropdown", "name": "PARAM_1", "options": [[strings.messages.on.toUpperCase(), "1"], [strings.messages.off.toUpperCase(), "0"]] },
-                        ]
-                    }
-                },
-                {
-                    name: "setBuzzerNote", params: ["String", "Number"], blocklyJson: {
-                        "args0": [
-                            {
-                                "type": "field_dropdown", "name": "PARAM_0", "options": getSensorNames("buzzer")
-                            },
-                            { "type": "input_value", "name": "PARAM_1"},
-                        ]
-                    },
-                    blocklyXml: "<block type='setBuzzerNote'>" +
-                        "<value name='PARAM_1'><shadow type='math_number'><field name='NUM'>200</field></shadow></value>" +
-                        "</block>"
-                },
-                {
-                    name: "getBuzzerNote", yieldsValue: 'int', params: ["String"], blocklyJson: {
-                        "args0": [
-                            {
-                                "type": "field_dropdown", "name": "PARAM_0", "options": getSensorNames("buzzer")
-                            },
-                        ]
-                    }
-                },
-                {
-                    name: "setLedBrightness", params: ["String", "Number"], blocklyJson: {
-                        "args0": [
-                            {
-                                "type": "field_dropdown", "name": "PARAM_0", "options": getSensorNames("led")
-                            },
-                            { "type": "input_value", "name": "PARAM_1"},
-                        ]
-                    },
-                    blocklyXml: "<block type='setLedBrightness'>" +
-                        "<value name='PARAM_1'><shadow type='math_number'></shadow></value>" +
-                        "</block>"
-                },
-                {
-                    name: "getLedBrightness", yieldsValue: 'int', params: ["String"], blocklyJson: {
-                        "args0": [
-                            {
-                                "type": "field_dropdown", "name": "PARAM_0", "options": getSensorNames("led")
-                            },
-                        ]
-                    }
-                },
-                {
-                    name: "isLedOn", yieldsValue: 'bool'
-                },
-                {
-                    name: "isLedOnWithName", yieldsValue: 'bool', params: ["String"], blocklyJson: {
-                        "args0": [
-                            {
-                                "type": "field_dropdown", "name": "PARAM_0", "options": getSensorNames("led")
-                            },
-                        ]
-                    }
-                },
-                {
-                    name: "isBuzzerOn", yieldsValue: 'bool'
-                },
-                {
-                    name: "isBuzzerOnWithName", yieldsValue: 'bool', params: ["String"], blocklyJson: {
-                        "args0": [
-                            {
-                                "type": "field_dropdown", "name": "PARAM_0", "options": getSensorNames("buzzer")
-                            },
-                        ]
-                    }
-                },
-                {
-                    name: "toggleLedState", params: ["String"], blocklyJson: {
-                        "args0": [
-                            {
-                                "type": "field_dropdown", "name": "PARAM_0", "options": getSensorNames("led")
-                            },
-                        ]
-                    }
-                },
-                {
-                    name: "setServoAngle", params: ["String", "Number"], blocklyJson: {
-                        "args0": [
-                            {
-                                "type": "field_dropdown", "name": "PARAM_0", "options": getSensorNames("servo")
-                            },
-                            { "type": "input_value", "name": "PARAM_1" },
-
-                        ]
-                    },
-                    blocklyXml: "<block type='setServoAngle'>" +
-                        "<value name='PARAM_1'><shadow type='math_number'></shadow></value>" +
-                        "</block>"
-                },
-                {
-                    name: "getServoAngle", yieldsValue: 'int', params: ["String"], blocklyJson: {
-                        "args0": [
-                            {
-                                "type": "field_dropdown", "name": "PARAM_0", "options": getSensorNames("servo")
-                            },
-                        ]
-                    }
-                },
-                {
-                    name: "setContinousServoDirection", params: ["String", "Number"], blocklyJson: {
-                        "args0": [
-                            {
-                                "type": "field_dropdown", "name": "PARAM_0", "options": getSensorNames("servo")
-                            },
-                            { 
-                                "type": "field_dropdown", "name": "PARAM_1", "options": [["forward", "1"], ["backwards", "-1"], ["stop", "0"]] 
-                            },
-
-                        ]
-                    },
-                },
-                {
-                    name: "setInfraredState", params: ["String", "Number"], blocklyJson: {
-                        "args0": [
-                            {"type": "field_dropdown", "name": "PARAM_0", "options": getSensorNames("irtrans")},
-                            { "type": "field_dropdown", "name": "PARAM_1", "options": [[strings.messages.on.toUpperCase(), "1"], [strings.messages.off.toUpperCase(), "0"]] },
-                        ]
-                    }
-                },
-                {
-                    name: "sendIRMessage", params: ["String", "String"], blocklyJson: {
-                        "args0": [
-                            {"type": "field_dropdown", "name": "PARAM_0", "options": getSensorNames("irtrans")},
-                            { "type": "input_value", "name": "PARAM_1", "text": "" },
-                        ]
-                    },
-                    blocklyXml: "<block type='sendIRMessage'>" +
-                        "<value name='PARAM_1'><shadow type='text'><field name='TEXT'></field> </shadow></value>" +
-                        "</block>"
-                },
-                {
-                    name: "presetIRMessage", params: ["String", "String"], blocklyJson: {
-                        "args0": [
-                            { "type": "input_value", "name": "PARAM_0", "text": "" },
-                            { "type": "input_value", "name": "PARAM_1", "text": "" },
-                        ]
-                    },
-                    blocklyXml: "<block type='presetIRMessage'>" +
-                        "<value name='PARAM_0'><shadow type='text'><field name='TEXT'></field> </shadow></value>" +
-                        "<value name='PARAM_1'><shadow type='text'><field name='TEXT'></field> </shadow></value>" +
-                        "</block>"
-                },
-                {
-                    name: "sleep", params: ["Number"], blocklyJson: {
-                        "args0": [
-                            { "type": "input_value", "name": "PARAM_0", "value": 0 },
-                        ]
-                    }
-                    ,
-                    blocklyXml: "<block type='sleep'>" +
-                        "<value name='PARAM_0'><shadow type='math_number'><field name='NUM'>1000</field></shadow></value>" +
-                        "</block>"
-                },
-            ],
-            display: [
-                {
-                    name: "displayText", params: ["String", "String"], variants: [[null], [null, null]], blocklyJson: {
-                        "args0": [
-                            { "type": "input_value", "name": "PARAM_0", "text": "" },
-                        ]
-                    },
-                    blocklyXml: "<block type='displayText'>" +
-                        "<value name='PARAM_0'><shadow type='text'><field name='TEXT'>" + strings.messages.hello + "</field> </shadow></value>" +
-                        "</block>"
-
-                },
-                {
-                    name: "displayText2Lines", params: ["String", "String"], blocklyJson: {
-                        "args0": [
-                            { "type": "input_value", "name": "PARAM_0", "text": "" },
-                            { "type": "input_value", "name": "PARAM_1", "text": "" },
-                        ]
-                    },
-                    blocklyXml: "<block type='displayText2Lines'>" +
-                        "<value name='PARAM_0'><shadow type='text'><field name='TEXT'>" + strings.messages.hello + "</field> </shadow></value>" +
-                        "<value name='PARAM_1'><shadow type='text'><field name='TEXT'></field> </shadow></value>" +
-                        "</block>"
-
-                },
-                {
-                    name: "drawPoint", params: ["Number", "Number"], blocklyJson: {
-                        "args0": [
-                            { "type": "input_value", "name": "PARAM_0"},
-                            { "type": "input_value", "name": "PARAM_1"},
-                        ]
-                    },
-                    blocklyXml: "<block type='drawPoint'>" +
-                        "<value name='PARAM_0'><shadow type='math_number'></shadow></value>" +
-                        "<value name='PARAM_1'><shadow type='math_number'></shadow></value>" +
-                        "</block>"
-                },
-                {
-                    name: "isPointSet", yieldsValue: 'bool', params: ["Number", "Number"], blocklyJson: {
-                        "args0": [
-                            { "type": "input_value", "name": "PARAM_0"},
-                            { "type": "input_value", "name": "PARAM_1"},
-                        ]
-                    },
-                    blocklyXml: "<block type='isPointSet'>" +
-                        "<value name='PARAM_0'><shadow type='math_number'></shadow></value>" +
-                        "<value name='PARAM_1'><shadow type='math_number'></shadow></value>" +
-                        "</block>"
-                },
-                {
-                    name: "drawLine", params: ["Number", "Number", "Number", "Number"], blocklyJson: {
-                        "args0": [
-                            { "type": "input_value", "name": "PARAM_0"},
-                            { "type": "input_value", "name": "PARAM_1"},
-                            { "type": "input_value", "name": "PARAM_2"},
-                            { "type": "input_value", "name": "PARAM_3"},
-                        ]
-                    },
-                    blocklyXml: "<block type='drawLine'>" +
-                        "<value name='PARAM_0'><shadow type='math_number'></shadow></value>" +
-                        "<value name='PARAM_1'><shadow type='math_number'></shadow></value>" +
-                        "<value name='PARAM_2'><shadow type='math_number'></shadow></value>" +
-                        "<value name='PARAM_3'><shadow type='math_number'></shadow></value>" +
-                        "</block>"
-                },
-                {
-                    name: "drawRectangle", params: ["Number", "Number", "Number", "Number"], blocklyJson: {
-                        "args0": [
-                            { "type": "input_value", "name": "PARAM_0"},
-                            { "type": "input_value", "name": "PARAM_1"},
-                            { "type": "input_value", "name": "PARAM_2"},
-                            { "type": "input_value", "name": "PARAM_3"},
-                        ]
-                    },
-                    blocklyXml: "<block type='drawRectangle'>" +
-                        "<value name='PARAM_0'><shadow type='math_number'></shadow></value>" +
-                        "<value name='PARAM_1'><shadow type='math_number'></shadow></value>" +
-                        "<value name='PARAM_2'><shadow type='math_number'></shadow></value>" +
-                        "<value name='PARAM_3'><shadow type='math_number'></shadow></value>" +
-                        "</block>"
-                },
-                {
-                    name: "drawCircle", params: ["Number", "Number", "Number"], blocklyJson: {
-                        "args0": [
-                            { "type": "input_value", "name": "PARAM_0"},
-                            { "type": "input_value", "name": "PARAM_1"},
-                            { "type": "input_value", "name": "PARAM_2"},
-                        ]
-                    },
-                    blocklyXml: "<block type='drawCircle'>" +
-                        "<value name='PARAM_0'><shadow type='math_number'></shadow></value>" +
-                        "<value name='PARAM_1'><shadow type='math_number'></shadow></value>" +
-                        "<value name='PARAM_2'><shadow type='math_number'></shadow></value>" +
-                        "</block>"
-                },
-
-                {
-                    name: "clearScreen"
-                },
-                {
-                    name: "updateScreen"
-                },
-                {
-                    name: "autoUpdate", params: ["Boolean"], blocklyJson: {
-                        "args0": [
-                            { "type": "input_value", "name": "PARAM_0"},
-                        ],
-                    },
-                    blocklyXml: "<block type='autoUpdate'>" +
-                    "<value name='PARAM_0'><shadow type='logic_boolean'></shadow></value>" +
-                    "</block>"
-
-                },
-                {
-                    name: "fill", params: ["Number"], blocklyJson: {
-                        "args0": [
-                            { "type": "input_value", "name": "PARAM_0"},
-                        ]
-                    },
-                    blocklyXml: "<block type='fill'>" +
-                        "<value name='PARAM_0'><shadow type='math_number'></shadow></value>" +
-                        "</block>"
-                },
-                {
-                    name: "noFill"
-                },
-                {
-                    name: "stroke", params: ["Number"], blocklyJson: {
-                        "args0": [
-                            { "type": "input_value", "name": "PARAM_0"},
-                        ]
-                    },
-                    blocklyXml: "<block type='stroke'>" +
-                        "<value name='PARAM_0'><shadow type='math_number'></shadow></value>" +
-                        "</block>"
-                },
-                {
-                    name: "noStroke"
-                },
-            ],
-            internet: [
-                {
-                    name: "getTemperatureFromCloud", yieldsValue: 'int', params: ["String"], blocklyJson: {
-                        "args0": [
-                            { "type": "field_input", "name": "PARAM_0", text: "Paris"},
-                        ]
-                    },
-                    blocklyXml: "<block type='getTemperatureFromCloud'>" +
-                        "<value name='PARAM_0'><shadow type='text'><field name='TEXT'></field> </shadow></value>" +
-                        "</block>"
-                },
-                {
-                    name: "connectToCloudStore", params: ["String", "String"], blocklyJson: {
-                        "args0": [
-                            { "type": "input_value", "name": "PARAM_0", text: ""},
-                            { "type": "input_value", "name": "PARAM_1", text: ""},
-                        ]
-                    },
-                    blocklyXml: "<block type='connectToCloudStore'>" +
-                        "<value name='PARAM_0'><shadow type='text'><field name='TEXT'></field> </shadow></value>" +
-                        "<value name='PARAM_1'><shadow type='text'><field name='TEXT'></field> </shadow></value>" +
-                        "</block>"
-                },
-                {
-                    name: "writeToCloudStore", params: ["String", "String", "String"], blocklyJson: {
-                        "args0": [
-                            { "type": "input_value", "name": "PARAM_0", text: ""},
-                            { "type": "input_value", "name": "PARAM_1", text: ""},
-                            { "type": "input_value", "name": "PARAM_2", text: ""},
-                        ]
-                    },
-                    blocklyXml: "<block type='writeToCloudStore'>" +
-                        "<value name='PARAM_0'><shadow type='text'><field name='TEXT'></field> </shadow></value>" +
-                        "<value name='PARAM_1'><shadow type='text'><field name='TEXT'></field> </shadow></value>" +
-                        "<value name='PARAM_2'><shadow type='text'><field name='TEXT'></field> </shadow></value>" +
-                        "</block>"
-                },
-                {
-                    name: "readFromCloudStore", yieldsValue: 'string', params: ["String", "String"], blocklyJson: {
-                        "args0": [
-                            { "type": "input_value", "name": "PARAM_0", text: ""},
-                            { "type": "input_value", "name": "PARAM_1", text: ""},
-                        ]
-                    },
-                    blocklyXml: "<block type='readFromCloudStore'>" +
-                        "<value name='PARAM_0'><shadow type='text'><field name='TEXT'></field> </shadow></value>" +
-                        "<value name='PARAM_1'><shadow type='text'><field name='TEXT'></field> </shadow></value>" +
-                        "</block>"
-                },
-
-            ]
-        }
-        // We can add multiple namespaces by adding other keys to customBlocks.
-    };
+    // context.thingz = {
+    //     Accel: {
+    //         get_x: function (self, callback) {
+    //             context.quickpi.readAcceleration('x', callback);
+    //         },
+    //         get_y: function (self, callback) {
+    //             context.quickpi.readAcceleration('y', callback);
+    //         },
+    //         get_z: function (self, callback) {
+    //             context.quickpi.readAcceleration('z', callback);
+    //         },
+    //     }
+    // }
 
     // Color indexes of block categories (as a hue in the range 0–420)
     context.provideBlocklyColours = function () {

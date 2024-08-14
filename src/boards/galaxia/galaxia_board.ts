@@ -1,6 +1,8 @@
-import {AbstractBoard} from "../abstract_board";
+import {AbstractBoard, BoardCustomBlocks} from "../abstract_board";
 import {BoardDefinition, ConnectionMethod} from "../../definitions";
 import {getGalaxiaConnection} from "./galaxia_connexion";
+import {accelerometerModuleDefinition} from "../../modules/thingz/accelerometer";
+import {quickpiModuleDefinition} from "../../modules/quickpi";
 
 interface GalaxiaBoardInnerState {
   connected?: boolean,
@@ -206,12 +208,25 @@ export class GalaxiaBoard extends AbstractBoard {
     return getGalaxiaConnection;
   }
 
-  // TODO: use this
-  getCustomBlocks() {
+  getCustomBlocks(context, strings): BoardCustomBlocks {
+    const quickPiModule = quickpiModuleDefinition(context, strings);
+    const accelerometerModule = accelerometerModuleDefinition(context);
+
     return {
-      customBlocks: {},
-      customClasses: {},
-      customClassInstances: {},
+      customClasses: {
+        thingz: accelerometerModule.classDefinitions,
+      },
+      customClassInstances: {
+        thingz: accelerometerModule.classInstances,
+      },
+      customClassImplementations: {
+        thingz: accelerometerModule.classImplementations,
+      },
+
+      // Take functions because they are needed in Thingz implementation
+      customBlockImplementations: {
+        quickpi: quickPiModule.blockImplementations,
+      },
     };
   }
 }

@@ -125,6 +125,41 @@ export class SensorHandler {
     return null;
   }
 
+  getSensorNames(sensorType) {
+    return () => {
+      var ports = [];
+      for (let i = 0; i < this.context.infos.quickPiSensors.length; i++) {
+        var sensor = this.context.infos.quickPiSensors[i];
+
+        if (sensor.type == sensorType) {
+          ports.push([sensor.name, sensor.name]);
+        }
+      }
+
+      if (sensorType == "button") {
+        for (let i = 0; i < this.context.infos.quickPiSensors.length; i++) {
+          let sensor = this.context.infos.quickPiSensors[i];
+
+          if (sensor.type == "stick") {
+            let stickDefinition = this.findSensorDefinition(sensor);
+
+            for (let iStick = 0; iStick < stickDefinition.gpiosNames.length; iStick++) {
+              let name = sensor.name + "." + stickDefinition.gpiosNames[iStick];
+
+              ports.push([name, name]);
+            }
+          }
+        }
+      }
+
+      if (ports.length == 0) {
+        ports.push(["none", "none"]);
+      }
+
+      return ports;
+    }
+  }
+
   drawSensor(sensor, juststate = false, donotmovefocusrect = false) {
     this.sensorDrawer.drawSensor(sensor, juststate, donotmovefocusrect);
   }

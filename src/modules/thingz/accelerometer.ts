@@ -1,8 +1,8 @@
 import {ModuleDefinition} from "../module_definition";
 
-export default function (context: any): ModuleDefinition {
+export function accelerometerModuleDefinition(context: any): ModuleDefinition {
   return {
-    blockDefinitions: {
+    classDefinitions: {
       sensors: { // category name
         Accel: [ // class name
           {name: "get_x", yieldsValue: true, blocklyJson: {output: "Number"}},
@@ -23,6 +23,9 @@ export default function (context: any): ModuleDefinition {
           context.quickpi.readAcceleration('z', callback);
         },
       }
-    }
+    },
+    classInstances: {
+      accelerometer: 'Accel',
+    },
   }
 }

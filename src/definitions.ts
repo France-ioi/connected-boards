@@ -67,7 +67,7 @@ export enum ConnectionMethod {
 
 export interface QuickalgoLibraryBlock {
   name: string,
-  yieldsValue?: boolean,
+  yieldsValue?: string|boolean,
   params?: string[],
   blocklyJson?: any,
   anyArgs?: boolean,
