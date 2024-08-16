@@ -5,6 +5,7 @@ import {thingzAccelerometerModuleDefinition} from "../../modules/thingz/accelero
 import {quickpiModuleDefinition} from "../../modules/quickpi";
 import {thingzButtonsModuleDefinition} from "../../modules/thingz/buttons";
 import {deepMerge} from "../../util";
+import {thingzTemperatureModuleDefinition} from "../../modules/thingz/temperature";
 
 interface GalaxiaBoardInnerState {
   connected?: boolean,
@@ -227,9 +228,9 @@ export class GalaxiaBoard extends AbstractBoard {
   }
 
   getCustomBlocks(context, strings): BoardCustomBlocks {
-    const quickPiModule = quickpiModuleDefinition(context, strings);
-    const accelerometerModule = thingzAccelerometerModuleDefinition(context);
+    const accelerometerModule = thingzAccelerometerModuleDefinition(context, strings);
     const buttonModule = thingzButtonsModuleDefinition(context);
+    const temperatureModule = thingzTemperatureModuleDefinition(context, strings);
 
     return {
       customClasses: {
@@ -250,10 +251,11 @@ export class GalaxiaBoard extends AbstractBoard {
           buttonModule.classImplementations,
         ),
       },
-
-      // Take functions because they are needed in Thingz implementation
       customBlockImplementations: {
-        quickpi: quickPiModule.blockImplementations,
+        thingz: temperatureModule.blockImplementations,
+      },
+      customBlocks: {
+        thingz: temperatureModule.blockDefinitions,
       },
     };
   }

@@ -1,6 +1,9 @@
 import {ModuleDefinition} from "../module_definition";
+import {quickpiModuleDefinition} from "../quickpi";
 
-export function thingzAccelerometerModuleDefinition(context: any): ModuleDefinition {
+export function thingzAccelerometerModuleDefinition(context: any, strings): ModuleDefinition {
+  const quickPiModuleDefinition = quickpiModuleDefinition(context, strings);
+
   return {
     classDefinitions: {
       sensors: { // category name
@@ -14,13 +17,13 @@ export function thingzAccelerometerModuleDefinition(context: any): ModuleDefinit
     classImplementations: {
       Accel: {
         get_x: function (self, callback) {
-          context.quickpi.readAcceleration('x', callback);
+          quickPiModuleDefinition.blockImplementations.readAcceleration('x', callback);
         },
         get_y: function (self, callback) {
-          context.quickpi.readAcceleration('y', callback);
+          quickPiModuleDefinition.blockImplementations.readAcceleration('y', callback);
         },
         get_z: function (self, callback) {
-          context.quickpi.readAcceleration('z', callback);
+          quickPiModuleDefinition.blockImplementations.readAcceleration('z', callback);
         },
       }
     },
