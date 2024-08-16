@@ -1,6 +1,9 @@
 import {ModuleDefinition} from "../module_definition";
+import {quickpiModuleDefinition} from "../quickpi";
 
-export function thingzButtonsModuleDefinition(context: any): ModuleDefinition {
+export function thingzButtonsModuleDefinition(context: any, strings: any): ModuleDefinition {
+  const quickPiModuleDefinition = quickpiModuleDefinition(context, strings);
+
   return {
     classDefinitions: {
       sensors: {
@@ -16,13 +19,13 @@ export function thingzButtonsModuleDefinition(context: any): ModuleDefinition {
       Button: {
         is_pressed: function (self, callback) {
           const buttonName = `btn${self.__variableName.split('_')[1].toLocaleUpperCase()}`;
-          context.quickpi.isButtonPressedWithName(buttonName, callback);
+          quickPiModuleDefinition.blockImplementations.isButtonPressedWithName(buttonName, callback);
         },
       },
       ButtonTouch: {
         is_touched: function (self, callback) {
           const buttonName = `btn${self.__variableName.split('_')[1].toLocaleUpperCase()}`;
-          context.quickpi.isButtonPressedWithName(buttonName, callback);
+          quickPiModuleDefinition.blockImplementations.isButtonPressedWithName(buttonName, callback);
         },
       }
     },

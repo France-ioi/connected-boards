@@ -14,8 +14,7 @@ export function thingzTemperatureModuleDefinition(context: any, strings): Module
     },
     blockImplementations: {
       temperature: function (callback) {
-        let sensor = context.sensorHandler.findSensorByType('temperature');
-
+        const sensor = context.sensorHandler.findSensorByType('temperature');
         quickPiModuleDefinition.blockImplementations.readTemperature(sensor.name, callback);
       }
     },

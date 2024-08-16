@@ -2,14 +2,14 @@ import {AbstractBoard, BoardCustomBlocks} from "../abstract_board";
 import {BoardDefinition, ConnectionMethod} from "../../definitions";
 import {getGalaxiaConnection} from "./galaxia_connexion";
 import {thingzAccelerometerModuleDefinition} from "../../modules/thingz/accelerometer";
-import {quickpiModuleDefinition} from "../../modules/quickpi";
 import {thingzButtonsModuleDefinition} from "../../modules/thingz/buttons";
 import {deepMerge} from "../../util";
 import {thingzTemperatureModuleDefinition} from "../../modules/thingz/temperature";
+import {thingzLedModuleDefinition} from "../../modules/thingz/led";
 
 interface GalaxiaBoardInnerState {
   connected?: boolean,
-  led?: string,
+  led?: [number, number, number]|null,
 }
 
 let galaxiaSvgInline = null;
@@ -19,13 +19,6 @@ export class GalaxiaBoard extends AbstractBoard {
   galaxiaSvg = null;
   initialized = false;
   innerState: GalaxiaBoardInnerState = {};
-  ledColors = {
-    'transparent': '#d3d3d3',
-    'green': '#B8E986',
-    'red': '#FF001F',
-    'blue': '#00C1FF',
-    'orange': '#F5A623'
-  };
   onUserEvent: (sensorName: string, state: unknown) => void;
 
   init(selector, onUserEvent) {
@@ -143,14 +136,13 @@ export class GalaxiaBoard extends AbstractBoard {
   }
 
   setLed(color) {
-    if (!this.initialized) {
+    if (!this.initialized || !color) {
       return;
     }
-    if (this.ledColors[color] !== undefined) {
-      color = this.ledColors[color];
-    }
+
+    console.log({color});
     let led = this.galaxiaSvg.find('#led');
-    led.css('fill', color);
+    led.css('fill', Array.isArray(color) ? `rgb(${color.join(',')})` : '#d3d3d3');
   }
 
   setConnected(isConnected) {
@@ -174,11 +166,11 @@ export class GalaxiaBoard extends AbstractBoard {
         return;
       }
       this.buttonStatesUpdators[sensor.name][sensor.state ? 'down' : 'up'](true);
-    } else if (sensor.type === 'led') {
+    } else if (sensor.type === 'ledrgb') {
       if (sensor.state) {
-        this.innerState.led = sensor.subType || 'green';
+        this.innerState.led = sensor.state;
       } else {
-        this.innerState.led = 'transparent';
+        this.innerState.led = null;
       }
       this.setLed(this.innerState.led);
     }
@@ -229,26 +221,30 @@ export class GalaxiaBoard extends AbstractBoard {
 
   getCustomBlocks(context, strings): BoardCustomBlocks {
     const accelerometerModule = thingzAccelerometerModuleDefinition(context, strings);
-    const buttonModule = thingzButtonsModuleDefinition(context);
+    const buttonModule = thingzButtonsModuleDefinition(context, strings);
     const temperatureModule = thingzTemperatureModuleDefinition(context, strings);
+    const ledModule = thingzLedModuleDefinition(context, strings);
 
     return {
       customClasses: {
         thingz: deepMerge(
           accelerometerModule.classDefinitions,
           buttonModule.classDefinitions,
+          ledModule.classDefinitions,
         ),
       },
       customClassInstances: {
         thingz: deepMerge(
           accelerometerModule.classInstances,
           buttonModule.classInstances,
+          ledModule.classInstances,
         ),
       },
       customClassImplementations: {
         thingz: deepMerge(
           accelerometerModule.classImplementations,
           buttonModule.classImplementations,
+          ledModule.classImplementations,
         ),
       },
       customBlockImplementations: {

@@ -68,6 +68,40 @@ export const getSensorDefinitions = function (context, strings) {
       ],
     },
     {
+      name: "ledrgb",
+      suggestedName: strings.messages.sensorNameLedRgb,
+      description: strings.messages.ledrgb,
+      isAnalog: false,
+      isSensor: false,
+      portType: "D",
+      getInitialState: function (sensor) {
+        return null;
+      },
+      selectorImages: ["ledon-red.png"],
+      valueType: "object",
+      pluggable: true,
+      getPercentageFromState: function (state) {
+        if (state)
+          return 1;
+        else
+          return 0;
+      },
+      getStateFromPercentage: function (percentage) {
+        if (percentage)
+          return 1;
+        else
+          return 0;
+      },
+      setLiveState: function (sensor, state, callback) {
+        var command = `setLedRgbState("${sensor.name}", [0, 0, 0])`;
+
+        context.quickPiConnection.sendCommand(command, callback);
+      },
+      getStateString: function(state) {
+        return `[${state.join(', ')}]`;
+      },
+    },
+    {
       name: "ledmatrix",
       suggestedName: strings.messages.sensorNameLedMatrix,
       description: strings.messages.ledmatrix,

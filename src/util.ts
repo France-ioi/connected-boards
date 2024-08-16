@@ -53,23 +53,26 @@ export function getImg(filename) {
   return (window.modulesPath ? window.modulesPath : '../../modules/') + 'img/quickpi/' + filename;
 }
 
-export function isObject(item) {
-  return (item && typeof item === 'object' && !Array.isArray(item));
-}
+export function deepMerge(...objects) {
+  const isObject = obj => obj && typeof obj === 'object';
 
-export function deepMerge(target, source) {
-  let output = Object.assign({}, target);
-  if (isObject(target) && isObject(source)) {
-    Object.keys(source).forEach(key => {
-      if (isObject(source[key])) {
-        if (!(key in target))
-          Object.assign(output, { [key]: source[key] });
-        else
-          output[key] = deepMerge(target[key], source[key]);
-      } else {
-        Object.assign(output, { [key]: source[key] });
+  return objects.reduce((prev, obj) => {
+    Object.keys(obj).forEach(key => {
+      const pVal = prev[key];
+      const oVal = obj[key];
+
+      if (Array.isArray(pVal) && Array.isArray(oVal)) {
+        prev[key] = pVal.concat(...oVal);
+      }
+      else if (isObject(pVal) && isObject(oVal)) {
+        prev[key] = deepMerge(pVal, oVal);
+      }
+      else {
+        prev[key] = oVal;
       }
     });
-  }
-  return output;
+
+    return prev;
+  }, {});
 }
+

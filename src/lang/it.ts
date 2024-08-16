@@ -340,6 +340,7 @@ export default { // TODO
     quickpihat: "France IOI QuickPi Hat",
     pinohat: "Raspberry Pi without hat",
     led: "LED",
+    ledrgb: "LED RGB",
     blueled: "LED blu",
     greenled: "LED verde",
     orangeled: "LED arancione",
@@ -408,6 +409,7 @@ export default { // TODO
 
     sensorNameBuzzer: "buzzer",
     sensorNameLed: "led",
+    sensorNameLedRgb: "ledRgb",
     sensorNameRedLed: "redled",
     sensorNameGreenLed: "greenled",
     sensorNameBlueLed: "blueled",

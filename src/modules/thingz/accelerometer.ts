@@ -30,5 +30,10 @@ export function thingzAccelerometerModuleDefinition(context: any, strings): Modu
     classInstances: {
       accelerometer: 'Accel',
     },
+
+    // TODO: each module should define how to interact with each component
+    // sensorLiveState: {
+    //   accelerometer: `print([round(accelerometer.get_x()/100, 1), round(accelerometer.get_y()/100, 1), round(accelerometer.get_z()/100, 1)])`,
+    // },
   }
 }

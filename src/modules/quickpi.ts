@@ -900,35 +900,6 @@ export function quickpiModuleDefinition(context: any, strings: any): ModuleDefin
       }
     },
 
-    setLedColors: function (name, r, g, b, callback) {
-      let sensor = sensorHandler.findSensorByName(name, true);
-
-      if (typeof r == "object")
-      {
-        r = r.valueOf();
-      }
-      if (typeof g == "object")
-      {
-        g = g.valueOf();
-      }
-      if (typeof b == "object")
-      {
-        b = b.valueOf();
-      }
-
-      let command = "setLedColors(\"" + name + "\"," + r + "," + g + "," + b + ")";
-
-      context.registerQuickPiEvent(name, {r: r, g: g, b: b});
-
-      if (!context.display || context.autoGrading || context.offLineMode) {
-        context.waitDelay(callback);
-      } else {
-        let cb = context.runner.waitCallback(callback);
-
-        context.quickPiConnection.sendCommand(command, cb);
-      }
-    },
-
     isLedOn: function (arg1, arg2) {
       let callback = arg2;
       let sensor = sensorHandler.findSensorByName(arg1, true);

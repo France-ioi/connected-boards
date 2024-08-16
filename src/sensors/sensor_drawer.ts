@@ -58,7 +58,7 @@ export class SensorDrawer {
   }
 
   drawSensor(sensor, juststate = false, donotmovefocusrect = false) {
-    console.log('draw sensor', sensor, this.context, this.context.paper);
+    // console.log('draw sensor', sensor, this.context, this.context.paper);
     // console.log(sensor.type)
     this.saveSensorStateIfNotRunning(sensor);
     if (this.context.sensorStateListener) {
@@ -287,6 +287,43 @@ export class SensorDrawer {
         sensor.ledoff.attr({"opacity": fadeopacity});
       }
 
+
+      if ((!this.context.runner || !this.context.runner.isRunning())
+        && !this.context.offLineMode) {
+
+        this.sensorHandler.findSensorDefinition(sensor).setLiveState(sensor, sensor.state, function (x) {
+        });
+      }
+    } else if (sensor.type == "ledrgb") {
+      if (sensor.stateText)
+        sensor.stateText.remove();
+
+      if (sensor.state == null)
+        sensor.state = 0;
+
+      if (!sensor.ledimage || this.sensorHandler.isElementRemoved(sensor.ledimage)) {
+        let imagename = "ledoff.png";
+        sensor.ledimage = this.context.paper.image(getImg(imagename), imgx, imgy, imgw, imgh);
+      }
+      if (!sensor.ledcolor || this.sensorHandler.isElementRemoved(sensor.ledcolor)) {
+        console.log('new ledcolor');
+        sensor.ledcolor = this.context.paper.circle();
+      }
+
+      sensor.ledimage.attr(sensorAttr);
+      sensor.ledcolor.attr(sensorAttr);
+      sensor.ledcolor.attr({});
+
+      sensor.ledcolor.attr({
+        "cx": imgx + imgw/2,
+        "cy": imgy + imgh*0.3,
+        "r": imgh*0.15,
+        fill: sensor.state ? `rgb(${sensor.state.join(',')})`: 'none',
+        stroke: 'none',
+        opacity: 0.5,
+      });
+
+      sensor.stateText = this.context.paper.text(state1x, state1y, `${sensor.state ? sensor.state.join(',') : ''  }`);
 
       if ((!this.context.runner || !this.context.runner.isRunning())
         && !this.context.offLineMode) {
