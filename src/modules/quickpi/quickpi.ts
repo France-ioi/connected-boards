@@ -1,8 +1,8 @@
-import {buzzerSound} from "../sensors/buzzer_sound";
-import {ModuleDefinition} from "./module_definition";
-import {LocalQuickStore} from "../sensors/local_quickpi_store";
-import {QuickStore} from "../sensors/quickpi_store";
-import {arrayContains} from "../util";
+import {buzzerSound} from "../../sensors/buzzer_sound";
+import {ModuleDefinition} from "../module_definition";
+import {LocalQuickStore} from "../../sensors/local_quickpi_store";
+import {QuickStore} from "../../sensors/quickpi_store";
+import {arrayContains} from "../../util";
 
 export function quickpiModuleDefinition(context: any, strings: any): ModuleDefinition {
   const sensorHandler = context.sensorHandler;

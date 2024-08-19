@@ -1,5 +1,5 @@
 import {ModuleDefinition} from "../module_definition";
-import {quickpiModuleDefinition} from "../quickpi";
+import {quickpiModuleDefinition} from "../quickpi/quickpi";
 
 export function thingzLedModuleDefinition(context: any, strings: any): ModuleDefinition {
   const quickPiModuleDefinition = quickpiModuleDefinition(context, strings);
@@ -7,14 +7,18 @@ export function thingzLedModuleDefinition(context: any, strings: any): ModuleDef
   return {
     classDefinitions: {
       sensors: {
-        Led: [
-          {name: 'read_light_level', yieldsValue: 'int'},
-        ],
+        Led: {
+          blocks: [
+            {name: 'read_light_level', yieldsValue: 'int'},
+          ],
+        },
       },
       actuator: {
-        Led: [
-          {name: "set_colors", params: ["Number", "Number", "Number"]},
-        ],
+        Led: {
+          blocks: [
+            {name: "set_colors", params: ["Number", "Number", "Number"]},
+          ],
+        }
       }
     },
     classImplementations: {

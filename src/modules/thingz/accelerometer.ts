@@ -1,5 +1,5 @@
 import {ModuleDefinition} from "../module_definition";
-import {quickpiModuleDefinition} from "../quickpi";
+import {quickpiModuleDefinition} from "../quickpi/quickpi";
 
 export function thingzAccelerometerModuleDefinition(context: any, strings): ModuleDefinition {
   const quickPiModuleDefinition = quickpiModuleDefinition(context, strings);
@@ -7,12 +7,14 @@ export function thingzAccelerometerModuleDefinition(context: any, strings): Modu
   return {
     classDefinitions: {
       sensors: { // category name
-        Accel: [ // class name
-          {name: "get_x", yieldsValue: true, blocklyJson: {output: "Number"}},
-          {name: "get_y", yieldsValue: true, blocklyJson: {output: "Number"}},
-          {name: "get_z", yieldsValue: true, blocklyJson: {output: "Number"}},
-        ],
-      }
+        Accel: { // class name
+          blocks: [
+            {name: "get_x", yieldsValue: true, blocklyJson: {output: "Number"}},
+            {name: "get_y", yieldsValue: true, blocklyJson: {output: "Number"}},
+            {name: "get_z", yieldsValue: true, blocklyJson: {output: "Number"}},
+          ],
+        },
+      },
     },
     classImplementations: {
       Accel: {

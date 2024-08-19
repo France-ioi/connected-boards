@@ -19,15 +19,15 @@ export class SensorHandler {
   }
 
   getNewSensorSuggestedName(name) {
-    var maxvalue = 0;
+    let maxvalue = 0;
 
-    for (var i = 0; i < this.context.infos.quickPiSensors.length; i++) {
-      var sensor = this.context.infos.quickPiSensors[i];
+    for (let i = 0; i < this.context.infos.quickPiSensors.length; i++) {
+      let sensor = this.context.infos.quickPiSensors[i];
 
-      var firstdigit = sensor.name.search(/\d/);
+      let firstdigit = sensor.name.search(/\d/);
       if (firstdigit > 0) {
-        var namepart = sensor.name.substring(0, firstdigit);
-        var numberpart = parseInt(sensor.name.substring(firstdigit), 10);
+        let namepart = sensor.name.substring(0, firstdigit);
+        let numberpart = parseInt(sensor.name.substring(firstdigit), 10);
 
         if (name == namepart && numberpart > maxvalue) {
           maxvalue = numberpart;
@@ -40,15 +40,15 @@ export class SensorHandler {
 
   findSensorDefinition(sensor) {
     // console.log(sensor)
-    var sensorDef = null;
-    for (var iType = 0; iType < this.sensorDefinitions.length; iType++) {
-      var type = this.sensorDefinitions[iType];
+    let sensorDef = null;
+    for (let iType = 0; iType < this.sensorDefinitions.length; iType++) {
+      let type = this.sensorDefinitions[iType];
 
       if (sensor.type == type.name) {
         if (sensor.subType && type.subTypes) {
 
-          for (var iSubType = 0; iSubType < type.subTypes.length; iSubType++) {
-            var subType = type.subTypes[iSubType];
+          for (let iSubType = 0; iSubType < type.subTypes.length; iSubType++) {
+            let subType = type.subTypes[iSubType];
 
             if (subType.subType == sensor.subType) {
               sensorDef = $.extend({}, type, subType);
@@ -115,9 +115,20 @@ export class SensorHandler {
   }
 
   findSensorByType(type: string) {
-    for (var i = 0; i < this.context.infos.quickPiSensors.length; i++) {
-      var sensor = this.context.infos.quickPiSensors[i];
+    for (let i = 0; i < this.context.infos.quickPiSensors.length; i++) {
+      let sensor = this.context.infos.quickPiSensors[i];
       if (sensor.type == type) {
+        return sensor;
+      }
+    }
+
+    return null;
+  }
+
+  findSensorByPort(port: string) {
+    for (let i = 0; i < this.context.infos.quickPiSensors.length; i++) {
+      let sensor = this.context.infos.quickPiSensors[i];
+      if (sensor.port == port) {
         return sensor;
       }
     }
@@ -127,9 +138,9 @@ export class SensorHandler {
 
   getSensorNames(sensorType) {
     return () => {
-      var ports = [];
+      let ports = [];
       for (let i = 0; i < this.context.infos.quickPiSensors.length; i++) {
-        var sensor = this.context.infos.quickPiSensors[i];
+        let sensor = this.context.infos.quickPiSensors[i];
 
         if (sensor.type == sensorType) {
           ports.push([sensor.name, sensor.name]);
@@ -169,7 +180,7 @@ export class SensorHandler {
   }
 
   warnClientSensorStateChanged(sensor) {
-    var sensorStateCopy = JSON.parse(JSON.stringify(sensor.state));
+    let sensorStateCopy = JSON.parse(JSON.stringify(sensor.state));
     if (this.context.dispatchContextEvent) {
       this.context.dispatchContextEvent({type: 'quickpi/changeSensorState', payload: [sensor.name, sensorStateCopy], onlyLog: true});
     }

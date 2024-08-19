@@ -270,6 +270,10 @@ export default {
 
     //Continous servo
     setContinousServoDirection: "setContinousServoDirection(servo, direction)",
+
+    "pin.__constructor": "pin = Pin(pinNumber, mode) description",
+    "pin.on": "pin.on() description",
+    "pin.off": "pin.off() description",
   },
   constant: {},
 

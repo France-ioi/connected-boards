@@ -584,7 +584,7 @@ var getContext = function (display, infos, curLevel) {
                             var port = sensorDefinition.portType;
                             if (sensorDefinition.portType != "i2c")
                                 port = sensorDefinition.portType + ports[iPorts];
-                            if (!findSensorByPort(port)) {
+                            if (!sensorHandler.findSensorByPort(port)) {
                                 sensor.port = port;
 
                                 if (!sensor.subType)
@@ -599,7 +599,7 @@ var getContext = function (display, infos, curLevel) {
                     var ports = board.portTypes[sensorDefinition.portType];
                     for (var iPorts = 0; iPorts < ports.length; iPorts++) {
                         var port = sensorDefinition.portType + ports[iPorts];
-                        if (!findSensorByPort(port)) {
+                        if (!sensorHandler.findSensorByPort(port)) {
                             sensor.port = port;
                             return;
                         }
@@ -3199,17 +3199,6 @@ var getContext = function (display, infos, curLevel) {
        [1] https://developers.google.com/blockly/guides/create-custom-blocks/define-blocks
        [2] https://developers.google.com/blockly/guides/create-custom-blocks/type-checks
     */
-
-    function findSensorByPort(port) {
-        for (var i = 0; i < infos.quickPiSensors.length; i++) {
-            var sensor = infos.quickPiSensors[i];
-            if (sensor.port == port) {
-                return sensor;
-            }
-        }
-
-        return null;
-    }
 
     function getSensorSuggestedName(type, suggested) {
         if (suggested) {

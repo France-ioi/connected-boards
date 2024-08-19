@@ -1,7 +1,7 @@
 import {AbstractBoard, BoardCustomBlocks} from "../abstract_board";
 import {ConnectionMethod} from "../../definitions";
 import {getQuickPiConnection} from "./quickpi_connection";
-import {quickpiModuleDefinition} from "../../modules/quickpi";
+import {quickpiModuleDefinition} from "../../modules/quickpi/quickpi";
 
 export class QuickPiBoard extends AbstractBoard {
   getBoardDefinitions() {

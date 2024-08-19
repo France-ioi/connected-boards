@@ -1,5 +1,5 @@
 import {ModuleDefinition} from "../module_definition";
-import {quickpiModuleDefinition} from "../quickpi";
+import {quickpiModuleDefinition} from "../quickpi/quickpi";
 
 export function thingzTemperatureModuleDefinition(context: any, strings): ModuleDefinition {
   const quickPiModuleDefinition = quickpiModuleDefinition(context, strings);

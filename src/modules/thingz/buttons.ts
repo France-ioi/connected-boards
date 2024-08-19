@@ -1,5 +1,5 @@
 import {ModuleDefinition} from "../module_definition";
-import {quickpiModuleDefinition} from "../quickpi";
+import {quickpiModuleDefinition} from "../quickpi/quickpi";
 
 export function thingzButtonsModuleDefinition(context: any, strings: any): ModuleDefinition {
   const quickPiModuleDefinition = quickpiModuleDefinition(context, strings);
@@ -7,12 +7,16 @@ export function thingzButtonsModuleDefinition(context: any, strings: any): Modul
   return {
     classDefinitions: {
       sensors: {
-        Button: [
-          {name: "is_pressed", yieldsValue: true, blocklyJson: {output: "Boolean"}},
-        ],
-        ButtonTouch: [
-          {name: "is_touched", yieldsValue: true, blocklyJson: {output: "Boolean"}},
-        ],
+        Button: {
+          blocks: [
+            {name: "is_pressed", yieldsValue: true, blocklyJson: {output: "Boolean"}},
+          ],
+        },
+        ButtonTouch: {
+          blocks: [
+            {name: "is_touched", yieldsValue: true, blocklyJson: {output: "Boolean"}},
+          ],
+        }
       }
     },
     classImplementations: {
