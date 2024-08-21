@@ -5,7 +5,8 @@ export function machinePinModuleDefinition(context: any, strings): ModuleDefinit
     classDefinitions: {
       actuator: { // category name
         Pin: {
-          init: {params: ["Number", "Number"]},
+          defaultInstanceName: 'pin',
+          init: {variants: [["Number"], ["Number", "Number"]]},
           blocks: [
             {name: "on"},
             {name: "off"},

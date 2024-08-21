@@ -274,6 +274,9 @@ export default {
     "pin.__constructor": "pin = Pin(pinNumber, mode) description",
     "pin.on": "pin.on() description",
     "pin.off": "pin.off() description",
+
+    "pwm.__constructor": "pwm = PWM(pin, freq, duty) description",
+    "pwm.duty": "pwm.duty(duty) description",
   },
   constant: {},
 

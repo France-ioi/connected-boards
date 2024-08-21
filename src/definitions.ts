@@ -70,6 +70,7 @@ export interface QuickalgoLibraryBlock {
   yieldsValue?: string|boolean,
   params?: string[],
   blocklyJson?: any,
+  blocklyXml?: string,
   anyArgs?: boolean,
   variants?: any,
 }

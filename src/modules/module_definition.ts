@@ -1,6 +1,7 @@
 import {QuickalgoLibraryBlock} from "../definitions";
 
 interface QuickAlgoCustomClass {
+  defaultInstanceName?: string,
   init?: QuickalgoLibraryBlock,
   blocks: QuickalgoLibraryBlock[],
   constants?: {name: string, value: any}[],

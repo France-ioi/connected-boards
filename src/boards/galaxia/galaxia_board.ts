@@ -7,6 +7,8 @@ import {deepMerge} from "../../util";
 import {thingzTemperatureModuleDefinition} from "../../modules/thingz/temperature";
 import {thingzLedModuleDefinition} from "../../modules/thingz/led";
 import {machinePinModuleDefinition} from "../../modules/machine/pin";
+import {machinePwmModuleDefinition} from "../../modules/machine/pwm";
+import {utimeSleepModuleDefinition} from "../../modules/utime/sleep";
 
 interface GalaxiaBoardInnerState {
   connected?: boolean,
@@ -226,6 +228,8 @@ export class GalaxiaBoard extends AbstractBoard {
     const temperatureModule = thingzTemperatureModuleDefinition(context, strings);
     const ledModule = thingzLedModuleDefinition(context, strings);
     const pinModule = machinePinModuleDefinition(context, strings);
+    const pwmModule = machinePwmModuleDefinition(context, strings);
+    const utimeModule = utimeSleepModuleDefinition(context, strings);
 
     return {
       customClasses: {
@@ -236,6 +240,7 @@ export class GalaxiaBoard extends AbstractBoard {
         ),
         machine: deepMerge(
           pinModule.classDefinitions,
+          pwmModule.classDefinitions,
         ),
       },
       customClassInstances: {
@@ -253,13 +258,16 @@ export class GalaxiaBoard extends AbstractBoard {
         ),
         machine: deepMerge(
           pinModule.classImplementations,
+          pwmModule.classImplementations,
         ),
       },
       customBlockImplementations: {
         thingz: temperatureModule.blockImplementations,
+        utime: utimeModule.blockImplementations,
       },
       customBlocks: {
         thingz: temperatureModule.blockDefinitions,
+        utime: utimeModule.blockDefinitions,
       },
     };
   }
