@@ -179,11 +179,8 @@ export default {
 
     //Continous servo
     setContinousServoDirection: "setContinousServoDirection",
-
-    "accelerometer.get_x": "accelerometer.get_x()",
   },
   description: {
-    "accelerometer.get_x": "accelerometer.get_x() retourne la valeur de l'accélération sur l'axe X",
     // Descriptions of the functions in Python (optional)
     turnLedOn: "turnLedOn() allume la LED",
     turnLedOff: "turnLedOff() éteint la LED",
@@ -271,12 +268,17 @@ export default {
     //Continous servo
     setContinousServoDirection: "setContinousServoDirection(servo, direction)",
 
+    // Galaxia
+    "accelerometer.get_x": "accelerometer.get_x() retourne la valeur de l'accélération sur l'axe X",
+
     "pin.__constructor": "pin = Pin(pinNumber, mode) description",
     "pin.on": "pin.on() description",
     "pin.off": "pin.off() description",
 
     "pwm.__constructor": "pwm = PWM(pin, freq, duty) description",
     "pwm.duty": "pwm.duty(duty) description",
+
+    sleep_us: "sleep_us(microseconds) met en pause l'exécution pendant une durée en microsec",
   },
   constant: {},
 
