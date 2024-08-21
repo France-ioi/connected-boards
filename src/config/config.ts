@@ -17,6 +17,8 @@ export function showConfig({context, strings, mainBoard}) {
 
   const connectionDialogHTML = getConnectionDialogHTML(availableConnectionMethods, strings, boardDefinitions, sensorDefinitions);
 
+  const customSensors = context.infos.customSensors;
+
   window.displayHelper.showPopupDialog(connectionDialogHTML, function () {
     $(".simple-dialog").addClass("config");
     $('#popupMessage .navigationContent ul li').removeClass('selected');
@@ -125,15 +127,15 @@ export function showConfig({context, strings, mainBoard}) {
     function addGridElement(gridID, add, idName, name, img, port) {
       // console.log(add,idName,name,img)
       var idType = (add) ? "add" : "remove";
-      $('#' + gridID).append(
-        "<span class=\"sensorElement\" id=\"qpi-" + idType + "-sensor-parent-" + idName + "\">" +
-        "<div class='name'>" + name + "</div>" +
-        getSensorImg(img) +
-        "<div class=\"sensorInfo\">" +
-        "<span class='port'>" + port + "</span>" +
-        "<input type=\"checkbox\" id=\"qpi-" + idType + "-sensor-" + idName + "\"></input>" +
-        "</div>" +
-        "</span>"
+      $('#' + gridID).append(`
+        <span class="sensorElement ${!customSensors ? 'read-only' : ''}" id="qpi-${idType}-sensor-parent-${idName}">
+          <div class='name'>${name}</div>
+          ${getSensorImg(img)}
+          <div class="sensorInfo">
+            <span class='port'>${port}</span>
+            ${customSensors ? `<input type="checkbox" id="qpi-${idType}-sensor-${idName}"/>` : ''}
+          </div>
+        </span>`
       );
     };
 
@@ -167,8 +169,10 @@ export function showConfig({context, strings, mainBoard}) {
       if (el.hasClass("selected")) {
         return
       }
-      if (id == "remove_tab" && toAdd.length > 0 ||
-        id == "add_tab" && toRemove.length > 0) {
+      if (
+        (id == "remove_tab" && toAdd.length > 0)
+        || (id == "add_tab" && toRemove.length > 0)
+      ) {
         showConfirmDialog(function () {
           unselectSensors();
           clickTab(id)
@@ -189,6 +193,10 @@ export function showConfig({context, strings, mainBoard}) {
       }
     };
     $("#sensorGrid .sensorElement").click(function () {
+      if (!customSensors) {
+        return;
+      }
+
       var id = $(this).attr('id');
       changeSelect(id);
     });
@@ -213,7 +221,7 @@ export function showConfig({context, strings, mainBoard}) {
         }
       }
       // console.log(arr)
-    };
+    }
 
     function unselectSensors(type = null) {
       if (!type) {
@@ -230,14 +238,23 @@ export function showConfig({context, strings, mainBoard}) {
           changePort(elID, false);
         }
       }
-    };
 
-    if (context.infos.customSensors) {
+      if ('add' === type) {
+        toAdd = [];
+      } else {
+        toRemove = [];
+      }
+    }
+
+    if (customSensors) {
       // $('#piaddsensor').click(clickAdder);
       $('#piaddsensor').click(addSensors);
     } else {
       $('#piaddsensor').hide();
+      $('#piremovesensor').hide();
+      $('#qpi-uiblock-components #tabs').hide();
     }
+
     $('#piremovesensor').click(function () {
       //$('#popupMessage').hide();
       //window.displayHelper.popupMessageShown = false;
@@ -262,6 +279,8 @@ export function showConfig({context, strings, mainBoard}) {
           // console.log(sensorName);
         }
       });
+
+      unselectSensors("remove");
 
       if (removed) {
         context.recreateDisplay = true;
