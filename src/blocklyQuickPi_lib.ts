@@ -36,6 +36,8 @@ var getContext = function (display, infos, curLevel) {
         throw `This main board doesn't exist: "${context.infos.quickPiBoard}"`;
     }
 
+    context.board = mainBoard.defaultSubBoard;
+
     mainBoard.setStrings(strings);
     context.mainBoard = mainBoard;
 
@@ -914,10 +916,6 @@ var getContext = function (display, infos, curLevel) {
         context.resetSensorTable();
         context.reset();
     };
-
-
-
-    context.board = "quickpi";
 
     if (getSessionStorage('board'))
         context.changeBoard(getSessionStorage('board'));

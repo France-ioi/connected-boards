@@ -12,6 +12,7 @@ export interface BoardCustomBlocks {
 
 export abstract class AbstractBoard {
   protected strings: any = {};
+  public defaultSubBoard: string = 'quickpi';
 
   abstract getBoardDefinitions(): BoardDefinition[]
 

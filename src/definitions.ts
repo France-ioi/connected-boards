@@ -49,7 +49,6 @@ export interface Sensor {
 
 export interface BoardDefinition {
   name: string,
-  friendlyName?: string,
   image?: string,
   adc?: string|string[],
   portTypes: {[type: string]: any[]},

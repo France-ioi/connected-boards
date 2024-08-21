@@ -21,6 +21,7 @@ let galaxiaSvgInline = null;
 
 export class GalaxiaBoard extends AbstractBoard {
   buttonStatesUpdators = {};
+  public defaultSubBoard: string = 'galaxia';
   galaxiaSvg = null;
   initialized = false;
   innerState: GalaxiaBoardInnerState = {};
@@ -58,9 +59,9 @@ export class GalaxiaBoard extends AbstractBoard {
     this.galaxiaSvg.attr('height', "100%");
 
     let buttonIds = {
-      a: 'btnA',
-      b: 'btnB',
-      sys: 'btnSys',
+      a: 'button_a',
+      b: 'button_b',
+      sys: 'button_sys',
     };
     
     for (let [buttonId, buttonName] of Object.entries(buttonIds)) {
@@ -68,10 +69,10 @@ export class GalaxiaBoard extends AbstractBoard {
     }
 
     let padIds = {
-      up: 'btnN',
-      down: 'btnS',
-      left: 'btnW',
-      right: 'btnE',
+      up: 'button_n',
+      down: 'button_s',
+      left: 'button_w',
+      right: 'button_e',
     }
     for (let [padId, padName] of Object.entries(padIds)) {
       this.bindPadButton(padId, padName);
@@ -182,25 +183,23 @@ export class GalaxiaBoard extends AbstractBoard {
     this.setConnected(this.innerState.connected);
   }
 
-  // TODO: make something corresponding more to the Galaxia
   getBoardDefinitions(): BoardDefinition[] {
     return [
       {
-        name: "quickpi",
-        friendlyName: this.strings.messages.quickpihat,
+        name: "galaxia",
         image: "quickpihat.png",
-        adc: "ads1015",
         portTypes: {
-          "D": [5, 16, 24],
-          "A": [0],
+          "D": [0, 1, 2, 6, 7, 8, 12, 13, 14, 15, 16, 19, 20],
+          "A": [0, 1, 2, 6, 7, 8, 12, 13, 14, 15, 16, 19, 20],
         },
         builtinSensors: [
-          {type: "button", suggestedName: this.strings.messages.sensorNameButton + "A"},
-          {type: "button", suggestedName: this.strings.messages.sensorNameButton + "B"},
-          {type: "button", suggestedName: this.strings.messages.sensorNameButton + "N"},
-          {type: "button", suggestedName: this.strings.messages.sensorNameButton + "S"},
-          {type: "button", suggestedName: this.strings.messages.sensorNameButton + "W"},
-          {type: "button", suggestedName: this.strings.messages.sensorNameButton + "E"},
+          {type: "ledrgb", suggestedName: 'led'},
+          {type: "button", suggestedName: 'button_a'},
+          {type: "button", suggestedName: 'button_b'},
+          {type: "button", suggestedName: 'button_n'},
+          {type: "button", suggestedName: 'button_s'},
+          {type: "button", suggestedName: 'button_e'},
+          {type: "button", suggestedName: 'button_w'},
         ],
       },
     ];

@@ -8,7 +8,6 @@ export class QuickPiBoard extends AbstractBoard {
     return [
       {
         name: "grovepi",
-        friendlyName: this.strings.messages.grovehat,
         image: "grovepihat.png",
         adc: "grovepi",
         portTypes: {
@@ -31,7 +30,6 @@ export class QuickPiBoard extends AbstractBoard {
       },
       {
         name: "quickpi",
-        friendlyName: this.strings.messages.quickpihat,
         image: "quickpihat.png",
         adc: "ads1015",
         portTypes: {
@@ -60,7 +58,6 @@ export class QuickPiBoard extends AbstractBoard {
       {
         name: "pinohat",
         image: "pinohat.png",
-        friendlyName: this.strings.messages.pinohat,
         adc: ["ads1015", "none"],
         portTypes: {
           "D": [5, 16, 24],

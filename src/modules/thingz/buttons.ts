@@ -22,14 +22,12 @@ export function thingzButtonsModuleDefinition(context: any, strings: any): Modul
     classImplementations: {
       Button: {
         is_pressed: function (self, callback) {
-          const buttonName = `btn${self.__variableName.split('_')[1].toLocaleUpperCase()}`;
-          quickPiModuleDefinition.blockImplementations.isButtonPressedWithName(buttonName, callback);
+          quickPiModuleDefinition.blockImplementations.isButtonPressedWithName(self.__variableName, callback);
         },
       },
       ButtonTouch: {
         is_touched: function (self, callback) {
-          const buttonName = `btn${self.__variableName.split('_')[1].toLocaleUpperCase()}`;
-          quickPiModuleDefinition.blockImplementations.isButtonPressedWithName(buttonName, callback);
+          quickPiModuleDefinition.blockImplementations.isButtonPressedWithName(self.__variableName, callback);
         },
       }
     },
