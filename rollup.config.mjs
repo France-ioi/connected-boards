@@ -1,6 +1,7 @@
 import swc from '@rollup/plugin-swc';
 import nodeResolve from "@rollup/plugin-node-resolve";
 import styles from 'rollup-plugin-styles';
+import image from '@rollup/plugin-image';
 
 export default {
   input: 'src/index.ts',
@@ -23,6 +24,7 @@ export default {
     styles({
       mode: 'extract',
     }),
+    image(),
   ],
   output: [
     {

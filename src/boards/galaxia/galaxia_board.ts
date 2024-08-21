@@ -9,6 +9,8 @@ import {thingzLedModuleDefinition} from "../../modules/thingz/led";
 import {machinePinModuleDefinition} from "../../modules/machine/pin";
 import {machinePwmModuleDefinition} from "../../modules/machine/pwm";
 import {utimeSleepModuleDefinition} from "../../modules/utime/sleep";
+// @ts-ignore
+import galaxiaSvg from '../../../images/galaxia.svg';
 
 interface GalaxiaBoardInnerState {
   connected?: boolean,
@@ -33,19 +35,11 @@ export class GalaxiaBoard extends AbstractBoard {
 
   async fetchGalaxiaCard() {
     // Cache results
-    if (galaxiaSvgInline) {
-      return Promise.resolve(galaxiaSvgInline);
+    if (!galaxiaSvgInline) {
+      galaxiaSvgInline = decodeURIComponent(galaxiaSvg.substring(galaxiaSvg.indexOf(',') + 1));
     }
 
-    const svgPath = (window.modulesPath || '') + 'img/quickpi/galaxia.svg';
-
-    return fetch(svgPath)
-      .then(response => response.text())
-      .then(svgData => {
-        galaxiaSvgInline = svgData;
-
-        return svgData;
-      })
+    return galaxiaSvgInline;
   }
 
   async importGalaxia(selector) {
