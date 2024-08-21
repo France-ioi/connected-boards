@@ -10,23 +10,24 @@ export function machinePwmModuleDefinition(context: any, strings): ModuleDefinit
           blocks: [
             {name: "duty", params: ["Number"]},
           ],
-        }
-      }
+        },
+      },
     },
     classImplementations: {
       PWM: {
         __constructor: function* (self, pin, freq, duty) {
           self.pin = pin;
           self.freq = freq;
-          self.duty = duty;
+          self.currentDuty = duty;
         },
-        duty: function (self, dutyValue, callback) {
-          const sensor = context.sensorHandler.findSensorByPort(`D${self.pinNumber}`);
+        duty: function (self, duty, callback) {
+          const sensor = context.sensorHandler.findSensorByPort(`D${self.pin.pinNumber}`);
           if (!sensor) {
-            throw `There is no sensor connected to the digital port D${self.pinNumber}`;
+            throw `There is no sensor connected to the digital port D${self.pin.pinNumber}`;
           }
 
-          let command = "pwmDuty(\"" + sensor.name + "\", " + dutyValue + ")";
+          let command = "pwmDuty(\"" + sensor.name + "\", " + duty + ")";
+          self.currentDuty = duty;
 
           context.registerQuickPiEvent(sensor.name, true);
 

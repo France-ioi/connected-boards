@@ -15,14 +15,18 @@ export function machinePinModuleDefinition(context: any, strings): ModuleDefinit
             {name: "IN", value: 1},
             {name: "OUT", value: 3},
           ],
-        }
-      }
+        },
+      },
     },
     classImplementations: {
       Pin: {
-        __constructor: function* (self, pinNumber, mode) {
+        __constructor: function* () {
+          const args = [...arguments];
+          const callback = args.pop();
+          const [self, pinNumber, mode] = args;
+
           self.pinNumber = pinNumber;
-          self.mode = mode;
+          self.mode = mode ?? 3; // Pin.OUT
         },
         on: function (self, callback) {
           const sensor = context.sensorHandler.findSensorByPort(`D${self.pinNumber}`);
