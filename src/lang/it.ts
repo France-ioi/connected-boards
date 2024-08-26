@@ -335,6 +335,7 @@ export default { // TODO
     off: "Off",
 
     getTemperatureFromCloudWrongValue: "getTemperatureFromCloud: {0} is not a town supported by getTemperatureFromCloud", // TODO: translate
+    wifiNotActive: "Il Wi-Fi non è attivato. Attiva il Wi-Fi per farlo.",
 
     grovehat: "Grove Base Hat for Raspberry Pi",
     quickpihat: "France IOI QuickPi Hat",
@@ -354,6 +355,7 @@ export default { // TODO
     oled128x32: "128x32 Oled Screen",
     irtrans: "IR Transmiter",
     button: "Button",
+    wifi: "Wi-Fi",
     fivewaybutton: "5 way button",
     tempsensor: "Temperature sensor",
     groveanalogtempsensor: "Grove Analog tempeature sensor",
@@ -431,6 +433,7 @@ export default { // TODO
     sensorNameHumidity: "humidity",
     sensorNamePotentiometer: "pot",
     sensorNameCloudStore: "cloud",
+    sensorNameWifi: "wifi",
   },
   concepts: {
     quickpi_start: 'Crea un programma',

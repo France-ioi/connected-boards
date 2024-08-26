@@ -9,9 +9,14 @@ export function networkWlanModuleDefinition(context: any, strings): ModuleDefini
     classDefinitions: {
       actuator: { // category name
         WLAN: {
-          init: {params: [null, "Number"]},
+          defaultInstanceName: 'wlan',
+          init: {params: ["Number"]},
           blocks: [
-            {name: "duty", params: ["Number"]},
+            {name: "active", params: ["Boolean"]},
+            {name: "scan"},
+            {name: "connect", params: ["String", "String"]},
+            {name: "isconnected", yieldsValue: "bool"},
+            {name: "ifconfig", yieldsValue: "String"},
           ],
         },
       },
@@ -21,16 +26,15 @@ export function networkWlanModuleDefinition(context: any, strings): ModuleDefini
         __constructor: function* (self, interfaceId) {
           self.interface = interfaceId;
         },
-        active: function (self, duty, callback) {
-          const sensor = context.sensorHandler.findSensorByPort(`D${self.pin.pinNumber}`);
-          if (!sensor) {
-            throw `There is no sensor connected to the digital port D${self.pin.pinNumber}`;
-          }
+        active: function (self, active, callback) {
+          const sensor = context.sensorHandler.findSensorByType('wifi');
 
-          let command = "pwmDuty(\"" + sensor.name + "\", " + duty + ")";
-          self.currentDuty = duty;
+          let command = "wifiSetActive(\"" + sensor.name + "\", " + active + ")";
 
-          context.registerQuickPiEvent(sensor.name, true);
+          context.registerQuickPiEvent(sensor.name, {
+            ...sensor.state,
+            active: !!active,
+          });
 
           if (!context.display || context.autoGrading || context.offLineMode) {
             context.waitDelay(callback);
@@ -40,7 +44,99 @@ export function networkWlanModuleDefinition(context: any, strings): ModuleDefini
             context.quickPiConnection.sendCommand(command, cb);
           }
         },
-      }
+        scan: function (self, callback) {
+          const sensor = context.sensorHandler.findSensorByType('wifi');
+
+          if (!sensor.state?.active) {
+            throw strings.messages.wifiNotActive;
+          }
+
+          let command = "wifiScan(\"" + sensor.name + "\")";
+
+          if (!context.display || context.autoGrading || context.offLineMode) {
+            context.registerQuickPiEvent(sensor.name, {
+              ...sensor.state,
+              scanning: true,
+            });
+
+            let cb = context.runner.waitCallback(callback);
+
+            setTimeout(() => {
+              context.registerQuickPiEvent(sensor.name, {
+                ...sensor.state,
+                scanning: false,
+              });
+
+              cb();
+            }, 1000);
+          } else {
+            let cb = context.runner.waitCallback(callback);
+
+            context.quickPiConnection.sendCommand(command, cb);
+          }
+        },
+        connect: function (self, ssid, password, callback) {
+          const sensor = context.sensorHandler.findSensorByType('wifi');
+
+          if (!sensor.state?.active) {
+            throw strings.messages.wifiNotActive;
+          }
+
+          context.registerQuickPiEvent(sensor.name, {
+            ...sensor.state,
+            connected: true,
+            ssid,
+          });
+
+          if (!context.display || context.autoGrading || context.offLineMode) {
+            context.waitDelay(callback);
+          } else {
+            let cb = context.runner.waitCallback(callback);
+            let command = "wifiConnect(\"" + sensor.name + "\", \"" + ssid + "\", \"" + password + "\")";
+            context.quickPiConnection.sendCommand(command, cb);
+          }
+        },
+        isconnected: function (self, callback) {
+          const sensor = context.sensorHandler.findSensorByType('wifi');
+
+          if (!context.display || context.autoGrading || context.offLineMode) {
+            const state = context.getSensorState(sensor.name);
+            if (!state?.active) {
+              throw strings.messages.wifiNotActive;
+            }
+
+            context.runner.noDelay(callback, !!state.connected);
+          } else {
+            let command = "wifiIsConnected(\"" + sensor.name + "\")";
+            let cb = context.runner.waitCallback(callback);
+
+            context.quickPiConnection.sendCommand(command, function (returnVal) {
+              cb(!!returnVal.connected);
+            });
+          }
+        },
+        ifconfig: function (self, callback) {
+          const sensor = context.sensorHandler.findSensorByType('wifi');
+
+          if (!context.display || context.autoGrading || context.offLineMode) {
+            const state = context.getSensorState(sensor.name);
+            if (!state?.active) {
+              throw strings.messages.wifiNotActive;
+            }
+
+            const ips = ['192.168.1.4', '255.255.255.0', '192.168.1.1', '8.8.8.8'];
+
+            context.runner.noDelay(callback, ips);
+          } else {
+            let command = "wifiIfconfig(\"" + sensor.name + "\")";
+            let cb = context.runner.waitCallback(callback);
+
+            context.quickPiConnection.sendCommand(command, function (returnVal) {
+              cb(returnVal);
+            });
+          }
+        },
+      },
     },
   }
 }

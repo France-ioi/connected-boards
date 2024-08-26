@@ -1,4 +1,4 @@
-import {getImg} from "../util";
+import {getImg, textEllipsis} from "../util";
 import {buzzerSound} from "./buzzer_sound";
 import {gyroscope3D} from "./gyroscope3d";
 import {SensorHandler} from "./sensor_handler";
@@ -1916,6 +1916,44 @@ export class SensorDrawer {
     } else if (sensor.type == "adder") {
       this.drawCustomSensorAdder(x, y, w, h, namesize);
       return
+    } else if (sensor.type == "wifi") {
+      if (sensor.stateText)
+        sensor.stateText.remove();
+
+      if (!sensor.img || this.sensorHandler.isElementRemoved(sensor.img))
+        sensor.img = this.context.paper.image(getImg('wifi.png'), imgx, imgy, imgw, imgh);
+
+      if (!sensor.active || this.sensorHandler.isElementRemoved(sensor.active))
+        sensor.active = this.context.paper.circle();
+
+      const ssid = sensor.state?.ssid;
+      sensor.stateText = this.context.paper.text(state1x, state1y, sensor.state?.scanning ? '...' : (ssid ? textEllipsis(ssid, 6) : ''));
+
+      sensor.img.attr({
+        "x": imgx,
+        "y": imgy,
+        "width": imgw,
+        "height": imgh,
+        "opacity": fadeopacity,
+      });
+
+      let color = 'grey';
+      if (sensor.state?.active) {
+        if (sensor.state.connected) {
+          color = 'green';
+        } else {
+          color = 'red';
+        }
+      }
+
+      sensor.active.attr({
+        "cx": imgx + imgw*0.15,
+        "cy": imgy + imgh*0.1,
+        "r": imgh*0.15,
+        fill: `${color}`,
+        stroke: 'none',
+        opacity: 1,
+      });
     }
 
 

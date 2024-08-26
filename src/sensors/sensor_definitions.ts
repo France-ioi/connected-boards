@@ -769,6 +769,40 @@ export const getSensorDefinitions = function (context, strings) {
         });
       },
     },
+    {
+      name: "wifi",
+      suggestedName: strings.messages.sensorNameWifi,
+      description: strings.messages.wifi,
+      isAnalog: false,
+      isSensor: false,
+      portType: "D",
+      getInitialState: function (sensor) {
+        return null;
+      },
+      selectorImages: ["wifi.png"],
+      valueType: "object",
+      pluggable: true,
+      getPercentageFromState: function (state) {
+        if (state)
+          return 1;
+        else
+          return 0;
+      },
+      getStateFromPercentage: function (percentage) {
+        if (percentage)
+          return 1;
+        else
+          return 0;
+      },
+      setLiveState: function (sensor, state, callback) {
+        var command = `setWifiState("${sensor.name}", [0, 0, 0])`;
+
+        context.quickPiConnection.sendCommand(command, callback);
+      },
+      getStateString: function(state) {
+        return `[${state.join(', ')}]`;
+      },
+    },
     /******************************** */
     /*             dummy sensors      */
     /**********************************/

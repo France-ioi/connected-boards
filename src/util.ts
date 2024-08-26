@@ -75,3 +75,7 @@ export function deepMerge<T>(...objects: T[]): T {
     return prev;
   }, {}) as T;
 }
+
+export function textEllipsis(text, maxLength: number) {
+  return text.length > maxLength ? text.substring(0, maxLength - 3) + '...' : text;
+}

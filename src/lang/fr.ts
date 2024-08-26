@@ -376,6 +376,7 @@ export default {
     oled128x32: "128x32 Oled Screen",
     irtrans: "IR Transmiter",
     button: "Button",
+    wifi: "Wi-Fi",
     fivewaybutton: "5 way button",
     tempsensor: "Temperature sensor",
     groveanalogtempsensor: "Grove Analog tempeature sensor",
@@ -424,6 +425,7 @@ export default {
     hello: "Bonjour",
 
     getTemperatureFromCloudWrongValue: "getTemperatureFromCloud: {0} n'est pas une ville supportée par getTemperatureFromCloud",
+    wifiNotActive: "Le Wi-Fi n'est pas activé. Activez le Wi-Fi pour faire cette opération.",
 
     experiment: "Expérimenter",
     validate: "Valider",
@@ -466,6 +468,7 @@ export default {
     sensorNameHumidity: "humidity",
     sensorNamePotentiometer: "pot",
     sensorNameCloudStore: "cloud",
+    sensorNameWifi: "wifi",
 
     selectOption: "Sélectionnez une rubrique…",
     components: "Composants",

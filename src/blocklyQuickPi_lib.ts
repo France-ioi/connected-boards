@@ -3226,6 +3226,10 @@ var getContext = function (display, infos, curLevel) {
     if (customBlocks.customClassInstances) {
         context.customClassInstances = customBlocks.customClassInstances;
     }
+    context.customConstants = {};
+    if (customBlocks.customConstants) {
+        context.customConstants = customBlocks.customConstants;
+    }
     if (customBlocks.customBlockImplementations) {
         for (let [moduleName, blocks] of Object.entries(customBlocks.customBlockImplementations)) {
             if (!(moduleName in context)) {
@@ -3279,12 +3283,6 @@ var getContext = function (display, infos, curLevel) {
                 procedures: 180,
             }
         };
-    };
-
-    // Constants available in Python
-    context.customConstants = {
-        quickpi: [
-        ]
     };
 
     // Don't forget to return our newly created context!

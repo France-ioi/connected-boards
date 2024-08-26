@@ -325,6 +325,7 @@ export default {
     irDisableContinous: "Desactivar la emisión IR continua",
 
     getTemperatureFromCloudWrongValue: "getTemperatureFromCloud: {0} is not a town supported by getTemperatureFromCloud", // TODO: translate
+    wifiNotActive: "El wifi no está activado. Active Wi-Fi para hacer esto.",
 
     up: "arriba",
     down: "abajo",
@@ -353,6 +354,7 @@ export default {
     oled128x32: "Pantalla 128x32 Oled",
     irtrans: "Transmisor de infrarrojos",
     button: "Botón",
+    wifi: "Wi-Fi",
     fivewaybutton: "Botón de 5 direcciones",
     tempsensor: "Sensor de temperatura",
     groveanalogtempsensor: "Sensor de temperatura analógico Grove",
@@ -429,6 +431,7 @@ export default {
     sensorNameHumidity: "humedad",
     sensorNamePotentiometer: "pot",
     sensorNameCloudStore: "nube",
+    sensorNameWifi: "wifi",
   },
   concepts: {
     quickpi_start: 'Crea tu primer programa y ejecútalo',
