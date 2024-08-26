@@ -283,6 +283,10 @@ export default {
     "wlan.active": "wlan.active(active) description",
     "wlan.connect": "wlan.connect(ssid, password) description",
 
+    dumps: "dumps(content) description",
+    get: "get(url) description",
+    post: "post(url, data, headers) description",
+
     sleep_us: "sleep_us(microseconds) met en pause l'exécution pendant une durée en microsec",
   },
   constant: {},
@@ -431,6 +435,7 @@ export default {
 
     getTemperatureFromCloudWrongValue: "getTemperatureFromCloud: {0} n'est pas une ville supportée par getTemperatureFromCloud",
     wifiNotActive: "Le Wi-Fi n'est pas activé. Activez le Wi-Fi pour faire cette opération.",
+    networkRequestFailed: "La requête à la page {0} a échoué.",
 
     experiment: "Expérimenter",
     validate: "Valider",

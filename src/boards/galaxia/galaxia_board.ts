@@ -12,6 +12,8 @@ import {utimeSleepModuleDefinition} from "../../modules/utime/sleep";
 // @ts-ignore
 import galaxiaSvg from '../../../images/galaxia.svg';
 import {networkWlanModuleDefinition} from "../../modules/network/wlan";
+import {urequestsModuleDefinition} from "../../modules/urequests/requests";
+import {ujsonModuleDefinition} from "../../modules/ujson/json";
 
 interface GalaxiaBoardInnerState {
   connected?: boolean,
@@ -225,6 +227,8 @@ export class GalaxiaBoard extends AbstractBoard {
     const pwmModule = machinePwmModuleDefinition(context, strings);
     const utimeModule = utimeSleepModuleDefinition(context, strings);
     const wlanModule = networkWlanModuleDefinition(context, strings);
+    const requestsModule = urequestsModuleDefinition(context, strings);
+    const jsonModule = ujsonModuleDefinition(context, strings);
 
     return {
       customClasses: {
@@ -264,10 +268,14 @@ export class GalaxiaBoard extends AbstractBoard {
       customBlockImplementations: {
         thingz: temperatureModule.blockImplementations,
         utime: utimeModule.blockImplementations,
+        urequests: requestsModule.blockImplementations,
+        ujson: jsonModule.blockImplementations,
       },
       customBlocks: {
         thingz: temperatureModule.blockDefinitions,
         utime: utimeModule.blockDefinitions,
+        urequests: requestsModule.blockDefinitions,
+        ujson: jsonModule.blockDefinitions,
       },
     };
   }
