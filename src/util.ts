@@ -53,7 +53,7 @@ export function getImg(filename) {
   return (window.modulesPath ? window.modulesPath : '../../modules/') + 'img/quickpi/' + filename;
 }
 
-export function deepMerge(...objects) {
+export function deepMerge<T>(...objects: T[]): T {
   const isObject = obj => obj && typeof obj === 'object';
 
   return objects.reduce((prev, obj) => {
@@ -73,5 +73,5 @@ export function deepMerge(...objects) {
     });
 
     return prev;
-  }, {});
+  }, {}) as T;
 }

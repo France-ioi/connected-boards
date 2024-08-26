@@ -1,14 +1,4 @@
-import {BoardDefinition, ConnectionMethod, QuickalgoLibraryBlock} from "../definitions";
-
-export interface BoardCustomBlocks {
-  customBlocks?: {[generatorName: string]: {[categoryName: string]: QuickalgoLibraryBlock[]}},
-  customConstants?: {[generatorName: string]: {name: string, value: any}[]},
-  customClasses?: {[generatorName: string]: {[categoryName: string]: {[className: string]: any[]}}},
-  customClassInstances?: {[generatorName: string]: {[instanceName: string]: string}},
-
-  customBlockImplementations?: {[generatorName: string]: {[blockName: string]: Function}},
-  customClassImplementations?: {[generatorName: string]: {[className: string]: {[methodName: string]: Function}}},
-}
+import {BoardCustomBlocks, BoardDefinition, ConnectionMethod} from "../definitions";
 
 export abstract class AbstractBoard {
   protected strings: any = {};

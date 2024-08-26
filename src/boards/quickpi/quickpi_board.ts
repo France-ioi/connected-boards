@@ -1,5 +1,5 @@
-import {AbstractBoard, BoardCustomBlocks} from "../abstract_board";
-import {ConnectionMethod} from "../../definitions";
+import {AbstractBoard} from "../abstract_board";
+import {BoardCustomBlocks, ConnectionMethod} from "../../definitions";
 import {getQuickPiConnection} from "./quickpi_connection";
 import {quickpiModuleDefinition} from "../../modules/quickpi/quickpi";
 

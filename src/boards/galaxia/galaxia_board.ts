@@ -1,5 +1,5 @@
-import {AbstractBoard, BoardCustomBlocks} from "../abstract_board";
-import {BoardDefinition, ConnectionMethod} from "../../definitions";
+import {AbstractBoard} from "../abstract_board";
+import {BoardCustomBlocks, BoardDefinition, ConnectionMethod} from "../../definitions";
 import {getGalaxiaConnection} from "./galaxia_connexion";
 import {thingzAccelerometerModuleDefinition} from "../../modules/thingz/accelerometer";
 import {thingzButtonsModuleDefinition} from "../../modules/thingz/buttons";
@@ -11,6 +11,7 @@ import {machinePwmModuleDefinition} from "../../modules/machine/pwm";
 import {utimeSleepModuleDefinition} from "../../modules/utime/sleep";
 // @ts-ignore
 import galaxiaSvg from '../../../images/galaxia.svg';
+import {networkWlanModuleDefinition} from "../../modules/network/wlan";
 
 interface GalaxiaBoardInnerState {
   connected?: boolean,
@@ -223,6 +224,7 @@ export class GalaxiaBoard extends AbstractBoard {
     const pinModule = machinePinModuleDefinition(context, strings);
     const pwmModule = machinePwmModuleDefinition(context, strings);
     const utimeModule = utimeSleepModuleDefinition(context, strings);
+    const wlanModule = networkWlanModuleDefinition(context, strings);
 
     return {
       customClasses: {
@@ -235,6 +237,10 @@ export class GalaxiaBoard extends AbstractBoard {
           pinModule.classDefinitions,
           pwmModule.classDefinitions,
         ),
+        network: wlanModule.classDefinitions,
+      },
+      customConstants: {
+        network: wlanModule.constants,
       },
       customClassInstances: {
         thingz: deepMerge(
@@ -253,6 +259,7 @@ export class GalaxiaBoard extends AbstractBoard {
           pinModule.classImplementations,
           pwmModule.classImplementations,
         ),
+        network: wlanModule.classImplementations,
       },
       customBlockImplementations: {
         thingz: temperatureModule.blockImplementations,
