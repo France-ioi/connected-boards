@@ -270,6 +270,7 @@ export default {
 
     // Galaxia
     "accelerometer.get_x": "accelerometer.get_x() retourne la valeur de l'accélération sur l'axe X",
+    "led.set_colors": "led.set_colors(red, green, blue) description",
 
     "pin.__constructor": "pin = Pin(pinNumber, mode) description",
     "pin.on": "pin.on() description",
@@ -277,6 +278,10 @@ export default {
 
     "pwm.__constructor": "pwm = PWM(pin, freq, duty) description",
     "pwm.duty": "pwm.duty(duty) description",
+
+    "wlan.__constructor": "wlan = WLAN(interface) description",
+    "wlan.active": "wlan.active(active) description",
+    "wlan.connect": "wlan.connect(ssid, password) description",
 
     sleep_us: "sleep_us(microseconds) met en pause l'exécution pendant une durée en microsec",
   },
