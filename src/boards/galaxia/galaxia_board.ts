@@ -72,10 +72,10 @@ export class GalaxiaBoard extends AbstractBoard {
     }
 
     let padIds = {
-      up: 'button_n',
-      down: 'button_s',
-      left: 'button_w',
-      right: 'button_e',
+      up: 'touch_n',
+      down: 'touch_s',
+      left: 'touch_w',
+      right: 'touch_e',
     }
     for (let [padId, padName] of Object.entries(padIds)) {
       this.bindPadButton(padId, padName);
@@ -199,10 +199,10 @@ export class GalaxiaBoard extends AbstractBoard {
           {type: "ledrgb", suggestedName: 'led'},
           {type: "button", suggestedName: 'button_a'},
           {type: "button", suggestedName: 'button_b'},
-          {type: "button", suggestedName: 'button_n'},
-          {type: "button", suggestedName: 'button_s'},
-          {type: "button", suggestedName: 'button_e'},
-          {type: "button", suggestedName: 'button_w'},
+          {type: "button", suggestedName: 'touch_n'},
+          {type: "button", suggestedName: 'touch_s'},
+          {type: "button", suggestedName: 'touch_e'},
+          {type: "button", suggestedName: 'touch_w'},
         ],
       },
     ];
