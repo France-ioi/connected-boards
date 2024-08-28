@@ -141,7 +141,6 @@ export class GalaxiaBoard extends AbstractBoard {
       return;
     }
 
-    console.log({color});
     let led = this.galaxiaSvg.find('#led');
     led.css('fill', Array.isArray(color) ? `rgb(${color.join(',')})` : '#d3d3d3');
   }
@@ -242,6 +241,7 @@ export class GalaxiaBoard extends AbstractBoard {
           pwmModule.classDefinitions,
         ),
         network: wlanModule.classDefinitions,
+        urequests: requestsModule.classDefinitions,
       },
       customConstants: {
         network: wlanModule.constants,
@@ -264,6 +264,7 @@ export class GalaxiaBoard extends AbstractBoard {
           pwmModule.classImplementations,
         ),
         network: wlanModule.classImplementations,
+        urequests: requestsModule.classImplementations,
       },
       customBlockImplementations: {
         thingz: temperatureModule.blockImplementations,

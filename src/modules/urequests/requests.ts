@@ -7,27 +7,58 @@ export interface FetchParameters {
   body?: string,
 }
 
-
-
 export function urequestsModuleDefinition(context: any, strings): ModuleDefinition {
-  function makeRequest(fetchParameters: FetchParameters, callback) {
-    console.log('fetch', fetchParameters);
+  async function makeRequest(fetchParameters: FetchParameters, callback) {
     const proxyUrl = fetchParameters.url;
     const {url, ...withoutUrlParameters} = fetchParameters;
 
-    // @ts-ignore
-    return fetch(proxyUrl, withoutUrlParameters)
-      .then((result) => {
-        console.log('result', result);
-        // TODO: handle response to make .text and .json() on it
-        callback(result);
-      })
-      .catch(() => {
-        throw strings.messages.networkRequestFailed.format(fetchParameters.url);
-      })
+    let result = null;
+    try {
+      // @ts-ignore
+      result = await fetch(proxyUrl, withoutUrlParameters)
+    } catch (e) {
+      console.error(e);
+      throw strings.messages.networkRequestFailed.format(fetchParameters.url);
+    }
+
+    const text = await result.text();
+    callback({
+      __className: 'Response',
+      arguments: [
+        result.status,
+        text,
+      ],
+    });
   }
 
   return {
+    classDefinitions: {
+      actuator: { // category name
+        Response: {
+          defaultInstanceName: 'response',
+          init: {params: ["Number", "String"]},
+          blocks: [
+            {name: "json"},
+          ],
+        },
+      },
+    },
+    classImplementations: {
+      Response: {
+        __constructor: function* (self, statusCode, text) {
+          self.statusCode = statusCode;
+          self.text = text;
+        },
+        json: function* (self) {
+          try {
+            return JSON.parse(self.text);
+          } catch (e) {
+            console.error(e);
+            throw strings.messages.nonValidJson;
+          }
+        },
+      },
+    },
     blockDefinitions: {
       actuator: [
         {name: 'get', variants: [["String"], ["String", null]], yieldsValue: 'string'},
@@ -35,7 +66,10 @@ export function urequestsModuleDefinition(context: any, strings): ModuleDefiniti
       ]
     },
     blockImplementations: {
-      get: function (url: string, headers = {}, callback) {
+      get: function () {
+        const args = [...arguments];
+        const callback = args.pop();
+        const [url, headers] = args;
         const cb = context.runner.waitCallback(callback);
 
         return makeRequest({
@@ -44,7 +78,10 @@ export function urequestsModuleDefinition(context: any, strings): ModuleDefiniti
           headers,
         }, cb);
       },
-      post: function (url: string, data = null, headers = {}, callback) {
+      post: function () {
+        const args = [...arguments];
+        const callback = args.pop();
+        const [url, data, headers] = args;
         const cb = context.runner.waitCallback(callback);
 
         return makeRequest({

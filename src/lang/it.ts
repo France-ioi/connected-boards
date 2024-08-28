@@ -336,6 +336,8 @@ export default { // TODO
 
     getTemperatureFromCloudWrongValue: "getTemperatureFromCloud: {0} is not a town supported by getTemperatureFromCloud", // TODO: translate
     wifiNotActive: "Il Wi-Fi non è attivato. Attiva il Wi-Fi per farlo.",
+    networkRequestFailed: "La richiesta alla pagina {0} non è riuscita.",
+    networkResponseInvalidJson: "Questa risposta non è in formato JSON.",
 
     grovehat: "Grove Base Hat for Raspberry Pi",
     quickpihat: "France IOI QuickPi Hat",

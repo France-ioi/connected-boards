@@ -326,6 +326,8 @@ export default {
 
     getTemperatureFromCloudWrongValue: "getTemperatureFromCloud: {0} is not a town supported by getTemperatureFromCloud", // TODO: translate
     wifiNotActive: "El wifi no está activado. Active Wi-Fi para hacer esto.",
+    networkRequestFailed: "Error en la solicitud a la página {0}.",
+    networkResponseInvalidJson: "Esta respuesta no está en formato JSON.",
 
     up: "arriba",
     down: "abajo",

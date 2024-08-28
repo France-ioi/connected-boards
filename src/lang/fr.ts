@@ -436,6 +436,7 @@ export default {
     getTemperatureFromCloudWrongValue: "getTemperatureFromCloud: {0} n'est pas une ville supportée par getTemperatureFromCloud",
     wifiNotActive: "Le Wi-Fi n'est pas activé. Activez le Wi-Fi pour faire cette opération.",
     networkRequestFailed: "La requête à la page {0} a échoué.",
+    networkResponseInvalidJson: "Cette réponse n'est pas au format JSON.",
 
     experiment: "Expérimenter",
     validate: "Valider",
