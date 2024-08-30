@@ -76,7 +76,7 @@ export const getSensorDefinitions = function (context, strings): SensorDefinitio
       isSensor: false,
       portType: "D",
       getInitialState: function (sensor) {
-        return null;
+        return [0, 0, 0];
       },
       selectorImages: ["ledon-red.png"],
       valueType: "object",
@@ -91,7 +91,7 @@ export const getSensorDefinitions = function (context, strings): SensorDefinitio
       },
       getStateFromPercentage: function (percentage) {
         if (percentage)
-          return percentage * 255;
+          return Math.round(percentage * 255);
         else
           return 0;
       },

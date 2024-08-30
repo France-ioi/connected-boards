@@ -331,6 +331,16 @@ export class SensorDrawer {
         this.sensorHandler.findSensorDefinition(sensor).setLiveState(sensor, sensor.state, function () {
         });
       }
+
+      if (!this.context.autoGrading && this.context.offLineMode) {
+        this.setSlider(sensor, juststate, imgx, imgy, imgw, imgh, 0, 255);
+      } else {
+        sensor.focusrect.click(() => {
+          this.sensorInConnectedModeError();
+        });
+
+        this.removeSlider(sensor);
+      }
     } else if (sensor.type == "leddim") {
       if (sensor.stateText)
         sensor.stateText.remove();
