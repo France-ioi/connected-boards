@@ -1,4 +1,4 @@
-function OutputGenerator() {
+export function OutputGenerator() {
    this.events = [];
    this.time = 0;
 
@@ -55,4 +55,4 @@ function OutputGenerator() {
    this.getEvents = function() {
       return this.events;
    }
-};
+}

@@ -72,7 +72,7 @@ export const getSensorDefinitions = function (context, strings): SensorDefinitio
       name: "ledrgb",
       suggestedName: strings.messages.sensorNameLedRgb,
       description: strings.messages.ledrgb,
-      isAnalog: false,
+      isAnalog: true,
       isSensor: false,
       portType: "D",
       getInitialState: function (sensor) {
@@ -80,16 +80,18 @@ export const getSensorDefinitions = function (context, strings): SensorDefinitio
       },
       selectorImages: ["ledon-red.png"],
       valueType: "object",
+      valueMin: 0,
+      valueMax: 255,
       pluggable: true,
       getPercentageFromState: function (state) {
         if (state)
-          return 1;
+          return state / 255;
         else
           return 0;
       },
       getStateFromPercentage: function (percentage) {
         if (percentage)
-          return 1;
+          return percentage * 255;
         else
           return 0;
       },
@@ -106,7 +108,7 @@ export const getSensorDefinitions = function (context, strings): SensorDefinitio
       name: "leddim",
       suggestedName: strings.messages.sensorNameLedDim,
       description: strings.messages.ledDim,
-      isAnalog: false,
+      isAnalog: true,
       isSensor: false,
       portType: "D",
       getInitialState: function (sensor) {
@@ -115,6 +117,8 @@ export const getSensorDefinitions = function (context, strings): SensorDefinitio
       selectorImages: ["ledon-red.png"],
       valueType: "number",
       pluggable: true,
+      valueMin: 0,
+      valueMax: 1,
       getPercentageFromState: function (state) {
         return state;
       },
@@ -131,7 +135,7 @@ export const getSensorDefinitions = function (context, strings): SensorDefinitio
         context.quickPiConnection.sendCommand(command, callback);
       },
       getStateString: function(state) {
-        return state;
+        return Math.round(state * 100) + "%";
       },
     },
     {
@@ -711,7 +715,7 @@ export const getSensorDefinitions = function (context, strings): SensorDefinitio
         context.quickPiConnection.sendCommand("readAccelBMI160()", function(val) {
           var array = JSON.parse(val);
           callback(array);
-        });
+        });100
       },
       cellsAmount: function(paper) {
         return 2;
