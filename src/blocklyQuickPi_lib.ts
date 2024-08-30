@@ -2382,9 +2382,11 @@ var getContext = function (display, infos, curLevel) {
         var drawnElements = [];
         var deleteLastDrawnElements = true;
 
-        if (sensor.type == "accelerometer" ||
-            sensor.type == "gyroscope" ||
-            sensor.type == "magnetometer") {
+        if (sensor.type == "accelerometer"
+          || sensor.type == "gyroscope"
+          || sensor.type == "magnetometer"
+          || sensor.type == "ledrgb"
+        ) {
 
             if (state != null) {
             for (var i = 0; i < 3; i++) {

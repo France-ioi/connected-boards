@@ -63,6 +63,9 @@ export class SensorHandler {
 
     if (sensorDef && !sensorDef.compareState) {
       sensorDef.compareState = function (state1, state2) {
+        if (Array.isArray(state1) && Array.isArray(state2)) {
+          return JSON.stringify(state1) === JSON.stringify(state2)
+        }
         return state1 == state2;
       };
     }
