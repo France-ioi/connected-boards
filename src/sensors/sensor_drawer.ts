@@ -291,7 +291,7 @@ export class SensorDrawer {
       if ((!this.context.runner || !this.context.runner.isRunning())
         && !this.context.offLineMode) {
 
-        this.sensorHandler.findSensorDefinition(sensor).setLiveState(sensor, sensor.state, function (x) {
+        this.sensorHandler.findSensorDefinition(sensor).setLiveState(sensor, sensor.state, function () {
         });
       }
     } else if (sensor.type == "ledrgb") {
@@ -328,7 +328,7 @@ export class SensorDrawer {
       if ((!this.context.runner || !this.context.runner.isRunning())
         && !this.context.offLineMode) {
 
-        this.sensorHandler.findSensorDefinition(sensor).setLiveState(sensor, sensor.state, function (x) {
+        this.sensorHandler.findSensorDefinition(sensor).setLiveState(sensor, sensor.state, function () {
         });
       }
     } else if (sensor.type == "ledmatrix") {
@@ -498,7 +498,7 @@ export class SensorDrawer {
         let setLiveState = this.sensorHandler.findSensorDefinition(sensor).setLiveState;
 
         if (setLiveState) {
-          setLiveState(sensor, sensor.state, function (x) {
+          setLiveState(sensor, sensor.state, function () {
           });
         }
       }
@@ -831,7 +831,7 @@ export class SensorDrawer {
         if (!sensor.updatetimeout) {
           sensor.updatetimeout = setTimeout(() => {
 
-            this.sensorHandler.findSensorDefinition(sensor).setLiveState(sensor, sensor.state, function (x) {
+            this.sensorHandler.findSensorDefinition(sensor).setLiveState(sensor, sensor.state, function () {
             });
 
             sensor.updatetimeout = null;
@@ -1406,7 +1406,7 @@ export class SensorDrawer {
       if ((!this.context.runner || !this.context.runner.isRunning())
         && !this.context.offLineMode) {
 
-        this.sensorHandler.findSensorDefinition(sensor).setLiveState(sensor, sensor.state, function (x) {
+        this.sensorHandler.findSensorDefinition(sensor).setLiveState(sensor, sensor.state, function () {
         });
       }
     } else if (sensor.type == "irrecv") {
@@ -1920,8 +1920,19 @@ export class SensorDrawer {
       if (sensor.stateText)
         sensor.stateText.remove();
 
-      if (!sensor.img || this.sensorHandler.isElementRemoved(sensor.img))
+      if (!sensor.img || this.sensorHandler.isElementRemoved(sensor.img)) {
         sensor.img = this.context.paper.image(getImg('wifi.png'), imgx, imgy, imgw, imgh);
+
+        sensor.focusrect.click(() => {
+          if (!this.context.autoGrading && (!this.context.runner || !this.context.runner.isRunning())) {
+            sensor.state.connected = !sensor.state.connected;
+            this.sensorHandler.warnClientSensorStateChanged(sensor);
+            this.drawSensor(sensor);
+          } else {
+            this.actuatorsInRunningModeError();
+          }
+        });
+      }
 
       if (!sensor.active || this.sensorHandler.isElementRemoved(sensor.active))
         sensor.active = this.context.paper.circle();

@@ -26,10 +26,17 @@ export function machinePwmModuleDefinition(context: any, strings): ModuleDefinit
             throw `There is no sensor connected to the digital port D${self.pin.pinNumber}`;
           }
 
+          const sensorDef = context.sensorHandler.findSensorDefinition(sensor);
+          if (!sensorDef.getStateFromPwm) {
+            throw "This sensor may not be controlled by a PWM";
+          }
+
+          const newState = sensorDef.getStateFromPwm(duty);
+
           let command = "pwmDuty(\"" + sensor.name + "\", " + duty + ")";
           self.currentDuty = duty;
 
-          context.registerQuickPiEvent(sensor.name, true);
+          context.registerQuickPiEvent(sensor.name, newState);
 
           if (!context.display || context.autoGrading || context.offLineMode) {
             context.waitDelay(callback);

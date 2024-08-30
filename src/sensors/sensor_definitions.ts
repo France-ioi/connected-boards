@@ -1,8 +1,9 @@
 import {quickPiLocalLanguageStrings} from "../lang/language_strings";
 import {deepEqual, isPrimitive} from "../util";
 import {LocalQuickStore} from "./local_quickpi_store";
+import {SensorDefinition} from "../definitions";
 
-export const getSensorDefinitions = function (context, strings) {
+export const getSensorDefinitions = function (context, strings): SensorDefinition[] {
   return [
     /******************************** */
     /*             Actuators          */
@@ -225,7 +226,10 @@ export const getSensorDefinitions = function (context, strings) {
       },
       getStateString: function(state) {
         return "" + state + "°";
-      }
+      },
+      getStateFromPwm: function (pwmDuty) {
+        return 180*(pwmDuty - 0.025*1023) / (0.1 * 1023);
+      },
     },
     {
       name: "screen",

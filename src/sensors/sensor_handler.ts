@@ -1,11 +1,12 @@
 import {getSensorDefinitions} from "./sensor_definitions";
 import {SensorDrawer} from "./sensor_drawer";
+import {Sensor, SensorDefinition} from "../definitions";
 
 export class SensorHandler {
   private context;
   private strings;
-  private sensorDefinitions;
-  private sensorDrawer;
+  private sensorDefinitions: SensorDefinition[];
+  private sensorDrawer: SensorDrawer;
 
   constructor(context, strings) {
     this.context = context;
@@ -14,7 +15,7 @@ export class SensorHandler {
     this.sensorDrawer = new SensorDrawer(context, strings, this.sensorDefinitions, this);
   }
 
-  getSensorDefinitions() {
+  getSensorDefinitions(): SensorDefinition[] {
     return this.sensorDefinitions;
   }
 
@@ -38,7 +39,7 @@ export class SensorHandler {
     return name + (maxvalue + 1);
   }
 
-  findSensorDefinition(sensor) {
+  findSensorDefinition(sensor: Sensor): SensorDefinition {
     // console.log(sensor)
     let sensorDef = null;
     for (let iType = 0; iType < this.sensorDefinitions.length; iType++) {
@@ -69,7 +70,7 @@ export class SensorHandler {
     return sensorDef;
   }
 
-  isPortUsed(type, port) {
+  isPortUsed(type, port): boolean {
     for (let i = 0; i < this.context.infos.quickPiSensors.length; i++) {
       let sensor = this.context.infos.quickPiSensors[i];
 
@@ -85,7 +86,7 @@ export class SensorHandler {
     return false;
   }
 
-  findSensorByName(name, error=false) {
+  findSensorByName(name, error=false): Sensor|null {
     if (isNaN(name.substring(0, 1)) && !isNaN(name.substring(1))) {
       for (let i = 0; i < this.context.infos.quickPiSensors.length; i++) {
         let sensor = this.context.infos.quickPiSensors[i];
@@ -114,7 +115,7 @@ export class SensorHandler {
     return null;
   }
 
-  findSensorByType(type: string) {
+  findSensorByType(type: string): Sensor|null {
     for (let i = 0; i < this.context.infos.quickPiSensors.length; i++) {
       let sensor = this.context.infos.quickPiSensors[i];
       if (sensor.type == type) {
@@ -125,7 +126,7 @@ export class SensorHandler {
     return null;
   }
 
-  findSensorByPort(port: string) {
+  findSensorByPort(port: string): Sensor|null {
     for (let i = 0; i < this.context.infos.quickPiSensors.length; i++) {
       let sensor = this.context.infos.quickPiSensors[i];
       if (sensor.port == port) {

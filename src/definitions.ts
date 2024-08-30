@@ -45,6 +45,8 @@ export interface Sensor {
   port?: string,
   state?: any,
   builtin?: boolean,
+  showAsAnalog?: boolean,
+  isDrawingScreen?: boolean,
 }
 
 export interface BoardDefinition {
@@ -111,6 +113,36 @@ export interface BoardCustomBlocks {
 
   customBlockImplementations?: {[generatorName: string]: {[blockName: string]: Function}},
   customClassImplementations?: {[generatorName: string]: {[className: string]: {[methodName: string]: Function}}},
+}
+
+export interface SensorDefinition {
+  name?: string,
+  suggestedName?: string,
+  subType?: string,
+  description?: string,
+  isAnalog?: boolean,
+  isSensor?: boolean,
+  portType?: string,
+  getInitialState?: (sensor: Sensor) => any,
+  selectorImages?: string[],
+  valueType?: string,
+  pluggable?: boolean,
+  getPercentageFromState?: (state: any, sensor?: Sensor) => number,
+  getStateFromPercentage?: (percentage: number) => any,
+  getStateFromPwm?: (pwmDuty: number) => any,
+  getLiveState?: (sensor: Sensor, callback: (state: any) => void) => void,
+  setLiveState?: (sensor: Sensor, state: any, callback: () => void) => void,
+  getStateString?: (state: any) => string,
+  subTypes?: SensorDefinition[],
+  valueMin?: number,
+  valueMax?: number,
+  step?: number,
+  cellsAmount?: (paper: any) => number,
+  compareState?: (state1: any, state2: any) => boolean,
+  getWrongStateString?: (failInfo: any) => string,
+  gpiosNames?: string[],
+  gpios?: number[],
+  getButtonState?: (buttonname: string, state: any) => boolean,
 }
 
 export {};
