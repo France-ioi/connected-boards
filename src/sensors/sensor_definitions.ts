@@ -103,6 +103,38 @@ export const getSensorDefinitions = function (context, strings): SensorDefinitio
       },
     },
     {
+      name: "leddim",
+      suggestedName: strings.messages.sensorNameLedDim,
+      description: strings.messages.ledDim,
+      isAnalog: false,
+      isSensor: false,
+      portType: "D",
+      getInitialState: function (sensor) {
+        return 0;
+      },
+      selectorImages: ["ledon-red.png"],
+      valueType: "number",
+      pluggable: true,
+      getPercentageFromState: function (state) {
+        return state;
+      },
+      getStateFromPercentage: function (percentage) {
+        return percentage;
+      },
+      getStateFromPwm: function (duty) {
+        return duty / 1023;
+      },
+      setLiveState: function (sensor, state, callback) {
+        var ledstate = state ? 1 : 0;
+        var command = "setLedState(\"" + sensor.name + "\"," + ledstate + ")";
+
+        context.quickPiConnection.sendCommand(command, callback);
+      },
+      getStateString: function(state) {
+        return state;
+      },
+    },
+    {
       name: "ledmatrix",
       suggestedName: strings.messages.sensorNameLedMatrix,
       description: strings.messages.ledmatrix,

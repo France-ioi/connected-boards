@@ -331,6 +331,63 @@ export class SensorDrawer {
         this.sensorHandler.findSensorDefinition(sensor).setLiveState(sensor, sensor.state, function () {
         });
       }
+    } else if (sensor.type == "leddim") {
+      if (sensor.stateText)
+        sensor.stateText.remove();
+
+      if (sensor.state == null)
+        sensor.state = 0;
+
+      if (!sensor.ledoff || this.sensorHandler.isElementRemoved(sensor.ledoff)) {
+        sensor.ledoff = this.context.paper.image(getImg('ledoff.png'), imgx, imgy, imgw, imgh);
+      }
+
+      if (!sensor.ledon || this.sensorHandler.isElementRemoved(sensor.ledon)) {
+        let imagename = "ledon-";
+        if (sensor.subType)
+          imagename += sensor.subType;
+        else
+          imagename += "red";
+
+        imagename += ".png";
+        sensor.ledon = this.context.paper.image(getImg(imagename), imgx, imgy, imgw, imgh);
+      }
+
+      sensor.ledon.attr(sensorAttr);
+      sensor.ledoff.attr(sensorAttr);
+
+      sensor.stateText = this.context.paper.text(state1x, state1y, Math.round(100 * sensor.state) + '%');
+
+      if (sensor.state) {
+        sensor.ledon.attr({"opacity": fadeopacity});
+        sensor.ledoff.attr({"opacity": 0});
+      } else {
+        sensor.ledon.attr({"opacity": 0});
+        sensor.ledoff.attr({"opacity": fadeopacity});
+      }
+
+      if (typeof sensor.state == 'number') {
+        sensor.ledon.attr({"opacity": sensor.state * fadeopacity});
+        sensor.ledoff.attr({"opacity": fadeopacity});
+      }
+
+      if ((!this.context.runner || !this.context.runner.isRunning())
+        && !this.context.offLineMode) {
+
+        this.sensorHandler.findSensorDefinition(sensor).setLiveState(sensor, sensor.state, function () {
+        });
+      }
+
+      if (!this.context.autoGrading &&
+        (!this.context.runner || !this.context.runner.isRunning())) {
+        this.setSlider(sensor, juststate, imgx, imgy, imgw, imgh, 0, 1);
+      } else {
+        sensor.focusrect.click(() => {
+          this.sensorInConnectedModeError();
+        });
+
+        this.removeSlider(sensor);
+      }
     } else if (sensor.type == "ledmatrix") {
       if (sensor.stateText)
         sensor.stateText.remove();
