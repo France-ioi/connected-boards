@@ -44,7 +44,7 @@ export const getQuickPiConnection = function (userName, _onConnect, _onDisconnec
 
         this.wsSession = new WebSocket(url);
 
-        this.wsSession.onopen = function () {
+        this.wsSession.onopen = () => {
             var command =
             {
                 "command": "grabLock",
@@ -52,10 +52,10 @@ export const getQuickPiConnection = function (userName, _onConnect, _onDisconnec
                 "detectionLib": pythonLibDetection
             }
 
-            wsSession.send(JSON.stringify(command));
+            this.wsSession.send(JSON.stringify(command));
         }
 
-        this.wsSession.onmessage = function (evt) {
+        this.wsSession.onmessage = (evt) => {
             var message = JSON.parse(evt.data);
 
             if (message.command == "hello") {
@@ -64,87 +64,86 @@ export const getQuickPiConnection = function (userName, _onConnect, _onDisconnec
                     version = message.version;
 
                 if (version < NEED_VERSION) {
-                    wrongVersion = true;
-                    wsSession.close();
-                    onclose();
+                    this.wrongVersion = true;
+                    this.wsSession.close();
+                    this.onclose();
                 }
                 else {
                     var replaceLib = pythonLibHash != message.libraryHash;
 
 
                     if (replaceLib)
-                        transferPythonLib();
+                        this.transferPythonLib();
                     else {
                         var command =
                         {
                             "command": "pythonLib",
                             "replaceLib": false,
                         };
-    
-                        wsSession.send(JSON.stringify(command));
+
+                        this.wsSession.send(JSON.stringify(command));
                     }
 
-                    connected = true;
-                    onConnect();
-        
-                    pingInterval = setInterval(function() {
+                    this.connected = true;
+                    this.onConnect();
+
+                    this.pingInterval = setInterval(() => {
                         var command =
                         {
                             "command": "ping"
                         }
         
-                        if (pingsWithoutPong > 8)
+                        if (this.pingsWithoutPong > 8)
                         {
-                            wsSession.close();
-                            onclose();
+                            this.wsSession.close();
+                            this.onclose();
                         } else {
-                            pingsWithoutPong++;
-                            wsSession.send(JSON.stringify(command));
-                            lastPingSend = + new Date();
+                            this.pingsWithoutPong++;
+                            this.wsSession.send(JSON.stringify(command));
+                            this.lastPingSend = + new Date();
                         }
         
                         }, 4000);        
 
-                    if (onChangeBoard && message.board)
+                    if (this.onChangeBoard && message.board)
                     {
-                        onChangeBoard(message.board);
+                        this.onChangeBoard(message.board);
                     }
                 }
             }
             if (message.command == "locked") {
-                locked = message.lockedby;
+                this.locked = message.lockedby;
             } else if (message.command == "pong") {
-                pingsWithoutPong = 0;
+                this.pingsWithoutPong = 0;
             } else if (message.command == "installed") {
 
-                if (oninstalled != null)
-                    oninstalled();
+                if (this.oninstalled != null)
+                    this.oninstalled();
 
             } else if (message.command == "startCommandMode") {
-                if (commandQueue.length > 0)
+                if (this.commandQueue.length > 0)
                 {
-                    var command = commandQueue.shift();
-
-                    resultsCallbackArray = [];
-                    sendCommand(command.command, command.callback);
+                    let command = this.commandQueue.shift();
+                    this.resultsCallbackArray = [];
+                    this.sendCommand(command.command, command.callback);
                 }
             } else if (message.command == "execLineresult") {
-                if (commandMode) {
+                if (this.commandMode) {
 
                     //console.log("Result seq: " + message.seq);
 
-                    if (resultsCallbackArray && resultsCallbackArray.length > 0)
+                    if (this.resultsCallbackArray && this.resultsCallbackArray.length > 0)
                     {
                         //console.log("resultsCallbackArray has elements")
-                        if (message.seq >= resultsCallbackArray[0].seq)
+                        if (message.seq >= this.resultsCallbackArray[0].seq)
                         {
                             //console.log("we under the seq");
                             var callbackelement = null;
                             var found = false;
 
-                            while (resultsCallbackArray.length > 0)
+                            while (this.resultsCallbackArray.length > 0)
                             {
-                                callbackelement = resultsCallbackArray.shift();
+                                callbackelement = this.resultsCallbackArray.shift();
 
                                 if (callbackelement.seq == message.seq)
                                 {
@@ -161,37 +160,37 @@ export const getQuickPiConnection = function (userName, _onConnect, _onDisconnec
                     }
 
 
-                    if (commandQueue.length > 0 && !transaction)
+                    if (this.commandQueue.length > 0 && !this.transaction)
                     {
-                        var command = commandQueue.shift();
+                        let command = this.commandQueue.shift();
 
-                        sendCommand(command.command, command.callback);
+                        this.sendCommand(command.command, command.callback);
                     }
                 }
             } else if (message.command == "closed") {
-                if (wsSession) {
-                        wsSession.close();
+                if (this.wsSession) {
+                    this.wsSession.close();
                 }
             }
             else if (message.command == "distributedEvent")
             {
-                if (onDistributedEvent)
-                    onDistributedEvent(message.event);
+                if (this.onDistributedEvent)
+                    this.onDistributedEvent(message.event);
             }
         }
 
-        this.wsSession.onclose = function (event) {
-            if (wsSession != null) {
-                clearInterval(pingInterval);
-                pingInterval = null;
+        this.wsSession.onclose = (event) => {
+            if (this.wsSession != null) {
+                clearInterval(this.pingInterval);
+                this.pingInterval = null;
 
-                wsSession = null;
-                commandMode = false;
-                sessionTainted = false;
+                this.wsSession = null;
+                this.commandMode = false;
+                this.sessionTainted = false;
 
-                connected = false;
+                this.connected = false;
 
-                onDisconnect(connected, wrongVersion);
+                this.onDisconnect(this.connected, this.wrongVersion);
             }
         }
     }
@@ -212,15 +211,15 @@ export const getQuickPiConnection = function (userName, _onConnect, _onDisconnec
                 "last": ((numChunks -1 ) == i),
             };
 
-            wsSession.send(JSON.stringify(command));
+            this.wsSession.send(JSON.stringify(command));
         }
     }
 
     this.isAvailable = function(ipaddress, callback) {
-        url = "ws://" + ipaddress + ":5000/api/v1/commands";
+        this.url = "ws://" + ipaddress + ":5000/api/v1/commands";
 
         try {
-           var websocket = new WebSocket(url);
+           var websocket = new WebSocket(this.url);
 
            websocket.onopen = function () {
                websocket.onclose = null;
@@ -236,15 +235,15 @@ export const getQuickPiConnection = function (userName, _onConnect, _onDisconnec
     }
 
     this.onclose = function() {
-        clearInterval(pingInterval);
-        pingInterval = null;
+        clearInterval(this.pingInterval);
+        this.pingInterval = null;
 
-        wsSession = null;
-        commandMode = false;
-        sessionTainted = false;
-        connected = false;
+        this.wsSession = null;
+        this.commandMode = false;
+        this.sessionTainted = false;
+        this.connected = false;
 
-        onDisconnect(connected, wrongVersion);
+        this.onDisconnect(this.connected, this.wrongVersion);
 
     }
 
@@ -368,7 +367,7 @@ export const getQuickPiConnection = function (userName, _onConnect, _onDisconnec
 
     this.endTransaction = function()
     {
-        messages = [];
+        const messages = [];
         this.resultsCallbackArray = [];
 
         for (var i = 0; i < this.commandQueue.length; i++)
@@ -378,14 +377,14 @@ export const getQuickPiConnection = function (userName, _onConnect, _onDisconnec
             {
                 "command": "execLine",
                 "line": this.commandQueue[i].command,
-                "seq": seq,
+                "seq": this.seq,
                 "long": this.commandQueue[i].long? true: false
             });
 
             //console.log("trans seq: " + seq);
 
             this.resultsCallbackArray.push ({
-                "seq": seq,
+                "seq": this.seq,
                 "callback": this.commandQueue[i].callback,
                 "command": this.commandQueue[i].command
             });
@@ -426,7 +425,7 @@ export const getQuickPiConnection = function (userName, _onConnect, _onDisconnec
                     {
                         "command": "execLine",
                         "line": command,
-                        "seq": seq,
+                        "seq": this.seq,
                         "long": long? true: false
                     }
 
@@ -434,7 +433,7 @@ export const getQuickPiConnection = function (userName, _onConnect, _onDisconnec
 
                     //console.log("Sending seq: " + seq);
                     this.resultsCallbackArray.push ({
-                        "seq": seq,
+                        "seq": this.seq,
                         "callback": callback,
                         "command": command,
                     });
@@ -3607,7 +3606,7 @@ return cmn(c ^ (b | (~d)), a, b, x, s, t);
 }
 
 function md51(s) {
-txt = '';
+let txt = '';
 var n = s.length,
 state = [1732584193, -271733879, -1732584194, 271733878], i;
 for (i=64; i<=s.length; i+=64) {
