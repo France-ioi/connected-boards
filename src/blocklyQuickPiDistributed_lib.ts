@@ -1,4 +1,6 @@
 import {getSessionStorage, setSessionStorage} from "./helpers/session_storage";
+import {AbstractBoard} from "./boards/abstract_board";
+import {quickPiBoard} from "./boards/quickpi/quickpi_board";
 
 var getContext = function (display, infos, curLevel) {
    // Local language strings for each language
@@ -67,7 +69,7 @@ var getContext = function (display, infos, curLevel) {
 
    var introControls = null;
    // Create a base context
-   var context = quickAlgoContext(display, infos);
+   var context = window.quickAlgoContext(display, infos);
    // Import our localLanguageStrings into the global scope
    var strings = context.setLocalLanguageStrings(localLanguageStrings);
 
@@ -77,6 +79,8 @@ var getContext = function (display, infos, curLevel) {
    if(window.quickAlgoInterface) {
       window.quickAlgoInterface.stepDelayMax = 500;
    }
+
+   const mainBoard: AbstractBoard = quickPiBoard;
 
    if (mainBoard.getConnection()) {
       var lockstring = getSessionStorage('lockstring');
@@ -90,6 +94,8 @@ var getContext = function (display, infos, curLevel) {
       context.quickPiConnection.onDistributedEvent = raspberryPiDistributedEvent;
    }
 
+   let timelinePaper;
+   let paper;
 
    function raspberryPiConnected() {
       console.log("Raspberry pi connected");
@@ -151,7 +157,7 @@ var getContext = function (display, infos, curLevel) {
 
          //$("#messageTable").insertRow();
 
-         var table = document.getElementById("messageTable");
+         var table = document.getElementById("messageTable") as HTMLTableElement;
          var row = table.insertRow();
 
          var no = row.insertCell();
@@ -223,7 +229,7 @@ var getContext = function (display, infos, curLevel) {
 
          var linesize = toNode.timeLinePos.y - fromNode.timeLinePos.y;
 
-         var _transformedPath = Raphael.transformPath(targetpath, 'T0,' + linesize);
+         var _transformedPath = window.Raphael.transformPath(targetpath, 'T0,' + linesize);
          triangle.animate({path: _transformedPath}, context.infos.actionDelay);
 
 
@@ -267,7 +273,7 @@ var getContext = function (display, infos, curLevel) {
          var fromNode = context.findNodeById(messageInfo.fromId);
          var toNode = context.findNodeById(messageInfo.toId);
 
-         var table = document.getElementById("messageTable");
+         var table = document.getElementById("messageTable") as HTMLTableElement;
          var row = table.insertRow();
 
          var no = row.insertCell();
@@ -395,7 +401,7 @@ var getContext = function (display, infos, curLevel) {
             bbox = text.getBBox();
          }
 
-         text.click(function()
+         text.click(function(event)
          {
             $('#screentooltip').remove();
             $("body").append('<div id="screentooltip"></div>');
@@ -496,7 +502,7 @@ var getContext = function (display, infos, curLevel) {
 
          // Copy graph to avoid modifying the taskInfos orignal
          context.graphDefinition = JSON.parse(JSON.stringify(taskInfos.graphDefinition));
-         context.Graph = Graph.fromJSON(JSON.stringify(context.graphDefinition.minGraph));
+         context.Graph = window.Graph.fromJSON(JSON.stringify(context.graphDefinition.minGraph));
 
          context.validateAnswer = taskInfos.validateAnswer;
          context.systemMessages = taskInfos.systemMessages;
@@ -633,18 +639,18 @@ var getContext = function (display, infos, curLevel) {
       });
 
 
-      var graphDrawer = new SimpleGraphDrawer(vertexAttr, edgeAttr);
+      var graphDrawer = new window.SimpleGraphDrawer(vertexAttr, edgeAttr);
 
       var vertexVisualInfoTimeline = JSON.parse(JSON.stringify(context.graphDefinition.vertexVisualInfo));
-      context.vGraphTimeline = new VisualGraph("vGraphTimeline", timelinePaper, context.Graph, graphDrawer, true, vertexVisualInfoTimeline, timeLineedgeVisualInfo);
+      context.vGraphTimeline = new window.VisualGraph("vGraphTimeline", timelinePaper, context.Graph, graphDrawer, true, vertexVisualInfoTimeline, timeLineedgeVisualInfo);
 
-      this.graphMouseTimeline = new GraphMouse("GraphMouseTimeline", context.Graph, context.vGraph);
+      this.graphMouseTimeline = new window.GraphMouse("GraphMouseTimeline", context.Graph, context.vGraph);
 
 
       var pixelsPerVertice = context.timeLineGraphH / context.nodesAndNeighbors.length;
 
 
-      $.each(vertices, function (index) {
+      $.each(vertices, function (index: number) {
          var id = vertices[index];
          var node = context.findNodeByVertice(id);
          node.timeLinePos = {
@@ -855,7 +861,7 @@ var getContext = function (display, infos, curLevel) {
 
       var tableStatus = "<table id='node-status-table' style='border-collapse: collapse; margin: auto;'><tr><th>#</th><th>ID</th><th>Status</th><th>Answer</th></tr></table>";
       $('#nodeStatus').html(tableStatus);
-      var table = document.getElementById("node-status-table");
+      var table = document.getElementById("node-status-table") as HTMLTableElement;
 
       $.each(context.nodesAndNeighbors, function (index) {
          //console.log(context.nodesAndNeighbors[index]);
@@ -897,7 +903,7 @@ var getContext = function (display, infos, curLevel) {
          context.blocklyHelper.reportValues = false;
 
 
-         python_code = window.task.displayedSubTask.blocklyHelper.getCode('python');
+         let python_code = window.task.displayedSubTask.blocklyHelper.getCode('python');
 
          python_code = python_code.replace("from quickpi import *", "");
          python_code = python_code.replace("from distributed import *", "");
@@ -932,10 +938,10 @@ var getContext = function (display, infos, curLevel) {
       };
 
 
-      var graphDrawer = new SimpleGraphDrawer(vertexAttr, edgeAttr);
-      context.vGraph = new VisualGraph("vGraph", paper, context.Graph, graphDrawer, true, context.graphDefinition.vertexVisualInfo, context.graphDefinition.edgeVisualInfo);
+      var graphDrawer = new window.SimpleGraphDrawer(vertexAttr, edgeAttr);
+      context.vGraph = new window.VisualGraph("vGraph", paper, context.Graph, graphDrawer, true, context.graphDefinition.vertexVisualInfo, context.graphDefinition.edgeVisualInfo);
 
-      this.graphMouse = new GraphMouse("GraphMouse", context.Graph, context.vGraph);
+      this.graphMouse = new window.GraphMouse("GraphMouse", context.Graph, context.vGraph);
 
       var vertices = context.Graph.getAllVertices();
 
@@ -984,15 +990,15 @@ var getContext = function (display, infos, curLevel) {
 
       context.vGraph.redraw();
 
-      var a = new PaperMouseEvent("paperMain", paper, "mousemove", function () {
+      var a = new window.PaperMouseEvent("paperMain", paper, "mousemove", function () {
          console.log("Hello");
       }, true);
 
 
       //this.graphMouse.addEvent("whatever", "click", "vertex", null, [function() { console.log("test") }]);
 
-      this.graphMouse.addEvent("whatever2", "click", "edge", null, [function (id) {
-         var id = (Beav.Navigator.isIE8()) ? elementID : this.data("id");
+      this.graphMouse.addEvent("whatever2", "click", "edge", null, [function (elementID) {
+         var id = (window.Beav.Navigator.isIE8()) ? elementID : this.data("id");
          var vertexObject = context.vGraph.getRaphaelsFromID(id)[0];
 
          var a = vertexObject.node.getBoundingClientRect();
@@ -1000,8 +1006,8 @@ var getContext = function (display, infos, curLevel) {
       }]);
 
       //VertexToggler("whatever", context.Graph, context.vGraph, this.graphMouse, function(id, selected) {
-      this.graphMouse.addEvent("whatever", "hover", "vertex", null, [function (id) {
-         var id = (Beav.Navigator.isIE8()) ? elementID : this.data("id");
+      this.graphMouse.addEvent("whatever", "hover", "vertex", null, [function (elementID) {
+         var id = (window.Beav.Navigator.isIE8()) ? elementID : this.data("id");
          var vertexObject = context.vGraph.getRaphaelsFromID(id)[0];
 
          var a = vertexObject.node.getBoundingClientRect();
@@ -1317,13 +1323,13 @@ var getContext = function (display, infos, curLevel) {
    };
 
    context.distributed.getNextMessage = function() {
+      let timeout = arguments[0];
+      let callback = arguments[1];
       if(typeof arguments[0] == 'function') {
-         var timeout = -1;
-         var callback = arguments[0];
-      } else {
-         var timeout = arguments[0];
-         var callback = arguments[1];
+         timeout = -1;
+         callback = arguments[0];
       }
+
       var node = context.nodesAndNeighbors[context.curNode];
       //console.log("getNextMessage");
 
@@ -1445,7 +1451,8 @@ var getContext = function (display, infos, curLevel) {
          message: message,
          status: "queued",
          messageId: messageId,
-         circle: null
+         circle: null,
+         messageCountText: null,
       };
 
       var canSendMessage = context.canNodeSendMessages(fromNode, toNode);
@@ -2380,7 +2387,7 @@ var distributedTaskUtilities = {
    }
 }
 
-Raphael.el.animateAlong = function (params, props, callback) {
+window.Raphael.el.animateAlong = function (params, props, callback) {
    var element = this,
       paper = element.paper,
       path = params.path,
@@ -2408,7 +2415,8 @@ Raphael.el.animateAlong = function (params, props, callback) {
       var point = this.path.getPointAtLength(v * this.pathLen),
          attrs = {
             cx: point.x,
-            cy: point.y
+            cy: point.y,
+            transform: null,
          };
       this.rotateWith && (attrs.transform = 'r' + point.alpha);
       // TODO: rotate along a path while also not messing
@@ -2440,7 +2448,7 @@ Raphael.el.animateAlong = function (params, props, callback) {
 
 // Register the library; change "template" by the name of your library in lowercase
 if (window.quickAlgoLibraries) {
-   quickAlgoLibraries.register('distributed', getContext);
+   window.quickAlgoLibraries.register('distributed', getContext);
 } else {
    if (!window.quickAlgoLibrariesList) { window.quickAlgoLibrariesList = []; }
    window.quickAlgoLibrariesList.push(['distributed', getContext]);

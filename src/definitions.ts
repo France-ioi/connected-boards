@@ -19,6 +19,13 @@ declare global {
     stringsLanguage: any,
     quickAlgoInterface: any,
     OffscreenCanvas: any,
+    Raphael: any,
+    SimpleGraphDrawer: any,
+    VisualGraph: any,
+    GraphMouse: any,
+    PaperMouseEvent: any,
+    Beav: any,
+    Graph: any,
   }
 }
 
