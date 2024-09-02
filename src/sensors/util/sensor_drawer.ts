@@ -1,8 +1,10 @@
-import {getImg, textEllipsis} from "../util";
+import {getImg, textEllipsis} from "../../util";
 import {buzzerSound} from "./buzzer_sound";
 import {gyroscope3D} from "./gyroscope3d";
 import {SensorHandler} from "./sensor_handler";
 import {screenDrawing} from "./screen";
+import {createSensor} from "../sensor_factory";
+import {QuickalgoLibrary} from "../../definitions";
 
 const colors = {
   blue: "#4a90e2",
@@ -10,7 +12,7 @@ const colors = {
 }
 
 export class SensorDrawer {
-  private context;
+  private context: QuickalgoLibrary;
   private strings;
   private sensorHandler: SensorHandler;
   private sensorDefinitions;
@@ -228,74 +230,22 @@ export class SensorDrawer {
       "height": imgh,
     };
 
-    if (sensor.type == "led") {
-      if (sensor.stateText)
-        sensor.stateText.remove();
+    if (sensor.draw) {
+      const drawParameters = {
+        fadeopacity,
+        sensorAttr,
+        imgx,
+        imgy,
+        imgw,
+        imgh,
+        state1x,
+        state1y,
+      };
 
-      if (sensor.state == null)
-        sensor.state = 0;
+      sensor.draw(this.sensorHandler, drawParameters);
+    }
 
-      if (!sensor.ledoff || this.sensorHandler.isElementRemoved(sensor.ledoff)) {
-        sensor.ledoff = this.context.paper.image(getImg('ledoff.png'), imgx, imgy, imgw, imgh);
-
-        sensor.focusrect.click(() => {
-          if (!this.context.autoGrading && (!this.context.runner || !this.context.runner.isRunning())) {
-            sensor.state = !sensor.state;
-            this.sensorHandler.warnClientSensorStateChanged(sensor);
-            this.drawSensor(sensor);
-          } else {
-            this.actuatorsInRunningModeError();
-          }
-        });
-      }
-
-      if (!sensor.ledon || this.sensorHandler.isElementRemoved(sensor.ledon)) {
-        let imagename = "ledon-";
-        if (sensor.subType)
-          imagename += sensor.subType;
-        else
-          imagename += "red";
-
-        imagename += ".png";
-        sensor.ledon = this.context.paper.image(getImg(imagename), imgx, imgy, imgw, imgh);
-      }
-
-      sensor.ledon.attr(sensorAttr);
-      sensor.ledoff.attr(sensorAttr);
-
-      if (sensor.showAsAnalog) {
-        sensor.stateText = this.context.paper.text(state1x, state1y, sensor.state);
-      } else {
-        if (sensor.state) {
-          sensor.stateText = this.context.paper.text(state1x, state1y, this.strings.messages.on.toUpperCase());
-        } else {
-          sensor.stateText = this.context.paper.text(state1x, state1y, this.strings.messages.off.toUpperCase());
-        }
-      }
-
-      if (sensor.state) {
-        sensor.ledon.attr({"opacity": fadeopacity});
-        sensor.ledoff.attr({"opacity": 0});
-      } else {
-        sensor.ledon.attr({"opacity": 0});
-        sensor.ledoff.attr({"opacity": fadeopacity});
-      }
-
-      // let x = typeof sensor.state;
-
-      if (typeof sensor.state == 'number') {
-        sensor.ledon.attr({"opacity": sensor.state * fadeopacity});
-        sensor.ledoff.attr({"opacity": fadeopacity});
-      }
-
-
-      if ((!this.context.runner || !this.context.runner.isRunning())
-        && !this.context.offLineMode) {
-
-        this.sensorHandler.findSensorDefinition(sensor).setLiveState(sensor, sensor.state, function () {
-        });
-      }
-    } else if (sensor.type == "ledrgb") {
+    if (sensor.type == "ledrgb") {
       if (sensor.stateText)
         sensor.stateText.remove();
 
@@ -2569,12 +2519,14 @@ export class SensorDrawer {
 
         // if(name == 'screen1') {
         // prepend screen because squareSize func can't handle cells wrap
-        this.context.infos.quickPiSensors.unshift({
+
+        const newSensor = createSensor({
           type: sensorDefinition.name,
           subType: sensorDefinition.subType,
           port: port,
           name: name
-        });
+        }, this.context, this.strings);
+        this.context.sensorsList.unshift(newSensor);
 
         // } else {
         //     infos.quickPiSensors.push({

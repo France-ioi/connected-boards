@@ -3,6 +3,7 @@ import {getImg} from "../util";
 import {getSessionStorage, setSessionStorage} from "../helpers/session_storage";
 import {showasConnecting} from "../display";
 import {getConnectionDialogHTML} from "./connection_dialog";
+import {createSensor} from "../sensors/sensor_factory";
 
 export function showConfig({context, strings, mainBoard}) {
   const availableConnectionMethods: ConnectionMethod[] = mainBoard.getAvailableConnectionMethods();
@@ -45,8 +46,7 @@ export function showConfig({context, strings, mainBoard}) {
       }
     }
 
-    for (let i = 0; i < context.infos.quickPiSensors.length; i++) {
-      let sensor = context.infos.quickPiSensors[i];
+    for (let sensor of context.sensorsList.all()) {
       let sensorDefinition = sensorHandler.findSensorDefinition(sensor);
       if (sensor.type == "adder")
         continue
@@ -268,10 +268,10 @@ export function showConfig({context, strings, mainBoard}) {
 
           $("#qpi-remove-sensor-parent-" + sensorName).remove();
 
-          for (var i = 0; i < context.infos.quickPiSensors.length; i++) {
-            if (context.infos.quickPiSensors[i] === sensor) {
+          for (let otherSensor of context.sensorsList.all()) {
+            if (otherSensor === sensor) {
               sensor.removed = true;
-              context.infos.quickPiSensors.splice(i, 1);
+              context.sensorsList.all().splice(i, 1);
             }
           }
 
@@ -308,16 +308,16 @@ export function showConfig({context, strings, mainBoard}) {
           var port = $("#qpi-add-sensor-parent-" + sensorID + " .port").text();
           var name = sensorHandler.getNewSensorSuggestedName(sensorDefinition.suggestedName);
 
-          context.infos.quickPiSensors.push({
+          const newSensor = createSensor({
             type: sensorDefinition.name,
             subType: sensorDefinition.subType,
             port: port,
             name: name
-          });
+          }, context, strings);
+
+          context.sensorsList.add(newSensor);
 
           added = true;
-
-
         }
       });
 

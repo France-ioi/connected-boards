@@ -1,3 +1,7 @@
+import {SensorCollection} from "./sensors/sensor_collection";
+import {AbstractSensor} from "./sensors/abstract_sensor";
+import {AbstractBoard} from "./boards/abstract_board";
+
 declare global {
   interface Window {
     modulesPath: string;
@@ -85,20 +89,40 @@ export interface QuickalgoLibraryBlock {
 }
 
 export interface QuickalgoLibrary {
-  display: boolean;
-  placeholderBlocks: any;
-  iTestCase: number; // Required for some libs such as barcode
+  display: boolean,
+  placeholderBlocks: any,
+  iTestCase: number, // Required for some libs such as barcode
   nbCodes: number;
   nbNodes: number;
-  nbMoves?: number;
-  strings: any;
-  customBlocks: {[generatorName: string]: {[categoryName: string]: QuickalgoLibraryBlock[]}};
-  customConstants: {[generatorName: string]: {name: string, value: any}[]};
-  customClasses: {[generatorName: string]: {[categoryName: string]: {[className: string]: any[]}}};
-  customClassInstances: {[generatorName: string]: {[instanceName: string]: string}};
-  conceptList: any[];
-  conceptDisabledList?: string[];
-  curNode: any;
+  nbMoves?: number,
+  strings: any,
+  customBlocks: {[generatorName: string]: {[categoryName: string]: QuickalgoLibraryBlock[]}},
+  customConstants: {[generatorName: string]: {name: string, value: any}[]},
+  customClasses: {[generatorName: string]: {[categoryName: string]: {[className: string]: any[]}}},
+  customClassInstances: {[generatorName: string]: {[instanceName: string]: string}},
+  conceptList: any[],
+  conceptDisabledList?: string[],
+  curNode: any,
+  paper: any,
+  runner: any,
+  offLineMode: boolean,
+  autoGrading: boolean,
+  quickPiConnection: any,
+  sensorsList: SensorCollection,
+  sensorAdder: any,
+  stopLiveUpdate: boolean,
+  resetSensorTable: () => void,
+  resetDisplay: () => void,
+  remoteIRcodes: {[preset: string]: any},
+  board: string,
+  findSensor: (type: string, port: string, error: boolean) => AbstractSensor,
+  useportforname: boolean,
+  compactLayout: boolean,
+  sensorsSaved: {[name: string]: any},
+  sensorStateListener: any,
+  mainBoard: AbstractBoard,
+  quickpi: any,
+  currentTime: number,
 }
 
 export interface QuickAlgoConstant {

@@ -1,4 +1,4 @@
-﻿import {deepEqual} from "../util";
+﻿import {deepEqual} from "../../util";
 
 export class LocalQuickStore {
   private Store;

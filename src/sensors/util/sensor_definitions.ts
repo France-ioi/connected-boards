@@ -1,73 +1,13 @@
-import {quickPiLocalLanguageStrings} from "../lang/language_strings";
-import {deepEqual, isPrimitive} from "../util";
+import {quickPiLocalLanguageStrings} from "../../lang/language_strings";
+import {deepEqual, isPrimitive} from "../../util";
 import {LocalQuickStore} from "./local_quickpi_store";
-import {SensorDefinition} from "../definitions";
+import {SensorDefinition} from "../../definitions";
 
 export const getSensorDefinitions = function (context, strings): SensorDefinition[] {
   return [
     /******************************** */
     /*             Actuators          */
     /**********************************/
-    {
-      name: "led",
-      suggestedName: strings.messages.sensorNameLed,
-      description: strings.messages.led,
-      isAnalog: false,
-      isSensor: false,
-      portType: "D",
-      getInitialState: function (sensor) {
-        return false;
-      },
-      selectorImages: ["ledon-red.png"],
-      valueType: "boolean",
-      pluggable: true,
-      getPercentageFromState: function (state) {
-        if (state)
-          return 1;
-        else
-          return 0;
-      },
-      getStateFromPercentage: function (percentage) {
-        if (percentage)
-          return 1;
-        else
-          return 0;
-      },
-      setLiveState: function (sensor, state, callback) {
-        var ledstate = state ? 1 : 0;
-        var command = "setLedState(\"" + sensor.name + "\"," + ledstate + ")";
-
-        context.quickPiConnection.sendCommand(command, callback);
-      },
-      getStateString: function(state) {
-        return state ? strings.messages.on.toUpperCase() : strings.messages.off.toUpperCase();
-      },
-      subTypes: [{
-        subType: "blue",
-        description: strings.messages.blueled,
-        selectorImages: ["ledon-blue.png"],
-        suggestedName: strings.messages.sensorNameBlueLed,
-      },
-        {
-          subType: "green",
-          description: strings.messages.greenled,
-          selectorImages: ["ledon-green.png"],
-          suggestedName: strings.messages.sensorNameGreenLed,
-        },
-        {
-          subType: "orange",
-          description: strings.messages.orangeled,
-          selectorImages: ["ledon-orange.png"],
-          suggestedName: strings.messages.sensorNameOrangeLed,
-        },
-        {
-          subType: "red",
-          description: strings.messages.redled,
-          selectorImages: ["ledon-red.png"],
-          suggestedName: strings.messages.sensorNameRedLed,
-        }
-      ],
-    },
     {
       name: "ledrgb",
       suggestedName: strings.messages.sensorNameLedRgb,

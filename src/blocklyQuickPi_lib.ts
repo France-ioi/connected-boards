@@ -2,14 +2,16 @@
 import {quickPiLocalLanguageStrings} from "./lang/language_strings";
 import {quickPiBoard} from "./boards/quickpi/quickpi_board";
 import {AbstractBoard} from "./boards/abstract_board";
-import {buzzerSound} from "./sensors/buzzer_sound";
+import {buzzerSound} from "./sensors/util/buzzer_sound";
 import {showConfig} from "./config/config";
 import {getSessionStorage, setSessionStorage} from "./helpers/session_storage";
-import {SensorHandler} from "./sensors/sensor_handler";
+import {SensorHandler} from "./sensors/util/sensor_handler";
 import {showasConnecting} from "./display";
-import {LocalQuickStore} from "./sensors/local_quickpi_store";
+import {LocalQuickStore} from "./sensors/util/local_quickpi_store";
 import {Sensor} from "./definitions";
-import {screenDrawing} from "./sensors/screen";
+import {screenDrawing} from "./sensors/util/screen";
+import {SensorCollection} from "./sensors/sensor_collection";
+import {createSensor} from "./sensors/sensor_factory";
 
 const boards: {[board: string]: AbstractBoard} = {
     galaxia: galaxiaBoard,
@@ -173,13 +175,19 @@ var getContext = function (display, infos, curLevel) {
         return conceptList;
     }
 
+    context.sensorsList = new SensorCollection();
+    for (let sensor of infos.quickPiSensors) {
+        const realSensor = createSensor(sensor, context, strings);
+        context.sensorsList.add(realSensor);
+    }
+
     const boardDefinitions = mainBoard.getBoardDefinitions();
 
-    if(window.quickAlgoInterface) {
+    if (window.quickAlgoInterface) {
         window.quickAlgoInterface.stepDelayMin = 1;
     }
 
-    var defaultQuickPiOptions = {
+    let defaultQuickPiOptions = {
         disableConnection: false,
         increaseTimeAfterCalls: 5
     };
@@ -270,10 +278,8 @@ var getContext = function (display, infos, curLevel) {
 
     context.getInnerState = function() {
         var savedSensors = {};
-        for (var i = 0; i < infos.quickPiSensors.length; i++) {
-            var sensor = infos.quickPiSensors[i];
-            var savedSensor = getSensorFullState(sensor);
-            savedSensors[sensor.name] = savedSensor;
+        for (let sensor of context.sensorsList.all()) {
+            savedSensors[sensor.name] = getSensorFullState(sensor);
         }
 
         innerState.sensors = savedSensors;
@@ -454,8 +460,7 @@ var getContext = function (display, infos, curLevel) {
         var pythonSensorTable = "sensorTable = [";
         var first = true;
 
-        for (var iSensor = 0; iSensor < infos.quickPiSensors.length; iSensor++) {
-            var sensor = infos.quickPiSensors[iSensor];
+       for (let sensor of context.sensorsList.all()) {
             if (first) {
                 first = false;
             } else {
@@ -506,9 +511,7 @@ var getContext = function (display, infos, curLevel) {
 
 
     context.findSensor = function findSensor(type, port, error=true) {
-        for (var i = 0; i < infos.quickPiSensors.length; i++) {
-            var sensor = infos.quickPiSensors[i];
-
+        for (let sensor of context.sensorsList.all()) {
             if (sensor.type == type && sensor.port == port)
                 return sensor;
         }
@@ -613,8 +616,7 @@ var getContext = function (display, infos, curLevel) {
     }
 
     context.resetSensors = function() {
-        for (var iSensor = 0; iSensor < infos.quickPiSensors.length; iSensor++) {
-            var sensor = infos.quickPiSensors[iSensor];
+        for (let sensor of context.sensorsList.all()) {
             if (context.sensorsSaved[sensor.name] && !context.autoGrading) {
                 var save = context.sensorsSaved[sensor.name];
                 reloadSensorFullState(sensor, save);
@@ -693,9 +695,7 @@ var getContext = function (display, infos, curLevel) {
                 }
 
 
-                for (var iSensor = 0; iSensor < infos.quickPiSensors.length; iSensor++) {
-                    var sensor = infos.quickPiSensors[iSensor];
-                    
+                for (let sensor of context.sensorsList.all()) {
                     if (sensor.type == "buzzer") {
                         var states = context.gradingStatesBySensor[sensor.name];
 
@@ -750,7 +750,7 @@ var getContext = function (display, infos, curLevel) {
 
             if (infos.quickPiSensors == "default")
             {
-                infos.quickPiSensors = [];
+                context.sensorsList = new SensorCollection();
                 addDefaultBoardSensors();
             }
         }
@@ -770,9 +770,7 @@ var getContext = function (display, infos, curLevel) {
 
         context.resetSensors();
 
-        for (var iSensor = 0; iSensor < infos.quickPiSensors.length; iSensor++) {
-            var sensor = infos.quickPiSensors[iSensor];
-
+        for (let sensor of context.sensorsList.all()) {
             // If the sensor has no port assign one
             if (!sensor.port) {
                 sensorAssignPort(sensor);
@@ -790,9 +788,7 @@ var getContext = function (display, infos, curLevel) {
         }
 
         // Needs display to be reset before calling registerQuickPiEvent
-        for (var iSensor = 0; iSensor < infos.quickPiSensors.length; iSensor++) {
-            var sensor = infos.quickPiSensors[iSensor];
-
+        for (let sensor of context.sensorsList.all()) {
             // Set initial state
             var sensorDef = sensorHandler.findSensorDefinition(sensor);
             if(sensorDef && !sensorDef.isSensor && sensorDef.getInitialState) {
@@ -829,9 +825,7 @@ var getContext = function (display, infos, curLevel) {
 
             context.quickPiConnection.startTransaction();
 
-            for (var iSensor = 0; iSensor < infos.quickPiSensors.length; iSensor++) {
-                var sensor = infos.quickPiSensors[iSensor];
-
+            for (let sensor of context.sensorsList.all()) {
                 updateLiveSensor(sensor);
             }
 
@@ -878,21 +872,19 @@ var getContext = function (display, infos, curLevel) {
         setSessionStorage('board', newboardname);
 
         if (infos.customSensors) {
-            for (var i = 0; i < infos.quickPiSensors.length; i++) {
-                var sensor = infos.quickPiSensors[i];
+            for (let sensor of context.sensorsList.all()) {
                 sensor.removed = true;
             }
-            infos.quickPiSensors = [];
+            context.sensorsList = new SensorCollection();
 
             if (board.builtinSensors) {
                 for (var i = 0; i < board.builtinSensors.length; i++) {
-                    var sensor = board.builtinSensors[i];
-
-                    var newSensor: any = {
+                    let sensor = board.builtinSensors[i];
+                    let newSensor = createSensor({
                         "type": sensor.type,
                         "port": sensor.port,
                         "builtin": true,
-                    };
+                    }, context, strings);
 
                     if (sensor.subType) {
                         newSensor.subType = sensor.subType;
@@ -900,16 +892,15 @@ var getContext = function (display, infos, curLevel) {
 
                     newSensor.name = getSensorSuggestedName(sensor.type, sensor.suggestedName);
 
-                    sensor.state = null;
-                    sensor.callsInTimeSlot = 0;
-                    sensor.lastTimeIncrease = 0;
+                    newSensor.state = null;
+                    newSensor.callsInTimeSlot = 0;
+                    newSensor.lastTimeIncrease = 0;
 
-                    infos.quickPiSensors.push(newSensor);
+                    context.sensorsList.add(newSensor);
                 }
             }
         } else {
-            for (var i = 0; i < infos.quickPiSensors.length; i++) {
-                var sensor = infos.quickPiSensors[i];
+            for (let sensor of context.sensorsList.all()) {
                 sensorAssignPort(sensor);
             }
         }
@@ -932,8 +923,7 @@ var getContext = function (display, infos, curLevel) {
             return;
 
         additional.quickpiSensors = [];
-        for (var i = 0; i < infos.quickPiSensors.length; i++) {
-            var currentSensor = infos.quickPiSensors[i];
+        for (let currentSensor of context.sensorsList.all()) {
             var savedSensor: Sensor = {
                 type: currentSensor.type,
                 port: currentSensor.port,
@@ -962,19 +952,18 @@ var getContext = function (display, infos, curLevel) {
         if (!newSensors)
             return;
 
-        for (let i = 0; i < infos.quickPiSensors.length; i++) {
-            var sensor = infos.quickPiSensors[i];
+        for (let sensor of context.sensorsList.all()) {
             sensor.removed = true;
         }
 
-        infos.quickPiSensors = [];
+        context.sensorsList = new SensorCollection();
 
         for (var i = 0; i < newSensors.length; i++) {
-            let sensor: Sensor = {
+            let sensor = createSensor({
                 type: newSensors[i].type,
                 port: newSensors[i].port,
                 name: newSensors[i].name
-            };
+            }, context, strings);
 
             if (newSensors[i].subType)
                 sensor.subType = newSensors[i].subType;
@@ -983,9 +972,8 @@ var getContext = function (display, infos, curLevel) {
             sensor.callsInTimeSlot = 0;
             sensor.lastTimeIncrease = 0;
 
-            infos.quickPiSensors.push(sensor);
+            context.sensorsList.add(sensor);
         }
-        // console.log(infos.quickPiSensors)
 
         context.recreateDisplay = true;
         this.resetDisplay();
@@ -1047,7 +1035,7 @@ var getContext = function (display, infos, curLevel) {
             context.sensorStates = context.paper.set();
             //context.paper.clear(); // Do this for now.
 
-            var numSensors = infos.quickPiSensors.length;
+            var numSensors = context.sensorsList.size();
             var sensorSize = Math.min(context.paper.height / numSensors * 0.80, $('#virtualSensors').width() / 10);
 
             //var sensorSize = Math.min(context.paper.height / (numSensors + 1));
@@ -1067,14 +1055,12 @@ var getContext = function (display, infos, curLevel) {
 
             context.pixelsPerTime = (context.paper.width - context.timelineStartx - 30) / maxTime;
 
-            context.timeLineY = 25 + (context.timeLineSlotHeight * (infos.quickPiSensors.length));
+            context.timeLineY = 25 + (context.timeLineSlotHeight * (context.sensorsList.size()));
             
 
             var color = true;
 
-            for (var iSensor = 0; iSensor < infos.quickPiSensors.length; iSensor++) {
-                var sensor = infos.quickPiSensors[iSensor];
-
+            for (let sensor of context.sensorsList.all()) {
                 sensor.drawInfo = {
                     x: 0,
                     y: 10 + (context.timeLineSlotHeight * iSensor),
@@ -1095,9 +1081,7 @@ var getContext = function (display, infos, curLevel) {
 
             drawTimeLine();
 
-            for (var iSensor = 0; iSensor < infos.quickPiSensors.length; iSensor++) {
-                var sensor = infos.quickPiSensors[iSensor];
-
+            for (let sensor of context.sensorsList.all()) {
                 sensorHandler.drawSensor(sensor);
                 sensor.timelinelastxlabel = 0;
 
@@ -1137,14 +1121,13 @@ var getContext = function (display, infos, curLevel) {
                     true);
             }
         } else {
-            var nSensors = infos.quickPiSensors.length;
-
-            infos.quickPiSensors.forEach(function (sensor) {
-                var cellsAmount = sensorHandler.findSensorDefinition(sensor).cellsAmount;
+            var nSensors = context.sensorsList.size();
+            for (let sensor of context.sensorsList.all()) {
+                let cellsAmount = sensorHandler.findSensorDefinition(sensor).cellsAmount;
                 if (cellsAmount) {
                     nSensors += cellsAmount(context.paper) - 1;
                 }
-            });
+            }
 
             if (nSensors < 4)
                 nSensors = 4;
@@ -1188,7 +1171,7 @@ var getContext = function (display, infos, curLevel) {
                     // var y2 = y + geometry.size * 3 / 4;
                     var y2 = y + geometry.size;
                     var cells = 1;
-                    var sensor = infos.quickPiSensors[iSensor];
+                    var sensor = context.sensorsList.all()[iSensor];
                     var foundsize = 0;
 
                     var cellsAmount = null;
@@ -1218,9 +1201,9 @@ var getContext = function (display, infos, curLevel) {
                         var colsleft = nbCol - col;
                         if (cells > colsleft)
                         {
-                            for (var iNewSensor = iSensor + 1; iNewSensor < infos.quickPiSensors.length; iNewSensor++)
+                            for (var iNewSensor = iSensor + 1; iNewSensor < context.sensorsList.size(); iNewSensor++)
                             {
-                                var newSensor = infos.quickPiSensors[iNewSensor];
+                                var newSensor = context.sensorsList.all()[iNewSensor];
                                 // if(newSensor.type == "adder")
                                     // continue
 
@@ -1232,8 +1215,8 @@ var getContext = function (display, infos, curLevel) {
 
                                 if (cells == 1)
                                 {
-                                    infos.quickPiSensors[iNewSensor] = sensor;
-                                    infos.quickPiSensors[iSensor] = newSensor;
+                                    context.sensorsList.all()[iNewSensor] = sensor;
+                                    context.sensorsList.all()[iSensor] = newSensor;
                                     sensor = newSensor;
                                     foundcols = true;
                                     break;
@@ -1251,10 +1234,10 @@ var getContext = function (display, infos, curLevel) {
                         continue;
 
 
-                    if (iSensor == infos.quickPiSensors.length && infos.customSensors) {
+                    if (iSensor == context.sensorsList.size() && infos.customSensors) {
                         // drawCustomSensorAdder(x, y, cellW * cells, geometry.size);
                         // drawCustomSensorAdder(x, y, geometry.size);
-                    } else if (infos.quickPiSensors[iSensor]) {                        
+                    } else if (context.sensorsList.all()[iSensor]) {
                         col += cells - 1;
 
                         sensor.drawInfo = {
@@ -1398,10 +1381,8 @@ var getContext = function (display, infos, curLevel) {
                             context.resetDisplay();
                 };                
 
-                $('#virtualSensors').scroll(function(event) {
-                    for (var iSensor = 0; iSensor < infos.quickPiSensors.length; iSensor++) {
-                        var sensor = infos.quickPiSensors[iSensor];
-
+                $('#virtualSensors').scroll(function() {
+                    for (let sensor of context.sensorsList.all()) {
                         sensorHandler.drawSensor(sensor);
                     }
                 });        
@@ -1415,7 +1396,7 @@ var getContext = function (display, infos, curLevel) {
 
         if (infos.quickPiSensors == "default")
         {
-            infos.quickPiSensors = [];
+            context.sensorsList = new SensorCollection();
             addDefaultBoardSensors();
         }
 
@@ -1570,9 +1551,7 @@ var getContext = function (display, infos, curLevel) {
                     "   </div>" +
                     "</div>", function () {
                     let table = document.getElementById("sensorTable") as HTMLTableElement;
-                    for (var iSensor = 0; iSensor < infos.quickPiSensors.length; iSensor++) {
-                        var sensor = infos.quickPiSensors[iSensor];
-
+                    for (let sensor of context.sensorsList.all()) {
                         function addNewRow()
                         {
                             var row = table.insertRow();
@@ -1708,11 +1687,11 @@ var getContext = function (display, infos, curLevel) {
             for (var i = 0; i < boardDefaultSensors.length; i++) {
                 var sensor = boardDefaultSensors[i];
 
-                let newSensor: Sensor = {
+                let newSensor = createSensor({
                     "type": sensor.type,
                     "port": sensor.port,
                     "builtin": true,
-                };
+                }, context, strings);
 
                 if (sensor.subType) {
                     newSensor.subType = sensor.subType;
@@ -1720,19 +1699,20 @@ var getContext = function (display, infos, curLevel) {
 
                 newSensor.name = getSensorSuggestedName(sensor.type, sensor.suggestedName);
 
-                sensor.state = null;
-                sensor.callsInTimeSlot = 0;
-                sensor.lastTimeIncrease = 0;
+                newSensor.state = null;
+                newSensor.callsInTimeSlot = 0;
+                newSensor.lastTimeIncrease = 0;
 
-                infos.quickPiSensors.push(newSensor);
+                context.sensorsList.add(newSensor);
             }
 
-            let newSensor = {
+            let newSensor = createSensor({
                 type: "cloudstore",
                 name: "cloud1",
                 port: "D5"
-            };
-            infos.quickPiSensors.push(newSensor);
+            }, context, strings);
+
+            context.sensorsList.add(newSensor);
         }
         if(infos.customSensors){
             // infos.quickPiSensors.push({
@@ -1941,12 +1921,9 @@ var getContext = function (display, infos, curLevel) {
             // Do something here
         }
 
-        for (var i = 0; i < infos.quickPiSensors.length; i++) {
-            var sensor = infos.quickPiSensors[i];
-
+        for (let sensor of context.sensorsList.all()) {
             sensor.removed = true;
         }
-
     };
 
     function drawTimeLine() {
@@ -2195,12 +2172,9 @@ var getContext = function (display, infos, curLevel) {
             $('#screentooltip').remove();
 
             context.resetSensors();
-            for (var iSensor = 0; iSensor < infos.quickPiSensors.length; iSensor++) {
-                var sensor = infos.quickPiSensors[iSensor];
-
+            for (let sensor of context.sensorsList.all()) {
                 sensorHandler.drawSensor(sensor);
             }
-
         });
 
 
