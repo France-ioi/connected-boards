@@ -6,7 +6,6 @@ import {SensorHandler} from "./util/sensor_handler";
 export class SensorLed extends AbstractSensor {
   private ledon: any;
   private ledoff: any;
-  private stateText: any;
   protected type = 'led';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
@@ -17,9 +16,6 @@ export class SensorLed extends AbstractSensor {
       isAnalog: false,
       isSensor: false,
       portType: "D",
-      getInitialState: function (sensor) {
-        return false;
-      },
       selectorImages: ["ledon-red.png"],
       valueType: "boolean",
       pluggable: true,
@@ -72,6 +68,10 @@ export class SensorLed extends AbstractSensor {
     var command = "setLedState(\"" + this.name + "\"," + ledstate + ")";
 
     this.context.quickPiConnection.sendCommand(command, callback);
+  }
+
+  getInitialState () {
+    return false;
   }
 
   draw(sensorHandler: SensorHandler, {fadeopacity, sensorAttr, imgx, imgy, imgw, imgh, state1x, state1y}) {

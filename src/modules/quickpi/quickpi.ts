@@ -722,7 +722,7 @@ export function quickpiModuleDefinition(context: any, strings: any): ModuleDefin
         if (sensor.type == "stick") {
           let stickDefinition = sensorHandler.findSensorDefinition(sensor);
 
-          stickDefinition.getLiveState(sensor, function(returnVal) {
+          sensor.getLiveState(function(returnVal) {
             sensor.state = returnVal;
             sensorHandler.drawSensor(sensor);
 
@@ -732,7 +732,7 @@ export function quickpiModuleDefinition(context: any, strings: any): ModuleDefin
           });
 
         } else {
-          sensorHandler.findSensorDefinition(sensor).getLiveState(sensor, function(returnVal) {
+          sensor.getLiveState(function(returnVal) {
             sensor.state = returnVal != "0";
             sensorHandler.drawSensor(sensor);
             cb(returnVal != "0");
@@ -983,7 +983,7 @@ export function quickpiModuleDefinition(context: any, strings: any): ModuleDefin
       } else {
         let cb = context.runner.waitCallback(callback);
 
-        sensorHandler.findSensorDefinition(sensor).getLiveState(sensor, function(returnVal) {
+        sensor.getLiveState(function(returnVal) {
           sensor.state = returnVal;
           sensorHandler.drawSensor(sensor);
           cb(returnVal);
@@ -1071,7 +1071,7 @@ export function quickpiModuleDefinition(context: any, strings: any): ModuleDefin
 
         let cb = context.runner.waitCallback(callback);
 
-        sensorHandler.findSensorDefinition(sensor).getLiveState(sensor, function(returnVal) {
+        sensor.getLiveState(function(returnVal) {
           sensor.state = returnVal;
           sensorHandler.drawSensor(sensor);
           cb(returnVal);
@@ -1090,7 +1090,7 @@ export function quickpiModuleDefinition(context: any, strings: any): ModuleDefin
 
         let cb = context.runner.waitCallback(callback);
 
-        sensorHandler.findSensorDefinition(sensor).getLiveState(sensor, function(returnVal) {
+        sensor.getLiveState(function(returnVal) {
           sensor.state = returnVal;
           sensorHandler.drawSensor(sensor);
           cb(returnVal);
@@ -1110,7 +1110,7 @@ export function quickpiModuleDefinition(context: any, strings: any): ModuleDefin
       } else {
         let cb = context.runner.waitCallback(callback);
 
-        sensorHandler.findSensorDefinition(sensor).getLiveState(sensor, function(returnVal) {
+        sensor.getLiveState(function(returnVal) {
           sensor.state = returnVal;
 
           sensorHandler.drawSensor(sensor);
@@ -1130,7 +1130,7 @@ export function quickpiModuleDefinition(context: any, strings: any): ModuleDefin
 
         let cb = context.runner.waitCallback(callback);
 
-        sensorHandler.findSensorDefinition(sensor).getLiveState(sensor, function(returnVal) {
+        sensor.getLiveState(function(returnVal) {
           sensor.state = returnVal;
           sensorHandler.drawSensor(sensor);
           cb(returnVal);
@@ -1483,7 +1483,7 @@ export function quickpiModuleDefinition(context: any, strings: any): ModuleDefin
       } else {
         let cb = context.runner.waitCallback(callback);
 
-        sensorHandler.findSensorDefinition(sensor).getLiveState(sensor, function(returnVal) {
+        sensor.getLiveState(function(returnVal) {
           sensor.state = returnVal;
           sensorHandler.drawSensor(sensor);
           cb(returnVal);
@@ -1508,7 +1508,7 @@ export function quickpiModuleDefinition(context: any, strings: any): ModuleDefin
         let cb = context.runner.waitCallback(callback);
         let sensor = context.findSensor("magnetometer", "i2c");
 
-        sensorHandler.findSensorDefinition(sensor).getLiveState(axis, function(returnVal) {
+        sensor.getLiveState(function(returnVal) {
           sensor.state = returnVal;
           sensorHandler.drawSensor(sensor);
 
@@ -1560,7 +1560,7 @@ export function quickpiModuleDefinition(context: any, strings: any): ModuleDefin
       } else {
         let cb = context.runner.waitCallback(callback);
 
-        sensorHandler.findSensorDefinition(sensor).getLiveState(sensor, function(returnVal) {
+        sensor.getLiveState(function(returnVal) {
           sensor.state = returnVal;
           sensorHandler.drawSensor(sensor);
           cb(returnVal);
@@ -1611,7 +1611,7 @@ export function quickpiModuleDefinition(context: any, strings: any): ModuleDefin
         let cb = context.runner.waitCallback(callback);
         let sensor = context.findSensor("gyroscope", "i2c");
 
-        sensorHandler.findSensorDefinition(sensor).getLiveState(axis, function(returnVal) {
+        sensor.getLiveState(function(returnVal) {
           sensor.state = returnVal;
           sensorHandler.drawSensor(sensor);
 

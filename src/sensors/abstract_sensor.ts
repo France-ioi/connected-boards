@@ -1,16 +1,33 @@
-import {QuickalgoLibrary, SensorDefinition} from "../definitions";
+import {QuickalgoLibrary} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 
 export interface SensorDrawParameters {
   fadeopacity: number,
   sensorAttr: object,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
   imgx: number,
   imgy: number,
   imgw: number,
   imgh: number,
   state1x: number,
   state1y: number,
+  statesize: number,
+  stateanchor: string,
+  juststate: boolean,
+  portx: number,
+  porty: number,
+  portsize: number,
+  drawPortText: boolean,
+  fontWeight: string,
+  namex: number,
+  namey: number,
+  namesize: number,
+  nameanchor: string,
 }
+
 export abstract class AbstractSensor {
   protected callsInTimeSlot?: number;
   protected drawInfo?: {
@@ -37,6 +54,8 @@ export abstract class AbstractSensor {
   protected builtin?: boolean;
   protected showAsAnalog?: boolean;
   protected isDrawingScreen?: boolean;
+  protected removed?: boolean;
+  protected stateText: any;
 
   protected context: QuickalgoLibrary;
   protected strings: any;

@@ -5,6 +5,7 @@ import {SensorHandler} from "./sensor_handler";
 import {screenDrawing} from "./screen";
 import {createSensor} from "../sensor_factory";
 import {QuickalgoLibrary} from "../../definitions";
+import {SensorDrawParameters} from "../abstract_sensor";
 
 const colors = {
   blue: "#4a90e2",
@@ -170,10 +171,8 @@ export class SensorDrawer {
     // console.log(this.context.compactLayout,statesize)
 
 
-    let drawPortText = true;
+    let drawPortText = false;
     let drawName = true;
-
-    drawPortText = false;
 
     if (!sensor.focusrect || this.sensorHandler.isElementRemoved(sensor.focusrect)) {
       sensor.focusrect = this.context.paper.rect(imgx, imgy, imgw, imgh);
@@ -230,353 +229,38 @@ export class SensorDrawer {
       "height": imgh,
     };
 
-    if (sensor.draw) {
-      const drawParameters = {
-        fadeopacity,
-        sensorAttr,
-        imgx,
-        imgy,
-        imgw,
-        imgh,
-        state1x,
-        state1y,
-      };
+    const drawParameters: SensorDrawParameters = {
+      fadeopacity,
+      sensorAttr,
+      imgx,
+      imgy,
+      imgw,
+      imgh,
+      state1x,
+      state1y,
+      juststate,
+      x,
+      y,
+      w,
+      h,
+      portx,
+      porty,
+      portsize,
+      stateanchor,
+      statesize,
+      drawPortText,
+      fontWeight,
+      namex,
+      namey,
+      namesize,
+      nameanchor,
+    };
 
+    if (sensor.draw) {
       sensor.draw(this.sensorHandler, drawParameters);
     }
 
-    if (sensor.type == "ledrgb") {
-      if (sensor.stateText)
-        sensor.stateText.remove();
-
-      if (sensor.state == null)
-        sensor.state = 0;
-
-      if (!sensor.ledimage || this.sensorHandler.isElementRemoved(sensor.ledimage)) {
-        let imagename = "ledoff.png";
-        sensor.ledimage = this.context.paper.image(getImg(imagename), imgx, imgy, imgw, imgh);
-      }
-      if (!sensor.ledcolor || this.sensorHandler.isElementRemoved(sensor.ledcolor)) {
-        console.log('new ledcolor');
-        sensor.ledcolor = this.context.paper.circle();
-      }
-
-      sensor.ledimage.attr(sensorAttr);
-      sensor.ledcolor.attr(sensorAttr);
-      sensor.ledcolor.attr({});
-
-      sensor.ledcolor.attr({
-        "cx": imgx + imgw/2,
-        "cy": imgy + imgh*0.3,
-        "r": imgh*0.15,
-        fill: sensor.state ? `rgb(${sensor.state.join(',')})`: 'none',
-        stroke: 'none',
-        opacity: 0.5,
-      });
-
-      sensor.stateText = this.context.paper.text(state1x, state1y, `${sensor.state ? sensor.state.join(',') : ''  }`);
-
-      if ((!this.context.runner || !this.context.runner.isRunning())
-        && !this.context.offLineMode) {
-
-        this.sensorHandler.findSensorDefinition(sensor).setLiveState(sensor, sensor.state, function () {
-        });
-      }
-
-      if (!this.context.autoGrading && this.context.offLineMode) {
-        this.setSlider(sensor, juststate, imgx, imgy, imgw, imgh, 0, 255);
-      } else {
-        sensor.focusrect.click(() => {
-          this.sensorInConnectedModeError();
-        });
-
-        this.removeSlider(sensor);
-      }
-    } else if (sensor.type == "leddim") {
-      if (sensor.stateText)
-        sensor.stateText.remove();
-
-      if (sensor.state == null)
-        sensor.state = 0;
-
-      if (!sensor.ledoff || this.sensorHandler.isElementRemoved(sensor.ledoff)) {
-        sensor.ledoff = this.context.paper.image(getImg('ledoff.png'), imgx, imgy, imgw, imgh);
-      }
-
-      if (!sensor.ledon || this.sensorHandler.isElementRemoved(sensor.ledon)) {
-        let imagename = "ledon-";
-        if (sensor.subType)
-          imagename += sensor.subType;
-        else
-          imagename += "red";
-
-        imagename += ".png";
-        sensor.ledon = this.context.paper.image(getImg(imagename), imgx, imgy, imgw, imgh);
-      }
-
-      sensor.ledon.attr(sensorAttr);
-      sensor.ledoff.attr(sensorAttr);
-
-      sensor.stateText = this.context.paper.text(state1x, state1y, Math.round(100 * sensor.state) + '%');
-
-      if (sensor.state) {
-        sensor.ledon.attr({"opacity": fadeopacity});
-        sensor.ledoff.attr({"opacity": 0});
-      } else {
-        sensor.ledon.attr({"opacity": 0});
-        sensor.ledoff.attr({"opacity": fadeopacity});
-      }
-
-      if (typeof sensor.state == 'number') {
-        sensor.ledon.attr({"opacity": sensor.state * fadeopacity});
-        sensor.ledoff.attr({"opacity": fadeopacity});
-      }
-
-      if ((!this.context.runner || !this.context.runner.isRunning())
-        && !this.context.offLineMode) {
-
-        this.sensorHandler.findSensorDefinition(sensor).setLiveState(sensor, sensor.state, function () {
-        });
-      }
-
-      if (!this.context.autoGrading &&
-        (!this.context.runner || !this.context.runner.isRunning())) {
-        this.setSlider(sensor, juststate, imgx, imgy, imgw, imgh, 0, 1);
-      } else {
-        sensor.focusrect.click(() => {
-          this.sensorInConnectedModeError();
-        });
-
-        this.removeSlider(sensor);
-      }
-    } else if (sensor.type == "ledmatrix") {
-      if (sensor.stateText)
-        sensor.stateText.remove();
-
-      if (!sensor.state || !sensor.state.length)
-        sensor.state = [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]];
-
-      let ledmatrixOnAttr = {
-        "fill": "red",
-        "stroke": "darkgray"
-      };
-      let ledmatrixOffAttr = {
-        "fill": "lightgray",
-        "stroke": "darkgray"
-      };
-
-      if (!sensor.ledmatrix || this.sensorHandler.isElementRemoved(sensor.ledmatrix[0][0])) {
-        sensor.ledmatrix = [];
-        for (let i = 0; i < 5; i++) {
-          sensor.ledmatrix[i] = [];
-          for (let j = 0; j < 5; j++) {
-            sensor.ledmatrix[i][j] = this.context.paper.rect(imgx + (imgw / 5) * i, imgy + (imgh / 5) * j, imgw / 5, imgh / 5);
-            sensor.ledmatrix[i][j].attr(ledmatrixOffAttr);
-          }
-        }
-      }
-
-      for (let i = 0; i < 5; i++) {
-        for (let j = 0; j < 5; j++) {
-          if (sensor.state[i][j]) {
-            sensor.ledmatrix[i][j].attr(ledmatrixOnAttr);
-          } else {
-            sensor.ledmatrix[i][j].attr(ledmatrixOffAttr);
-          }
-        }
-      }
-
-      const ledMatrixListener = (imgx, imgy, imgw, imgh, sensor) => {
-        return (e) => {
-          let i = Math.floor((e.offsetX - imgx) / (imgw / 5));
-          let j = Math.floor((e.offsetY - imgy) / (imgh / 5));
-          sensor.state[i][j] = !sensor.state[i][j] ? 1 : 0;
-          this.sensorHandler.findSensorDefinition(sensor).setLiveState(sensor, sensor.state, () => {
-          });
-          this.drawSensor(sensor);
-        }
-      }
-
-      sensor.focusrect.unclick();
-      sensor.focusrect.click(ledMatrixListener(imgx, imgy, imgw, imgh, sensor));
-    } else if (sensor.type == "buzzer") {
-      if (typeof sensor.state == 'number' &&
-        sensor.state != 0 &&
-        sensor.state != 1) {
-        buzzerSound.start(sensor.name, sensor.state);
-      } else if (sensor.state) {
-        buzzerSound.start(sensor.name);
-      } else {
-        buzzerSound.stop(sensor.name);
-      }
-
-      if (!juststate) {
-        if (sensor.muteBtn) {
-          sensor.muteBtn.remove();
-        }
-
-
-        // let muteBtnSize = w * 0.15;
-        let muteBtnSize = imgw * 0.3;
-        sensor.muteBtn = this.context.paper.text(
-          imgx + imgw * 0.8,
-          imgy + imgh * 0.8,
-          buzzerSound.isMuted(sensor.name) ? "\uf6a9" : "\uf028"
-        );
-        sensor.muteBtn.node.style.fontWeight = "bold";
-        sensor.muteBtn.node.style.cursor = "default";
-        sensor.muteBtn.node.style.MozUserSelect = "none";
-        sensor.muteBtn.node.style.WebkitUserSelect = "none";
-        sensor.muteBtn.attr({
-          "font-size": muteBtnSize + "px",
-          fill: buzzerSound.isMuted(sensor.name) ? "lightgray" : "#468DDF",
-          "font-family": '"Font Awesome 5 Free"',
-          'text-anchor': 'start',
-          "cursor": "pointer"
-        });
-        let bbox = sensor.muteBtn.getBBox();
-
-        sensor.muteBtn.click(() => {
-          if (buzzerSound.isMuted(sensor.name)) {
-            buzzerSound.unmute(sensor.name)
-          } else {
-            buzzerSound.mute(sensor.name)
-          }
-          this.drawSensor(sensor);
-        });
-        sensor.muteBtn.toFront();
-      }
-
-
-      if (!sensor.buzzeron || this.sensorHandler.isElementRemoved(sensor.buzzeron))
-        sensor.buzzeron = this.context.paper.image(getImg('buzzer-ringing.png'), imgx, imgy, imgw, imgh);
-
-      if (!sensor.buzzeroff || this.sensorHandler.isElementRemoved(sensor.buzzeroff)) {
-        sensor.buzzeroff = this.context.paper.image(getImg('buzzer.png'), imgx, imgy, imgw, imgh);
-
-        sensor.focusrect.click(() => {
-          if (!this.context.autoGrading && (!this.context.runner || !this.context.runner.isRunning())) {
-            sensor.state = !sensor.state;
-            this.sensorHandler.warnClientSensorStateChanged(sensor);
-            this.drawSensor(sensor);
-          } else {
-            this.actuatorsInRunningModeError();
-          }
-        });
-      }
-
-      if (sensor.state) {
-        if (!sensor.buzzerInterval) {
-          sensor.buzzerInterval = setInterval(() => {
-
-            if (!sensor.removed) {
-              sensor.ringingState = !sensor.ringingState;
-              this.drawSensor(sensor, true, true);
-            } else {
-              clearInterval(sensor.buzzerInterval);
-            }
-
-          }, 100);
-        }
-      } else {
-        if (sensor.buzzerInterval) {
-          clearInterval(sensor.buzzerInterval);
-          sensor.buzzerInterval = null;
-          sensor.ringingState = null;
-        }
-      }
-      sensor.buzzeron.attr(sensorAttr);
-      sensor.buzzeroff.attr(sensorAttr);
-
-      let drawState = sensor.state;
-      if (sensor.ringingState != null)
-        drawState = sensor.ringingState;
-
-      if (drawState) {
-        sensor.buzzeron.attr({"opacity": fadeopacity});
-        sensor.buzzeroff.attr({"opacity": 0});
-
-
-      } else {
-        sensor.buzzeron.attr({"opacity": 0});
-        sensor.buzzeroff.attr({"opacity": fadeopacity});
-      }
-
-      if (sensor.stateText)
-        sensor.stateText.remove();
-
-      let stateText = this.sensorHandler.findSensorDefinition(sensor).getStateString(sensor.state);
-
-      sensor.stateText = this.context.paper.text(state1x, state1y, stateText);
-
-
-      if ((!this.context.runner || !this.context.runner.isRunning())
-        && !this.context.offLineMode) {
-
-        let setLiveState = this.sensorHandler.findSensorDefinition(sensor).setLiveState;
-
-        if (setLiveState) {
-          setLiveState(sensor, sensor.state, function () {
-          });
-        }
-      }
-
-    } else if (sensor.type == "button") {
-      if (sensor.stateText)
-        sensor.stateText.remove();
-
-      if (!sensor.buttonon || this.sensorHandler.isElementRemoved(sensor.buttonon))
-        sensor.buttonon = this.context.paper.image(getImg('buttonon.png'), imgx, imgy, imgw, imgh);
-
-      if (!sensor.buttonoff || this.sensorHandler.isElementRemoved(sensor.buttonoff))
-        sensor.buttonoff = this.context.paper.image(getImg('buttonoff.png'), imgx, imgy, imgw, imgh);
-
-      if (sensor.state == null)
-        sensor.state = false;
-
-      sensor.buttonon.attr(sensorAttr);
-      sensor.buttonoff.attr(sensorAttr);
-
-      if (sensor.state) {
-        sensor.buttonon.attr({"opacity": fadeopacity});
-        sensor.buttonoff.attr({"opacity": 0});
-
-        sensor.stateText = this.context.paper.text(state1x, state1y, this.strings.messages.on.toUpperCase());
-      } else {
-        sensor.buttonon.attr({"opacity": 0});
-        sensor.buttonoff.attr({"opacity": fadeopacity});
-
-        sensor.stateText = this.context.paper.text(state1x, state1y, this.strings.messages.off.toUpperCase());
-      }
-
-      if (!this.context.autoGrading && !sensor.buttonon.node.onmousedown) {
-        sensor.focusrect.node.onmousedown = () => {
-          if (this.context.offLineMode) {
-            sensor.state = true;
-            this.sensorHandler.warnClientSensorStateChanged(sensor);
-            this.drawSensor(sensor);
-          } else
-            this.sensorInConnectedModeError();
-        };
-
-
-        sensor.focusrect.node.onmouseup = () => {
-          if (this.context.offLineMode) {
-            sensor.state = false;
-            sensor.wasPressed = true;
-            this.sensorHandler.warnClientSensorStateChanged(sensor);
-            this.drawSensor(sensor);
-
-            if (sensor.onPressed)
-              sensor.onPressed();
-          } else
-            this.sensorInConnectedModeError();
-        }
-
-        sensor.focusrect.node.ontouchstart = sensor.focusrect.node.onmousedown;
-        sensor.focusrect.node.ontouchend = sensor.focusrect.node.onmouseup;
-      }
-    } else if (sensor.type == "galaxia") {
+    if (sensor.type == "galaxia") {
       if (sensor.stateText)
         sensor.stateText.remove();
 
@@ -627,112 +311,6 @@ export class SensorDrawer {
 
         // sensor.focusrect.node.ontouchstart = sensor.focusrect.node.onmousedown;
         // sensor.focusrect.node.ontouchend = sensor.focusrect.node.onmouseup;
-      }
-    } else if (sensor.type == "screen") {
-      if (sensor.stateText) {
-        sensor.stateText.remove();
-        sensor.stateText = null;
-      }
-
-      let borderSize = 5;
-
-      let screenScale = 1.5;
-      if (w < 300) {
-        screenScale = 1;
-      }
-      if (w < 150) {
-        screenScale = 0.5;
-      }
-      // console.log(screenScale,w,h)
-
-      let screenScalerSize = {
-        width: 128 * screenScale,
-        height: 32 * screenScale
-      }
-      borderSize = borderSize * screenScale;
-
-      imgw = screenScalerSize.width + borderSize * 2;
-      imgh = screenScalerSize.height + borderSize * 2;
-      imgx = x - (imgw / 2) + (w / 2);
-
-      imgy = y + (h - imgh) / 2 + h * 0.05;
-
-      portx = imgx + imgw + borderSize;
-      porty = imgy + imgh / 3;
-
-      statesize = imgh / 3.5;
-
-      if (!sensor.img || this.sensorHandler.isElementRemoved(sensor.img)) {
-        sensor.img = this.context.paper.image(getImg('screen.png'), imgx, imgy, imgw, imgh);
-      }
-
-      sensor.img.attr({
-        "x": imgx,
-        "y": imgy,
-        "width": imgw,
-        "height": imgh,
-        "opacity": fadeopacity,
-      });
-
-      if (sensor.state) {
-        if (sensor.state.isDrawingData) {
-          if (!sensor.screenrect ||
-            this.sensorHandler.isElementRemoved(sensor.screenrect) ||
-            !sensor.canvasNode) {
-            sensor.screenrect = this.context.paper.rect(imgx, imgy, screenScalerSize.width, screenScalerSize.height);
-
-            sensor.canvasNode = document.createElementNS("http://www.w3.org/2000/svg", 'foreignObject');
-            sensor.canvasNode.setAttribute("x", imgx + borderSize); //Set rect data
-            sensor.canvasNode.setAttribute("y", imgy + borderSize); //Set rect data
-            sensor.canvasNode.setAttribute("width", screenScalerSize.width); //Set rect data
-            sensor.canvasNode.setAttribute("height", screenScalerSize.height); //Set rect data
-            this.context.paper.canvas.appendChild(sensor.canvasNode);
-
-            sensor.canvas = document.createElement("canvas");
-            sensor.canvas.id = "screencanvas";
-            sensor.canvas.width = screenScalerSize.width;
-            sensor.canvas.height = screenScalerSize.height;
-            sensor.canvasNode.appendChild(sensor.canvas);
-          }
-
-          $(sensor.canvas).css({opacity: fadeopacity});
-          sensor.canvasNode.setAttribute("x", imgx + borderSize); //Set rect data
-          sensor.canvasNode.setAttribute("y", imgy + borderSize); //Set rect data
-          sensor.canvasNode.setAttribute("width", screenScalerSize.width); //Set rect data
-          sensor.canvasNode.setAttribute("height", screenScalerSize.height); //Set rect data
-
-          sensor.screenrect.attr({
-            "x": imgx + borderSize,
-            "y": imgy + borderSize,
-            "width": 128,
-            "height": 32,
-          });
-
-          sensor.screenrect.attr({"opacity": 0});
-
-          this.context.quickpi.initScreenDrawing(sensor);
-          //sensor.screenDrawing.copyToCanvas(sensor.canvas, screenScale);
-          screenDrawing.renderToCanvas(sensor.state, sensor.canvas, screenScale);
-        } else {
-          let statex = imgx + (imgw * .05);
-
-          let statey = imgy + (imgh * .2);
-
-          if (sensor.state.line1.length > 16)
-            sensor.state.line1 = sensor.state.line1.substring(0, 16);
-
-          if (sensor.state.line2 && sensor.state.line2.length > 16)
-            sensor.state.line2 = sensor.state.line2.substring(0, 16);
-
-          if (sensor.canvasNode) {
-            $(sensor.canvasNode).remove();
-            sensor.canvasNode = null;
-          }
-
-          sensor.stateText = this.context.paper.text(statex, statey, sensor.state.line1 + "\n" + (sensor.state.line2 ? sensor.state.line2 : ""));
-          stateanchor = "start";
-          sensor.stateText.attr("")
-        }
       }
     } else if (sensor.type == "temperature") {
       if (sensor.stateText)
@@ -798,75 +376,6 @@ export class SensorDrawer {
         this.removeSlider(sensor);
       }
 
-    } else if (sensor.type == "servo") {
-      if (sensor.stateText)
-        sensor.stateText.remove();
-
-      if (!sensor.img || this.sensorHandler.isElementRemoved(sensor.img))
-        sensor.img = this.context.paper.image(getImg('servo.png'), imgx, imgy, imgw, imgh);
-
-      if (!sensor.pale || this.sensorHandler.isElementRemoved(sensor.pale))
-        sensor.pale = this.context.paper.image(getImg('servo-pale.png'), imgx, imgy, imgw, imgh);
-
-
-      if (!sensor.center || this.sensorHandler.isElementRemoved(sensor.center))
-        sensor.center = this.context.paper.image(getImg('servo-center.png'), imgx, imgy, imgw, imgh);
-
-      sensor.img.attr({
-        "x": imgx,
-        "y": imgy,
-        "width": imgw,
-        "height": imgh,
-        "opacity": fadeopacity,
-      });
-      sensor.pale.attr({
-        "x": imgx,
-        "y": imgy,
-        "width": imgw,
-        "height": imgh,
-        "transform": "",
-        "opacity": fadeopacity,
-      });
-      sensor.center.attr({
-        "x": imgx,
-        "y": imgy,
-        "width": imgw,
-        "height": imgh,
-        "opacity": fadeopacity,
-      });
-
-      sensor.pale.rotate(sensor.state);
-
-      if (sensor.state == null)
-        sensor.state = 0;
-
-      sensor.state = Math.round(sensor.state);
-
-      sensor.stateText = this.context.paper.text(state1x, state1y, sensor.state + "°");
-
-      if ((!this.context.runner || !this.context.runner.isRunning())
-        && !this.context.offLineMode) {
-        if (!sensor.updatetimeout) {
-          sensor.updatetimeout = setTimeout(() => {
-
-            this.sensorHandler.findSensorDefinition(sensor).setLiveState(sensor, sensor.state, function () {
-            });
-
-            sensor.updatetimeout = null;
-          }, 100);
-        }
-      }
-
-      if (!this.context.autoGrading &&
-        (!this.context.runner || !this.context.runner.isRunning())) {
-        this.setSlider(sensor, juststate, imgx, imgy, imgw, imgh, 0, 180);
-      } else {
-        sensor.focusrect.click(() => {
-          this.sensorInConnectedModeError();
-        });
-
-        this.removeSlider(sensor);
-      }
     } else if (sensor.type == "potentiometer") {
       if (sensor.stateText)
         sensor.stateText.remove();
@@ -1307,126 +816,6 @@ export class SensorDrawer {
         this.removeSlider(sensor);
       }
 
-    } else if (sensor.type == "irtrans") {
-      if (sensor.stateText)
-        sensor.stateText.remove();
-
-      if (!sensor.ledon || this.sensorHandler.isElementRemoved(sensor.ledon)) {
-        sensor.ledon = this.context.paper.image(getImg("irtranson.png"), imgx, imgy, imgw, imgh);
-      }
-
-      if (!sensor.ledoff || this.sensorHandler.isElementRemoved(sensor.ledoff)) {
-        sensor.ledoff = this.context.paper.image(getImg('irtransoff.png'), imgx, imgy, imgw, imgh);
-
-        sensor.focusrect.click(() => {
-          if (!this.context.autoGrading && (!this.context.runner || !this.context.runner.isRunning())
-            && !this.context.offLineMode) {
-            //sensor.state = !sensor.state;
-            //this.drawSensor(sensor);
-            window.displayHelper.showPopupDialog(irRemoteDialog, () => {
-              $('#picancel').click(() => {
-                $('#popupMessage').hide();
-                window.displayHelper.popupMessageShown = false;
-              });
-
-              $('#picancel2').click(() => {
-                $('#popupMessage').hide();
-                window.displayHelper.popupMessageShown = false;
-              });
-
-              let addedSomeButtons = false;
-              let remotecontent = document.getElementById('piremotecontent');
-              let parentdiv = document.createElement("DIV");
-              parentdiv.className = "form-group";
-
-              remotecontent.appendChild(parentdiv);
-              let count = 0;
-              for (let code in this.context.remoteIRcodes) {
-                addedSomeButtons = true;
-                this.context.remoteIRcodes[code];
-
-                let btn = document.createElement("BUTTON");
-                let t = document.createTextNode(code);
-
-                btn.className = "btn";
-                btn.appendChild(t);
-                parentdiv.appendChild(btn);
-
-                let capturedcode = code;
-                let captureddata = this.context.remoteIRcodes[code];
-                btn.onclick = () => {
-                  $('#popupMessage').hide();
-                  window.displayHelper.popupMessageShown = false;
-
-                  //if (sensor.waitingForIrMessage)
-                  //sensor.waitingForIrMessage(capturedcode);
-
-                  this.context.quickPiConnection.sendCommand("presetIRMessage(\"" + capturedcode + "\", '" + captureddata + "')", function (returnVal) {
-                  });
-                  this.context.quickPiConnection.sendCommand("sendIRMessage(\"irtran1\", \"" + capturedcode + "\")", function (returnVal) {
-                  });
-
-                };
-
-                count += 1;
-
-                if (count == 4) {
-                  count = 0;
-                  parentdiv = document.createElement("DIV");
-                  parentdiv.className = "form-group";
-                  remotecontent.appendChild(parentdiv);
-                }
-              }
-              if (!addedSomeButtons) {
-                $('#piremotemessage').text(this.strings.messages.noIrPresets);
-              }
-
-              let btn = document.createElement("BUTTON");
-              let t = document.createTextNode(this.strings.messages.irEnableContinous);
-              if (sensor.state) {
-                t = document.createTextNode(this.strings.messages.irDisableContinous);
-              }
-
-              btn.className = "btn";
-              btn.appendChild(t);
-              parentdiv.appendChild(btn);
-              btn.onclick = () => {
-                $('#popupMessage').hide();
-                window.displayHelper.popupMessageShown = false;
-
-                sensor.state = !sensor.state;
-                this.sensorHandler.warnClientSensorStateChanged(sensor);
-                this.drawSensor(sensor);
-              };
-            });
-          } else {
-            this.actuatorsInRunningModeError();
-          }
-        });
-      }
-
-      sensor.ledon.attr(sensorAttr);
-      sensor.ledoff.attr(sensorAttr);
-
-      if (sensor.state) {
-        sensor.ledon.attr({"opacity": fadeopacity});
-        sensor.ledoff.attr({"opacity": 0});
-
-        sensor.stateText = this.context.paper.text(state1x, state1y, this.strings.messages.on.toUpperCase());
-      } else {
-        sensor.ledon.attr({"opacity": 0});
-        sensor.ledoff.attr({"opacity": fadeopacity});
-
-        sensor.stateText = this.context.paper.text(state1x, state1y, this.strings.messages.off.toUpperCase());
-      }
-
-
-      if ((!this.context.runner || !this.context.runner.isRunning())
-        && !this.context.offLineMode) {
-
-        this.sensorHandler.findSensorDefinition(sensor).setLiveState(sensor, sensor.state, function () {
-        });
-      }
     } else if (sensor.type == "irrecv") {
       if (sensor.stateText)
         sensor.stateText.remove();
@@ -1602,305 +991,6 @@ export class SensorDrawer {
                       sensor.focusrect.node.ontouchstart = sensor.focusrect.node.onmousedown;
                       sensor.focusrect.node.ontouchend = sensor.focusrect.node.onmouseup;
                   }*/
-    } else if (sensor.type == "stick") {
-      if (sensor.stateText)
-        sensor.stateText.remove();
-
-      if (!sensor.img || this.sensorHandler.isElementRemoved(sensor.img))
-        sensor.img = this.context.paper.image(getImg('stick.png'), imgx, imgy, imgw, imgh);
-
-      if (!sensor.imgup || this.sensorHandler.isElementRemoved(sensor.imgup))
-        sensor.imgup = this.context.paper.image(getImg('stickup.png'), imgx, imgy, imgw, imgh);
-
-      if (!sensor.imgdown || this.sensorHandler.isElementRemoved(sensor.imgdown))
-        sensor.imgdown = this.context.paper.image(getImg('stickdown.png'), imgx, imgy, imgw, imgh);
-
-      if (!sensor.imgleft || this.sensorHandler.isElementRemoved(sensor.imgleft))
-        sensor.imgleft = this.context.paper.image(getImg('stickleft.png'), imgx, imgy, imgw, imgh);
-
-      if (!sensor.imgright || this.sensorHandler.isElementRemoved(sensor.imgright))
-        sensor.imgright = this.context.paper.image(getImg('stickright.png'), imgx, imgy, imgw, imgh);
-
-      if (!sensor.imgcenter || this.sensorHandler.isElementRemoved(sensor.imgcenter))
-        sensor.imgcenter = this.context.paper.image(getImg('stickcenter.png'), imgx, imgy, imgw, imgh);
-
-      let a = {
-        "x": imgx,
-        "y": imgy,
-        "width": imgw,
-        "height": imgh,
-        "opacity": 0,
-      };
-      sensor.img.attr(a).attr("opacity", fadeopacity);
-
-      sensor.imgup.attr(a);
-      sensor.imgdown.attr(a);
-      sensor.imgleft.attr(a);
-      sensor.imgright.attr(a);
-      sensor.imgcenter.attr(a);
-
-      if (sensor.stateText)
-        sensor.stateText.remove();
-
-      if (!sensor.state)
-        sensor.state = [false, false, false, false, false];
-
-      // let stateString = "\n";
-      let stateString = "";
-      let click = false;
-      if (sensor.state[0]) {
-        stateString += this.strings.messages.up.toUpperCase() + "\n";
-        sensor.imgup.attr({"opacity": 1});
-        click = true;
-      }
-      if (sensor.state[1]) {
-        stateString += this.strings.messages.down.toUpperCase() + "\n";
-        sensor.imgdown.attr({"opacity": 1});
-        click = true;
-      }
-      if (sensor.state[2]) {
-        stateString += this.strings.messages.left.toUpperCase() + "\n";
-        sensor.imgleft.attr({"opacity": 1});
-        click = true;
-      }
-      if (sensor.state[3]) {
-        stateString += this.strings.messages.right.toUpperCase() + "\n";
-        sensor.imgright.attr({"opacity": 1});
-        click = true;
-      }
-      if (sensor.state[4]) {
-        stateString += this.strings.messages.center.toUpperCase() + "\n";
-        sensor.imgcenter.attr({"opacity": 1});
-        click = true;
-      }
-      if (!click) {
-        stateString += "...";
-      }
-
-      sensor.stateText = this.context.paper.text(state1x, state1y, stateString);
-
-      if (sensor.portText)
-        sensor.portText.remove();
-
-      drawPortText = false;
-
-      if (sensor.portText)
-        sensor.portText.remove();
-
-      if (!this.context.autoGrading) {
-        let gpios = this.sensorHandler.findSensorDefinition(sensor).gpios;
-        let min = 255;
-        let max = 0;
-
-        for (let i = 0; i < gpios.length; i++) {
-          if (gpios[i] > max)
-            max = gpios[i];
-
-          if (gpios[i] < min)
-            min = gpios[i];
-        }
-
-
-        $('#stickupstate').text(sensor.state[0] ? this.strings.messages.on.toUpperCase() : this.strings.messages.off.toUpperCase());
-        $('#stickdownstate').text(sensor.state[1] ? this.strings.messages.on.toUpperCase() : this.strings.messages.off.toUpperCase());
-        $('#stickleftstate').text(sensor.state[2] ? this.strings.messages.on.toUpperCase() : this.strings.messages.off.toUpperCase());
-        $('#stickrightstate').text(sensor.state[3] ? this.strings.messages.on.toUpperCase() : this.strings.messages.off.toUpperCase());
-        $('#stickcenterstate').text(sensor.state[4] ? this.strings.messages.on.toUpperCase() : this.strings.messages.off.toUpperCase());
-
-        /*
-                        sensor.portText = this.context.paper.text(state1x, state1y, "D" + min.toString() + "-D" + max.toString() + "?");
-                        sensor.portText.attr({ "font-size": portsize + "px", 'text-anchor': 'start', fill: "blue" });
-                        sensor.portText.node.style = "-moz-user-select: none; -webkit-user-select: none;";
-                        let b = sensor.portText._getBBox();
-                        sensor.portText.translate(0, b.height / 2);
-
-                        let stickPortsDialog = `
-                        <div class="content qpi">
-                        <div class="panel-heading">
-                            <h2 class="sectionTitle">
-                                <span class="iconTag"><i class="icon fas fa-list-ul"></i></span>
-                                Noms et ports de la manette
-                            </h2>
-                            <div class="exit" id="picancel"><i class="icon fas fa-times"></i></div>
-                        </div>
-                        <div id="sensorPicker" class="panel-body">
-                            <label></label>
-                            <div class="flex-container">
-                            <table style="display:table-header-group;">
-                            <tr>
-                            <th>Name</th>
-                            <th>Port</th>
-                            <th>State</th>
-                            <th>Direction</th>
-                            </tr>
-                            <tr>
-                            <td><label id="stickupname"></td><td><label id="stickupport"></td><td><label id="stickupstate"></td><td><label id="stickupdirection"><i class="fas fa-arrow-up"></i></td>
-                            </tr>
-                            <tr>
-                            <td><label id="stickdownname"></td><td><label id="stickdownport"></td><td><label id="stickdownstate"></td><td><label id="stickdowndirection"><i class="fas fa-arrow-down"></i></td>
-                            </tr>
-                            <tr>
-                            <td><label id="stickleftname"></td><td><label id="stickleftport"></td><td><label id="stickleftstate"></td><td><label id="stickleftdirection"><i class="fas fa-arrow-left"></i></td>
-                            </tr>
-                            <tr>
-                            <td><label id="stickrightname"></td><td><label id="stickrightport"></td><td><label id="stickrightstate"></td><td><label id="stickrightdirection"><i class="fas fa-arrow-right"></i></td>
-                            </tr>
-                            <tr>
-                            <td><label id="stickcentername"></td><td><label id="stickcenterport"></td><td><label id="stickcenterstate"></td><td><label id="stickcenterdirection"><i class="fas fa-circle"></i></td>
-                            </tr>
-                            </table>
-                            </div>
-                        </div>
-                        <div class="singleButton">
-                            <button id="picancel2" class="btn btn-centered"><i class="icon fa fa-check"></i>Fermer</button>
-                        </div>
-                    </div>
-                        `;
-
-                        sensor.portText.click(() => {
-                            window.displayHelper.showPopupDialog(stickPortsDialog);
-
-                            $('#picancel').click(() => {
-                                $('#popupMessage').hide();
-                                window.displayHelper.popupMessageShown = false;
-                            });
-
-                            $('#picancel2').click(() => {
-                                $('#popupMessage').hide();
-                                window.displayHelper.popupMessageShown = false;
-                            });
-
-                            $('#stickupname').text(sensor.name + ".up");
-                            $('#stickdownname').text(sensor.name + ".down");
-                            $('#stickleftname').text(sensor.name + ".left");
-                            $('#stickrightname').text(sensor.name + ".right");
-                            $('#stickcentername').text(sensor.name + ".center");
-
-                            $('#stickupport').text("D" + gpios[0]);
-                            $('#stickdownport').text("D" + gpios[1]);
-                            $('#stickleftport').text("D" + gpios[2]);
-                            $('#stickrightport').text("D" + gpios[3]);
-                            $('#stickcenterport').text("D" + gpios[4]);
-
-                            $('#stickupstate').text(sensor.state[0] ? "ON" : "OFF");
-                            $('#stickdownstate').text(sensor.state[1] ? "ON" : "OFF");
-                            $('#stickleftstate').text(sensor.state[2] ? "ON" : "OFF");
-                            $('#stickrightstate').text(sensor.state[3] ? "ON" : "OFF");
-                            $('#stickcenterstate').text(sensor.state[4] ? "ON" : "OFF");
-
-                        });
-                        */
-      }
-
-
-      function poinInRect(rect, x, y) {
-
-        if (x > rect.left && x < rect.right && y > rect.top && y < rect.bottom)
-          return true;
-
-        return false;
-      }
-
-      function moveRect(rect, x, y) {
-        rect.left += x;
-        rect.right += x;
-
-        rect.top += y;
-        rect.bottom += y;
-      }
-
-      sensor.focusrect.node.onmousedown = (evt) => {
-        if (!this.context.offLineMode) {
-          this.sensorInConnectedModeError();
-          return;
-        }
-
-        let e = evt.target;
-        let dim = e.getBoundingClientRect();
-        let rectsize = dim.width * .30;
-
-
-        let rect = {
-          left: dim.left,
-          right: dim.left + rectsize,
-          top: dim.top,
-          bottom: dim.top + rectsize,
-        }
-
-        // Up left
-        if (poinInRect(rect, evt.clientX, evt.clientY)) {
-          sensor.state[0] = true;
-          sensor.state[2] = true;
-        }
-
-        // Up
-        moveRect(rect, rectsize, 0);
-        if (poinInRect(rect, evt.clientX, evt.clientY)) {
-          sensor.state[0] = true;
-        }
-
-        // Up right
-        moveRect(rect, rectsize, 0);
-        if (poinInRect(rect, evt.clientX, evt.clientY)) {
-          sensor.state[0] = true;
-          sensor.state[3] = true;
-        }
-
-        // Right
-        moveRect(rect, 0, rectsize);
-        if (poinInRect(rect, evt.clientX, evt.clientY)) {
-          sensor.state[3] = true;
-        }
-
-        // Center
-        moveRect(rect, -rectsize, 0);
-        if (poinInRect(rect, evt.clientX, evt.clientY)) {
-          sensor.state[4] = true;
-        }
-
-        // Left
-        moveRect(rect, -rectsize, 0);
-        if (poinInRect(rect, evt.clientX, evt.clientY)) {
-          sensor.state[2] = true;
-        }
-
-        // Down left
-        moveRect(rect, 0, rectsize);
-        if (poinInRect(rect, evt.clientX, evt.clientY)) {
-          sensor.state[1] = true;
-          sensor.state[2] = true;
-        }
-
-        // Down
-        moveRect(rect, rectsize, 0);
-        if (poinInRect(rect, evt.clientX, evt.clientY)) {
-          sensor.state[1] = true;
-        }
-
-        // Down right
-        moveRect(rect, rectsize, 0);
-        if (poinInRect(rect, evt.clientX, evt.clientY)) {
-          sensor.state[1] = true;
-          sensor.state[3] = true;
-        }
-
-        this.sensorHandler.warnClientSensorStateChanged(sensor);
-        this.drawSensor(sensor);
-      }
-
-      sensor.focusrect.node.onmouseup = (evt) => {
-        if (!this.context.offLineMode) {
-          this.sensorInConnectedModeError();
-          return;
-        }
-
-        sensor.state = [false, false, false, false, false];
-        this.sensorHandler.warnClientSensorStateChanged(sensor);
-        this.drawSensor(sensor);
-      }
-
-      sensor.focusrect.node.ontouchstart = sensor.focusrect.node.onmousedown;
-      sensor.focusrect.node.ontouchend = sensor.focusrect.node.onmouseup;
     } else if (sensor.type == "cloudstore") {
       if (!sensor.img || this.sensorHandler.isElementRemoved(sensor.img))
         sensor.img = this.context.paper.image(getImg('cloudstore.png'), imgx, imgy, imgw, imgh);
@@ -1993,9 +1083,9 @@ export class SensorDrawer {
         //     statecolor = "black";
         // console.log(statesize)
         sensor.stateText.attr({
-          "font-size": statesize,
-          'text-anchor': stateanchor,
-          'font-weight': fontWeight,
+          "font-size": drawParameters.statesize,
+          'text-anchor': drawParameters.stateanchor,
+          'font-weight': drawParameters.fontWeight,
           fill: statecolor
         });
         // let b = sensor.stateText._getBBox();
@@ -2010,7 +1100,7 @@ export class SensorDrawer {
       if (sensor.portText)
         sensor.portText.remove();
 
-      sensor.portText = this.context.paper.text(portx, porty, sensor.port);
+      sensor.portText = this.context.paper.text(drawParameters.portx, drawParameters.porty, sensor.port);
       sensor.portText.attr({"font-size": portsize + "px", 'text-anchor': 'start', fill: "gray"});
       sensor.portText.node.style = "-moz-user-select: none; -webkit-user-select: none;";
       let b = sensor.portText._getBBox();
@@ -2028,22 +1118,22 @@ export class SensorDrawer {
         if (this.context.useportforname)
           sensorId = sensor.port;
 
-        sensor.nameText = this.context.paper.text(namex, namey, sensorId);
+        sensor.nameText = this.context.paper.text(drawParameters.namex, drawParameters.namey, sensorId);
         // sensor.nameText = this.context.paper.text(namex, namey, sensor.name );
         sensor.nameText.attr({
-          "font-size": namesize,
-          "font-weight": fontWeight,
-          'text-anchor': nameanchor,
+          "font-size": drawParameters.namesize,
+          "font-weight": drawParameters.fontWeight,
+          'text-anchor': drawParameters.nameanchor,
           fill: "#7B7B7B"
         });
         sensor.nameText.node.style = "-moz-user-select: none; -webkit-user-select: none;";
         let bbox = sensor.nameText.getBBox();
         if (bbox.width > w - 20) {
-          namesize = namesize * (w - 20) / bbox.width;
-          namey += namesize * (1 - (w - 20) / bbox.width);
+          drawParameters.namesize = drawParameters.namesize * (w - 20) / bbox.width;
+          drawParameters.namey += drawParameters.namesize * (1 - (w - 20) / bbox.width);
           sensor.nameText.attr({
-            "font-size": namesize,
-            y: namey
+            "font-size": drawParameters.namesize,
+            y: drawParameters.namey
           });
         }
       }

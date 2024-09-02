@@ -27,6 +27,10 @@ export class SensorHandler {
     return this.sensorDefinitions;
   }
 
+  getSensorDrawer(): SensorDrawer {
+    return this.sensorDrawer;
+  }
+
   getNewSensorSuggestedName(name) {
     let maxvalue = 0;
 
@@ -46,7 +50,7 @@ export class SensorHandler {
   }
 
   findSensorDefinition(sensor: Sensor): SensorDefinition {
-    console.log(sensor)
+    console.log(sensor, this.sensorDefinitions);
     let sensorDef = null;
     for (let iType = 0; iType < this.sensorDefinitions.length; iType++) {
       let type = this.sensorDefinitions[iType];

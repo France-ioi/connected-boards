@@ -791,8 +791,8 @@ var getContext = function (display, infos, curLevel) {
         for (let sensor of context.sensorsList.all()) {
             // Set initial state
             var sensorDef = sensorHandler.findSensorDefinition(sensor);
-            if(sensorDef && !sensorDef.isSensor && sensorDef.getInitialState) {
-                var initialState = sensorDef.getInitialState(sensor);
+            if(sensorDef && !sensorDef.isSensor && sensor.getInitialState) {
+                var initialState = sensor.getInitialState();
                 if (initialState != null)
                     context.registerQuickPiEvent(sensor.name, initialState, true, true);
             }
@@ -834,12 +834,12 @@ var getContext = function (display, infos, curLevel) {
     };
 
     function updateLiveSensor(sensor) {
-        if (sensorHandler.findSensorDefinition(sensor).isSensor && sensorHandler.findSensorDefinition(sensor).getLiveState) {
+        if (sensorHandler.findSensorDefinition(sensor).isSensor && sensor.getLiveState) {
             context.liveUpdateCount++;
 
             //console.log("updateLiveSensor " + sensor.name, context.liveUpdateCount);
 
-            sensorHandler.findSensorDefinition(sensor).getLiveState(sensor, function (returnVal) {
+            sensor.getLiveState(function (returnVal) {
                 context.liveUpdateCount--;
 
                 //console.log("updateLiveSensor callback" + sensor.name, context.liveUpdateCount);
