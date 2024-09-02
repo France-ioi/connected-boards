@@ -1,22 +1,12 @@
-import {getImg, textEllipsis} from "../../util";
-import {buzzerSound} from "./buzzer_sound";
-import {gyroscope3D} from "./gyroscope3d";
 import {SensorHandler} from "./sensor_handler";
-import {screenDrawing} from "./screen";
-import {createSensor} from "../sensor_factory";
-import {QuickalgoLibrary} from "../../definitions";
+import {QuickalgoLibrary, SensorDefinition} from "../../definitions";
 import {SensorDrawParameters} from "../abstract_sensor";
-
-const colors = {
-  blue: "#4a90e2",
-  orange: "#f5a623"
-}
 
 export class SensorDrawer {
   private context: QuickalgoLibrary;
   private strings;
   private sensorHandler: SensorHandler;
-  private sensorDefinitions;
+  private sensorDefinitions: SensorDefinition[];
 
   constructor(context, strings, sensorDefinitions, sensorHandler) {
     this.context = context;

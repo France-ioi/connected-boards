@@ -9,7 +9,6 @@ export function ujsonModuleDefinition(context: any, strings): ModuleDefinition {
     },
     blockImplementations: {
       dumps: function (params, callback) {
-        console.log('param', {params, callback})
         const serialized = JSON.stringify(params);
         context.waitDelay(callback, serialized);
       },

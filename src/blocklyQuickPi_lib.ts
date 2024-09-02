@@ -1060,7 +1060,7 @@ var getContext = function (display, infos, curLevel) {
 
             var color = true;
 
-            for (let sensor of context.sensorsList.all()) {
+            for (let [iSensor, sensor] of context.sensorsList.all().entries()) {
                 sensor.drawInfo = {
                     x: 0,
                     y: 10 + (context.timeLineSlotHeight * iSensor),
@@ -1091,8 +1091,8 @@ var getContext = function (display, infos, curLevel) {
                     var lastState = null;
                     sensor.lastAnalogState = null;
 
-                    for (var iState = 0; iState < states.length; iState++) {
-                        var state = states[iState];
+                    for (let iState = 0; iState < states.length; iState++) {
+                        let state = states[iState];
 
                         drawSensorTimeLineState(sensor, lastState, startTime, state.time, "expected", true);
 

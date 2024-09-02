@@ -61,7 +61,6 @@ export class SensorLedRgb extends AbstractSensor {
       this.ledimage = this.context.paper.image(getImg(imagename), imgx, imgy, imgw, imgh);
     }
     if (!this.ledcolor || sensorHandler.isElementRemoved(this.ledcolor)) {
-      console.log('new ledcolor');
       this.ledcolor = this.context.paper.circle();
     }
 

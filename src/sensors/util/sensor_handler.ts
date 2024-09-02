@@ -1,4 +1,3 @@
-import {getSensorDefinitions} from "./sensor_definitions";
 import {SensorDrawer} from "./sensor_drawer";
 import {Sensor, SensorDefinition} from "../../definitions";
 import {sensorsList} from "../sensor_factory";
@@ -12,14 +11,7 @@ export class SensorHandler {
   constructor(context, strings) {
     this.context = context;
     this.strings = strings;
-    console.log('construct');
-    const otherDefinitions = Object.values(sensorsList).map(a => a.getDefinition(this.context, this.strings));
-
-    this.sensorDefinitions = [
-      ...getSensorDefinitions(context, strings),
-      ...otherDefinitions,
-    ];
-
+    this.sensorDefinitions = Object.values(sensorsList).map(a => a.getDefinition(this.context, this.strings));
     this.sensorDrawer = new SensorDrawer(context, strings, this.sensorDefinitions, this);
   }
 
@@ -50,7 +42,6 @@ export class SensorHandler {
   }
 
   findSensorDefinition(sensor: Sensor): SensorDefinition {
-    console.log(sensor, this.sensorDefinitions);
     let sensorDef = null;
     for (let iType = 0; iType < this.sensorDefinitions.length; iType++) {
       let type = this.sensorDefinitions[iType];
