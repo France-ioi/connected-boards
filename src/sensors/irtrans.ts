@@ -27,7 +27,7 @@ export function generateIrRemoteDialog(strings: any) {
 export class SensorIrTrans extends AbstractSensor {
   private ledon: any;
   private ledoff: any;
-  protected type = 'irtrans';
+  public type = 'irtrans';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

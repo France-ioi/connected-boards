@@ -1090,9 +1090,10 @@ var getContext = function (display, infos, curLevel) {
                     var startTime = 0;
                     var lastState = null;
                     sensor.lastAnalogState = null;
+                    let state;
 
                     for (let iState = 0; iState < states.length; iState++) {
-                        let state = states[iState];
+                        state = states[iState];
 
                         drawSensorTimeLineState(sensor, lastState, startTime, state.time, "expected", true);
 

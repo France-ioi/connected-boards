@@ -6,7 +6,7 @@ import {getImg} from "../util";
 export class SensorTemperature extends AbstractSensor {
   private img2: any;
   private img3: any;
-  protected type = 'temperature';
+  public type = 'temperature';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

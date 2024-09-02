@@ -8,7 +8,7 @@ export class SensorIrRecv extends AbstractSensor {
   private buttonon: any;
   private buttonoff: any;
   private waitingForIrMessage: (code: string) => void;
-  protected type = 'irrecv';
+  public type = 'irrecv';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

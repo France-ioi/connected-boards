@@ -8,7 +8,7 @@ export class SensorScreen extends AbstractSensor {
   private screenrect: any;
   private canvasNode: any;
   private canvas: any;
-  protected type = 'screen';
+  public type = 'screen';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

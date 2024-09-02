@@ -7,7 +7,7 @@ export class SensorServo extends AbstractSensor {
   private pale: any;
   private center: any;
   private updatetimeout: any;
-  protected type = 'servo';
+  public type = 'servo';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

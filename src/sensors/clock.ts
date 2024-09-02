@@ -4,7 +4,7 @@ import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
 
 export class SensorClock extends AbstractSensor {
-  protected type = 'clock';
+  public type = 'clock';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

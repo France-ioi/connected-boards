@@ -1,6 +1,7 @@
 import {SensorDrawer} from "./sensor_drawer";
 import {Sensor, SensorDefinition} from "../../definitions";
 import {sensorsList} from "../sensor_factory";
+import {AbstractSensor} from "../abstract_sensor";
 
 export class SensorHandler {
   private context;
@@ -41,7 +42,7 @@ export class SensorHandler {
     return name + (maxvalue + 1);
   }
 
-  findSensorDefinition(sensor: Sensor): SensorDefinition {
+  findSensorDefinition(sensor: AbstractSensor): SensorDefinition {
     let sensorDef = null;
     for (let iType = 0; iType < this.sensorDefinitions.length; iType++) {
       let type = this.sensorDefinitions[iType];
@@ -88,7 +89,7 @@ export class SensorHandler {
     return false;
   }
 
-  findSensorByName(name, error=false): Sensor|null {
+  findSensorByName(name, error=false): AbstractSensor|null {
     if (isNaN(name.substring(0, 1)) && !isNaN(name.substring(1))) {
       for (let sensor of this.context.sensorsList.all()) {
         if (sensor.port.toUpperCase() == name.toUpperCase()) {
@@ -113,7 +114,7 @@ export class SensorHandler {
     return null;
   }
 
-  findSensorByType(type: string): Sensor|null {
+  findSensorByType(type: string): AbstractSensor|null {
     for (let sensor of this.context.sensorsList.all()) {
       if (sensor.type == type) {
         return sensor;
@@ -123,7 +124,7 @@ export class SensorHandler {
     return null;
   }
 
-  findSensorByPort(port: string): Sensor|null {
+  findSensorByPort(port: string): AbstractSensor|null {
     for (let sensor of this.context.sensorsList.all()) {
       if (sensor.port == port) {
         return sensor;

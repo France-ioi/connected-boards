@@ -10,7 +10,7 @@ export class SensorBuzzer extends AbstractSensor {
   private muteBtn: any;
   private buzzerInterval: any;
   private ringingState: boolean;
-  protected type = 'buzzer';
+  public type = 'buzzer';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

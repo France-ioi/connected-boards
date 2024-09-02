@@ -4,7 +4,7 @@ import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
 
 export class SensorAccelerometer extends AbstractSensor {
-  protected type = 'accelerometer';
+  public type = 'accelerometer';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

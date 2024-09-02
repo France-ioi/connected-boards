@@ -8,7 +8,7 @@ export class SensorButton extends AbstractSensor {
   private buttonoff: any;
   private wasPressed: boolean;
   public onPressed: () => void;
-  protected type = 'button';
+  public type = 'button';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

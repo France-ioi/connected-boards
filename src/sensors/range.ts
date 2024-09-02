@@ -7,7 +7,7 @@ export class SensorRange extends AbstractSensor {
   private rangedistance: any;
   private rangedistancestart: any;
   private rangedistanceend: any;
-  protected type = 'range';
+  public type = 'range';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

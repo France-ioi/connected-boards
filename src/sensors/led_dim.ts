@@ -6,7 +6,7 @@ import {SensorHandler} from "./util/sensor_handler";
 export class SensorLedDim extends AbstractSensor {
   private ledon: any;
   private ledoff: any;
-  protected type = 'leddim';
+  public type = 'leddim';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

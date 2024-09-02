@@ -4,7 +4,7 @@ import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
 
 export class SensorSound extends AbstractSensor {
-  protected type = 'sound';
+  public type = 'sound';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

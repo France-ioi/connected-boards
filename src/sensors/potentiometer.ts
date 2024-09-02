@@ -5,7 +5,7 @@ import {getImg} from "../util";
 
 export class SensorPotentiometer extends AbstractSensor {
   private pale: any;
-  protected type = 'potentiometer';
+  public type = 'potentiometer';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

@@ -6,7 +6,7 @@ import {getImg} from "../util";
 export class SensorLight extends AbstractSensor {
   private moon: any;
   private sun: any;
-  protected type = 'light';
+  public type = 'light';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

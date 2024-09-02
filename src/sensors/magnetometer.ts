@@ -5,7 +5,7 @@ import {getImg} from "../util";
 
 export class SensorMagnetometer extends AbstractSensor {
   private needle: any;
-  protected type = 'magnetometer';
+  public type = 'magnetometer';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

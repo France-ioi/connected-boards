@@ -6,7 +6,7 @@ import {quickPiLocalLanguageStrings} from "../lang/language_strings";
 import {LocalQuickStore} from "./util/local_quickpi_store";
 
 export class SensorCloudStore extends AbstractSensor {
-  protected type = 'cloudstore';
+  public type = 'cloudstore';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

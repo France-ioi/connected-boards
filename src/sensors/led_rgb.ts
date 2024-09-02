@@ -6,7 +6,7 @@ import {SensorHandler} from "./util/sensor_handler";
 export class SensorLedRgb extends AbstractSensor {
   private ledimage: any;
   private ledcolor: any;
-  protected type = 'ledrgb';
+  public type = 'ledrgb';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

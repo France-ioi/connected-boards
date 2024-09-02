@@ -12,7 +12,7 @@ export class SensorGyroscope extends AbstractSensor {
   private previousState: number[];
   private old_state: number[];
   private lastSpeedChange: Date;
-  protected type = 'gyroscope';
+  public type = 'gyroscope';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

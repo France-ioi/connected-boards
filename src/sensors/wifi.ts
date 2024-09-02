@@ -5,7 +5,7 @@ import {getImg, textEllipsis} from "../util";
 
 export class SensorWifi extends AbstractSensor {
   protected active: any;
-  protected type = 'wifi';
+  public type = 'wifi';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

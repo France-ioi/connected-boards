@@ -4,7 +4,7 @@ import {SensorHandler} from "./util/sensor_handler";
 
 export class SensorLedMatrix extends AbstractSensor {
   private ledmatrix: any;
-  protected type = 'ledmatrix';
+  public type = 'ledmatrix';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {
@@ -93,7 +93,7 @@ export class SensorLedMatrix extends AbstractSensor {
         let i = Math.floor((e.offsetX - imgx) / (imgw / 5));
         let j = Math.floor((e.offsetY - imgy) / (imgh / 5));
         sensor.state[i][j] = !sensor.state[i][j] ? 1 : 0;
-        sensorHandler.findSensorDefinition(sensor).setLiveState(sensor, sensor.state, () => {
+        sensor.setLiveState(sensor.state, () => {
         });
         sensorHandler.getSensorDrawer().drawSensor(sensor);
       }

@@ -40,26 +40,26 @@ export abstract class AbstractSensor {
     width: number,
     height: number,
   };
-  protected focusrect?: any;
-  protected hasslider?: boolean;
-  protected img?: any;
-  protected lastDrawnState?: any;
-  protected lastDrawnTime?: number;
-  protected lastTimeIncrease?: number;
-  protected maxAnalog?: number;
-  protected minAnalog?: number;
-  protected name?: string;
-  protected nameText?: any;
-  protected type: string;
-  protected subType?: string;
-  protected suggestedName?: string;
-  protected port?: string;
-  protected state?: any;
-  protected builtin?: boolean;
-  protected showAsAnalog?: boolean;
-  protected isDrawingScreen?: boolean;
-  protected removed?: boolean;
-  protected stateText: any;
+  public focusrect?: any;
+  public hasslider?: boolean;
+  public img?: any;
+  public lastDrawnState?: any;
+  public lastDrawnTime?: number;
+  public lastTimeIncrease?: number;
+  public maxAnalog?: number;
+  public minAnalog?: number;
+  public name?: string;
+  public nameText?: any;
+  public type: string;
+  public subType?: string;
+  public suggestedName?: string;
+  public port?: string;
+  public state?: any;
+  public builtin?: boolean;
+  public showAsAnalog?: boolean;
+  public isDrawingScreen?: boolean;
+  public removed?: boolean;
+  public stateText: any;
 
   protected context: QuickalgoLibrary;
   protected strings: any;
