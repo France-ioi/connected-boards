@@ -244,61 +244,6 @@ export class SensorDrawer {
       sensor.draw(this.sensorHandler, drawParameters);
     }
 
-    if (sensor.type == "galaxia") {
-      if (sensor.stateText)
-        sensor.stateText.remove();
-
-      if (!sensor.galaxia || this.sensorHandler.isElementRemoved(sensor.galaxia))
-        sensor.galaxia = this.context.paper.image(getImg('galaxia.svg'), imgx, imgy, imgw, imgh);
-
-      if (sensor.state == null)
-        sensor.state = false;
-
-      sensor.galaxia.attr({
-        "x": imgx,
-        "y": imgy,
-        "width": imgw,
-        "height": imgh,
-      });
-
-      if (sensor.state) {
-        /*sensor.buttonon.attr({ "opacity": fadeopacity });
-        sensor.buttonoff.attr({ "opacity": 0 });*/
-      } else {
-        /*sensor.buttonon.attr({ "opacity": 0 });
-        sensor.buttonoff.attr({ "opacity": fadeopacity });*/
-      }
-
-      if (!this.context.autoGrading) {
-        // sensor.focusrect.node.onmousedown = () => {
-        //     if (this.context.offLineMode) {
-        //         sensor.state = true;
-        //         this.sensorHandler.warnClientSensorStateChanged(sensor);
-        //         this.drawSensor(sensor);
-        //     } else
-        //         this.sensorInConnectedModeError();
-        // };
-
-
-        // sensor.focusrect.node.onmouseup = () => {
-        //     if (this.context.offLineMode) {
-        //         sensor.state = false;
-        //         sensor.wasPressed = true;
-        //         this.sensorHandler.warnClientSensorStateChanged(sensor);
-        //         this.drawSensor(sensor);
-
-        //         if (sensor.onPressed)
-        //             sensor.onPressed();
-        //     } else
-        //         this.sensorInConnectedModeError();
-        // }
-
-        // sensor.focusrect.node.ontouchstart = sensor.focusrect.node.onmousedown;
-        // sensor.focusrect.node.ontouchend = sensor.focusrect.node.onmouseup;
-      }
-    }
-
-
     if (sensor.stateText) {
       try {
         let statecolor = "gray";
