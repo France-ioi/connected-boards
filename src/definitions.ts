@@ -109,7 +109,6 @@ export interface QuickalgoLibrary {
   autoGrading: boolean,
   quickPiConnection: any,
   sensorsList: SensorCollection,
-  sensorAdder: any,
   stopLiveUpdate: boolean,
   resetSensorTable: () => void,
   resetDisplay: () => void,

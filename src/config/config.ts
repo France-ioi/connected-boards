@@ -48,8 +48,6 @@ export function showConfig({context, strings, mainBoard}) {
 
     for (let sensor of context.sensorsList.all()) {
       let sensorDefinition = sensorHandler.findSensorDefinition(sensor);
-      if (sensor.type == "adder")
-        continue
 
       addGridElement("sensorGrid", 0, sensor.name, sensor.name, sensorDefinition.selectorImages[0], sensor.port);
     }
@@ -247,7 +245,6 @@ export function showConfig({context, strings, mainBoard}) {
     }
 
     if (customSensors) {
-      // $('#piaddsensor').click(clickAdder);
       $('#piaddsensor').click(addSensors);
     } else {
       $('#piaddsensor').hide();

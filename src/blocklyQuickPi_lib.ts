@@ -1204,8 +1204,6 @@ var getContext = function (display, infos, curLevel) {
                             for (var iNewSensor = iSensor + 1; iNewSensor < context.sensorsList.size(); iNewSensor++)
                             {
                                 var newSensor = context.sensorsList.all()[iNewSensor];
-                                // if(newSensor.type == "adder")
-                                    // continue
 
                                 cells = 1;
                                 cellsAmount = sensorHandler.findSensorDefinition(newSensor).cellsAmount;
