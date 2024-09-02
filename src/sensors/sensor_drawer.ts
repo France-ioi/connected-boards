@@ -2,6 +2,7 @@ import {getImg, textEllipsis} from "../util";
 import {buzzerSound} from "./buzzer_sound";
 import {gyroscope3D} from "./gyroscope3d";
 import {SensorHandler} from "./sensor_handler";
+import {screenDrawing} from "./screen";
 
 const colors = {
   blue: "#4a90e2",

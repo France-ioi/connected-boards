@@ -18,6 +18,7 @@ declare global {
     quickAlgoResponsive: boolean,
     stringsLanguage: any,
     quickAlgoInterface: any,
+    OffscreenCanvas: any,
   }
 }
 

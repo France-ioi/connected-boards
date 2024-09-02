@@ -9,6 +9,7 @@ import {SensorHandler} from "./sensors/sensor_handler";
 import {showasConnecting} from "./display";
 import {LocalQuickStore} from "./sensors/local_quickpi_store";
 import {Sensor} from "./definitions";
+import {screenDrawing} from "./sensors/screen";
 
 const boards: {[board: string]: AbstractBoard} = {
     galaxia: galaxiaBoard,
