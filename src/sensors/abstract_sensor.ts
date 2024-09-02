@@ -8,6 +8,8 @@ export interface SensorDrawParameters {
   y: number,
   w: number,
   h: number,
+  cx: number,
+  cy: number,
   imgx: number,
   imgy: number,
   imgw: number,
@@ -20,12 +22,14 @@ export interface SensorDrawParameters {
   portx: number,
   porty: number,
   portsize: number,
+  drawName: boolean,
   drawPortText: boolean,
   fontWeight: string,
   namex: number,
   namey: number,
   namesize: number,
   nameanchor: string,
+  scrolloffset: number,
 }
 
 export abstract class AbstractSensor {

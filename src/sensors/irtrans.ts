@@ -3,6 +3,27 @@ import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
 
+export function generateIrRemoteDialog(strings: any) {
+  return "<div class=\"content qpi\">" +
+    "   <div class=\"panel-heading\">" +
+    "       <h2 class=\"sectionTitle\">" +
+    "           <span class=\"iconTag\"><i class=\"icon fas fa-list-ul\"></i></span>" +
+    this.strings.messages.irRemoteControl +
+    "       </h2>" +
+    "       <div class=\"exit\" id=\"picancel\"><i class=\"icon fas fa-times\"></i></div>" +
+    "   </div>" +
+    "   <div id=\"sensorPicker\" class=\"panel-body\">" +
+    "       <div id=\"piremotemessage\" >" +
+    "       </div>" +
+    "       <div id=\"piremotecontent\" >" +
+    "       </div>" +
+    "   </div>" +
+    "   <div class=\"singleButton\">" +
+    "       <button id=\"picancel2\" class=\"btn btn-centered\"><i class=\"icon fa fa-check\"></i>" + this.strings.messages.closeDialog + "</button>" +
+    "   </div>" +
+    "</div>";
+}
+
 export class SensorIrTrans extends AbstractSensor {
   private ledon: any;
   private ledoff: any;
@@ -44,24 +65,7 @@ export class SensorIrTrans extends AbstractSensor {
       this.ledon = this.context.paper.image(getImg("irtranson.png"), imgx, imgy, imgw, imgh);
     }
 
-    const irRemoteDialog = "<div class=\"content qpi\">" +
-      "   <div class=\"panel-heading\">" +
-      "       <h2 class=\"sectionTitle\">" +
-      "           <span class=\"iconTag\"><i class=\"icon fas fa-list-ul\"></i></span>" +
-      this.strings.messages.irRemoteControl +
-      "       </h2>" +
-      "       <div class=\"exit\" id=\"picancel\"><i class=\"icon fas fa-times\"></i></div>" +
-      "   </div>" +
-      "   <div id=\"sensorPicker\" class=\"panel-body\">" +
-      "       <div id=\"piremotemessage\" >" +
-      "       </div>" +
-      "       <div id=\"piremotecontent\" >" +
-      "       </div>" +
-      "   </div>" +
-      "   <div class=\"singleButton\">" +
-      "       <button id=\"picancel2\" class=\"btn btn-centered\"><i class=\"icon fa fa-check\"></i>" + this.strings.messages.closeDialog + "</button>" +
-      "   </div>" +
-      "</div>";
+    const irRemoteDialog = generateIrRemoteDialog(this.strings);
 
     if (!this.ledoff || sensorHandler.isElementRemoved(this.ledoff)) {
       this.ledoff = this.context.paper.image(getImg('irtransoff.png'), imgx, imgy, imgw, imgh);
