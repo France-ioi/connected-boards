@@ -446,6 +446,13 @@ export default {
     wifiStatusDisconnected: "Déconnecté",
     wifiStatusConnected: "Connecté",
     wifiStatus: "Statut :",
+    wifiWrongCredentials: "Test échoué : <code>{0}</code> a essayé de se connecter avec les identifiants \"{1}\" au lieu de \"{2}\" à t={3}ms.",
+    wifiNoRequest: "Test échoué : <code>{0}</code> n'a pas effectué de requête à t={1}ms.",
+    wifiWrongMethod: "Test échoué : <code>{0}</code> a effectué une requête avec la méthode \"{1}\" à t={3}ms, la méthode attendue était \"{2}\".",
+    wifiWrongUrl: "Test échoué : <code>{0}</code> a effectué une requête à l'URL \"{1}\" à t={3}ms, l'URL attendue était \"{2}\".",
+    wifiWrongHeader: "Test échoué : <code>{0}</code> a effectué une requête avec le header \"{1}\" valant \"{2}\" à t={4}ms, la valeur attendue était \"{3}\".",
+    wifiWrongBody: "Test échoué : <code>{0}</code> a effectué une requête avec le paramètre \"{1}\" valant \"{2}\" à t={4}ms, la valeur attendue était \"{3}\".",
+    wifiUnknownError: "Test échoué : <code>{0}</code> a été dans un état incorrect à t={1}ms.",
     networkRequestFailed: "La requête à la page {0} a échoué.",
     networkResponseInvalidJson: "Cette réponse n'est pas au format JSON.",
 

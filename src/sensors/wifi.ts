@@ -1,7 +1,7 @@
 import {AbstractSensor, SensorDrawParameters} from "./abstract_sensor";
 import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
-import {getImg, textEllipsis} from "../util";
+import {deepSubsetEqual, getImg, textEllipsis} from "../util";
 
 export class SensorWifi extends AbstractSensor {
   protected active: any;
@@ -18,12 +18,19 @@ export class SensorWifi extends AbstractSensor {
 
       selectorImages: ["wifi.png"],
       valueType: "object",
+      valueMin: 0,
+      valueMax: 100,
       pluggable: true,
       getPercentageFromState: function (state) {
-        if (state)
-          return 1;
-        else
-          return 0;
+        if (state.active) {
+          if (state.connected) {
+            return 1;
+          }
+
+          return 0.5;
+        }
+
+        return 0;
       },
       getStateFromPercentage: function (percentage) {
         if (percentage)
@@ -32,13 +39,78 @@ export class SensorWifi extends AbstractSensor {
           return 0;
       },
       getStateString: function(state) {
-        return `[${state.join(', ')}]`;
+        if (!state.active) {
+          return strings.messages.wifiStatusDisabled;
+        }
+        if (!state.connected) {
+          return strings.messages.wifiStatusDisconnected;
+        }
+
+        return strings.messages.wifiStatusConnected;
       },
+      compareState: function (state1, state2) {
+        if (state1 === null && state2 === null) {
+          return true;
+        }
+        if ((null !== state1 && null === state2) || (null !== state2 && null === state1)) {
+          return false;
+        }
+
+        return deepSubsetEqual(state1, state2);
+      },
+      getWrongStateString: function(failInfo) {
+        const {actual, expected, name, time} = failInfo;
+
+        const expectedStatus = this.getStateString(expected);
+        const actualStatus = this.getStateString(actual);
+
+        if ((undefined !== expected.active && actual.active !== expected.active) || ((undefined !== expected.connected && actual.connected !== expected.connected))) {
+          return strings.messages.wrongState.format(name, actualStatus, expectedStatus, time);
+        }
+
+        if ((undefined !== expected.ssid && actual.ssid !== expected.ssid) || (undefined !== expected.password && actual.password !== expected.password)) {
+          return strings.messages.wifiWrongCredentials.format(name, actual.ssid + ' / ' + actual.password, expected.ssid + ' / ' + expected.password, time);
+        }
+
+        if (undefined !== expected.lastRequest) {
+          if (!actual.lastRequest) {
+            return strings.messages.wifiNoRequest.format(name, time);
+          }
+          
+          if (undefined !== expected.lastRequest.method && expected.lastRequest.method !== actual.lastRequest.method) {
+            return strings.messages.wifiWrongMethod.format(name, actual.lastRequest.method, expected.lastRequest.method, time);
+          }
+          if (undefined !== expected.lastRequest.url && expected.lastRequest.url !== actual.lastRequest.url) {
+            return strings.messages.wifiWrongUrl.format(name, actual.lastRequest.url, expected.lastRequest.url, time);
+          }
+          if (undefined !== expected.lastRequest.headers) {
+            for (let field in expected.lastRequest.headers) {
+              if (expected.lastRequest.headers[field] !== actual.lastRequest.headers?.[field]) {
+                return strings.messages.wifiWrongHeader.format(name, field, actual.lastRequest.headers?.[field] ?? '', expected.lastRequest.headers[field], time);
+              }
+            }
+          }
+          if (undefined !== expected.lastRequest.body) {
+            for (let field in expected.lastRequest.body) {
+              if (expected.lastRequest.body[field] !== actual.lastRequest.body?.[field]) {
+                return strings.messages.wifiWrongBody.format(name, field, actual.lastRequest.body?.[field] ?? '', expected.lastRequest.body[field], time);
+              }
+            }
+          }
+        }
+
+        return strings.messages.wifiUnknownError.format(name, time);
+      }
     };
   }
 
   getInitialState() {
-    return {};
+    return {
+      active: false,
+      connected: false,
+      ssid: '',
+      password: '',
+    };
   }
 
   setLiveState(state, callback) {
@@ -56,7 +128,6 @@ export class SensorWifi extends AbstractSensor {
 
       this.focusrect.click(() => {
         const state = this.state;
-        console.log('current state', state);
 
         let wifiDialog = `
         <div class="content qpi" id="wifi_dialog">
@@ -115,9 +186,9 @@ export class SensorWifi extends AbstractSensor {
                  <label id="pilistlabel">${this.strings.messages.wifiStatus}</label>
                  <div class="input-group">
                     <select id="wifi_status" class="custom-select">
-                      <option value="disabled">Désactivé</option>
-                      <option value="disconnected">Déconnecté</option>
-                      <option value="connected">Connecté</option>
+                      <option value="disabled">${this.strings.messages.wifiStatusDisabled}</option>
+                      <option value="disconnected">${this.strings.messages.wifiStatusDisconnected}</option>
+                      <option value="connected">${this.strings.messages.wifiStatusConnected}</option>
                     </select>
                  </div>
               </div>
@@ -131,11 +202,9 @@ export class SensorWifi extends AbstractSensor {
           $('#wifi_password').val(state.password);
 
           if (!this.context.autoGrading && (!this.context.runner || !this.context.runner.isRunning())) {
-            console.log('enable them');
             $('#wifi_ssid').prop('disabled', false);
             $('#wifi_password').prop('disabled', false);
           } else {
-            console.log('disable them');
             $('#wifi_ssid').prop('disabled', true);
             $('#wifi_password').prop('disabled', true);
           }
@@ -285,8 +354,8 @@ export class SensorWifi extends AbstractSensor {
     if (!this.active || sensorHandler.isElementRemoved(this.active))
       this.active = this.context.paper.circle();
 
-    const ssid = this.state.ssid;
-    this.stateText = this.context.paper.text(state1x, state1y, this.state?.scanning ? '...' : (ssid && this.state.connected ? textEllipsis(ssid, 6) : ''));
+    const ssid = this.state?.ssid;
+    this.stateText = this.context.paper.text(state1x, state1y, this.state?.scanning ? '...' : (ssid && this.state?.connected ? textEllipsis(ssid, 6) : ''));
 
     this.img.attr({
       "x": imgx,
@@ -298,7 +367,7 @@ export class SensorWifi extends AbstractSensor {
 
     let color = 'grey';
     if (this.state?.active) {
-      if (this.state.connected) {
+      if (this.state?.connected) {
         color = 'green';
       } else {
         color = 'red';

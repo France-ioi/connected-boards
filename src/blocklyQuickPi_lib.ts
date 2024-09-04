@@ -2918,7 +2918,7 @@ var getContext = function (display, infos, curLevel) {
             // Check the new state
             var expectedState = context.getSensorExpectedState(name, context.currentTime);
 
-            if (expectedState !== null && !sensorDef.compareState(expectedState.state, newState))
+            if (expectedState !== null && !sensorDef.compareState(newState, expectedState.state))
             {
                 type = "wrong";
             }

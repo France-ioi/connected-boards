@@ -31,13 +31,17 @@ export function networkWlanModuleDefinition(context: any, strings): ModuleDefini
 
           let command = "wifiSetActive(\"" + sensor.name + "\", " + active + ")";
 
-          context.registerQuickPiEvent(sensor.name, {
-            ...sensor.state,
-            active: !!active,
-          });
-
           if (!context.display || context.autoGrading || context.offLineMode) {
-            context.waitDelay(callback);
+            let cb = context.runner.waitCallback(callback);
+
+            setTimeout(() => {
+              context.registerQuickPiEvent(sensor.name, {
+                ...sensor.state,
+                active: !!active,
+              });
+
+              cb();
+            }, 500);
           } else {
             let cb = context.runner.waitCallback(callback);
 
@@ -82,14 +86,19 @@ export function networkWlanModuleDefinition(context: any, strings): ModuleDefini
             throw strings.messages.wifiNotActive;
           }
 
-          context.registerQuickPiEvent(sensor.name, {
-            ...sensor.state,
-            connected: true,
-            ssid,
-          });
-
           if (!context.display || context.autoGrading || context.offLineMode) {
-            context.waitDelay(callback);
+            let cb = context.runner.waitCallback(callback);
+
+            setTimeout(() => {
+              context.registerQuickPiEvent(sensor.name, {
+                ...sensor.state,
+                connected: true,
+                ssid,
+                password,
+              });
+
+              cb();
+            }, 500);
           } else {
             let cb = context.runner.waitCallback(callback);
             let command = "wifiConnect(\"" + sensor.name + "\", \"" + ssid + "\", \"" + password + "\")";

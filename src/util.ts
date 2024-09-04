@@ -48,6 +48,26 @@ export function deepEqual(obj1, obj2) {
   return true;
 }
 
+export function deepSubsetEqual(obj1, obj2) {
+
+  if (obj1 === obj2) // it's just the same object. No need to compare.
+    return true;
+
+  // if one is primitive and not the other, then we can return false. If both are primitive, then the up
+  // comparison can return true
+  if (isPrimitive(obj1) || isPrimitive(obj2))
+    return false;
+
+  // compare objects with same number of keys
+  for (let key in obj2)
+  {
+    if (!(key in obj1)) return false; //other object doesn't have this prop
+    if (!deepSubsetEqual(obj1[key], obj2[key])) return false;
+  }
+
+  return true;
+}
+
 export function getImg(filename) {
   // Get the path to an image stored in bebras-modules
   return (window.modulesPath ? window.modulesPath : '../../modules/') + 'img/quickpi/' + filename;

@@ -1,4 +1,5 @@
 import {ModuleDefinition} from "../module_definition";
+import {SensorWifi} from "../../sensors/wifi";
 
 export interface FetchParameters {
   method: 'GET'|'POST',
@@ -8,9 +9,13 @@ export interface FetchParameters {
 }
 
 export function urequestsModuleDefinition(context: any, strings): ModuleDefinition {
-  async function makeRequest(fetchParameters: FetchParameters, callback) {
+  async function makeRequest(sensor: SensorWifi, fetchParameters: FetchParameters, callback) {
     const proxyUrl = fetchParameters.url;
     const {url, ...withoutUrlParameters} = fetchParameters;
+
+    sensor.state.lastRequest = {
+      ...fetchParameters,
+    };
 
     let result = null;
     try {
@@ -70,9 +75,15 @@ export function urequestsModuleDefinition(context: any, strings): ModuleDefiniti
         const args = [...arguments];
         const callback = args.pop();
         const [url, headers] = args;
+
+        const sensor = context.sensorHandler.findSensorByType('wifi');
+        if (!sensor.state?.active) {
+          throw strings.messages.wifiNotActive;
+        }
+
         const cb = context.runner.waitCallback(callback);
 
-        return makeRequest({
+        return makeRequest(sensor, {
           method: 'GET',
           url,
           headers,
@@ -82,9 +93,15 @@ export function urequestsModuleDefinition(context: any, strings): ModuleDefiniti
         const args = [...arguments];
         const callback = args.pop();
         const [url, data, headers] = args;
+
+        const sensor = context.sensorHandler.findSensorByType('wifi');
+        if (!sensor.state?.active) {
+          throw strings.messages.wifiNotActive;
+        }
+
         const cb = context.runner.waitCallback(callback);
 
-        return makeRequest({
+        return makeRequest(sensor, {
           method: 'POST',
           url,
           headers,
