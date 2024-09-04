@@ -16,8 +16,8 @@ export function getConnectionDialogHTML(availableConnectionMethods: ConnectionMe
           <div class="panel-heading">
              <h2 class="sectionTitle">
                 <span class="iconTag">
-                <i class="icon fas fa-list-ul">
-                </i>
+                  <i class="icon fas fa-list-ul">
+                  </i>
                 </span>
                 ${strings.messages.raspiConfig}       
              </h2>

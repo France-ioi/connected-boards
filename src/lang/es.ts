@@ -326,6 +326,16 @@ export default {
 
     getTemperatureFromCloudWrongValue: "getTemperatureFromCloud: {0} is not a town supported by getTemperatureFromCloud", // TODO: translate
     wifiNotActive: "El wifi no está activado. Active Wi-Fi para hacer esto.",
+    wifiSsid: "SSID:",
+    wifiPassword: "Contraseña:",
+    wifiEnable: "Activar",
+    wifiDisable: "Desactivar",
+    wifiConnect: "Conectar",
+    wifiDisconnect: "Desconectar",
+    wifiStatusDisabled: "Desactivado",
+    wifiStatusDisconnected: "Desconectado",
+    wifiStatusConnected: "Conectado",
+    wifiStatus: "Estado:",
     networkRequestFailed: "Error en la solicitud a la página {0}.",
     networkResponseInvalidJson: "Esta respuesta no está en formato JSON.",
 
