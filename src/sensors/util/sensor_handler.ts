@@ -1,5 +1,5 @@
 import {SensorDrawer} from "./sensor_drawer";
-import {Sensor, SensorDefinition} from "../../definitions";
+import {SensorDefinition} from "../../definitions";
 import {sensorsList} from "../sensor_factory";
 import {AbstractSensor} from "../abstract_sensor";
 

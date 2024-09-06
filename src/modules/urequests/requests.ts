@@ -60,7 +60,7 @@ export function urequestsModuleDefinition(context: any, strings): ModuleDefiniti
       actuator: { // category name
         Response: {
           defaultInstanceName: 'response',
-          init: {params: ["Number", "String"]},
+          init: {params: ["Number", "String"], hidden: true},
           blocks: [
             {name: "json"},
           ],

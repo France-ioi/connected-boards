@@ -86,6 +86,7 @@ export interface QuickalgoLibraryBlock {
   blocklyXml?: string,
   anyArgs?: boolean,
   variants?: any,
+  hidden?: boolean,
 }
 
 export interface QuickalgoLibrary {
