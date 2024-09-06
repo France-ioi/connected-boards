@@ -4,23 +4,42 @@ import {SensorWifi} from "../../sensors/wifi";
 export interface FetchParameters {
   method: 'GET'|'POST',
   url: string,
-  headers?: object,
-  body?: string,
+  headers?: {[field: string]: string},
+  body?: {[field: string]: string},
+}
+
+function getRealValue(object: any) {
+  if (!object) {
+    return object;
+  }
+  if (object.toJSON) {
+    return object.toJSON();
+  }
+
+  return object;
 }
 
 export function urequestsModuleDefinition(context: any, strings): ModuleDefinition {
   async function makeRequest(sensor: SensorWifi, fetchParameters: FetchParameters, callback) {
     const proxyUrl = fetchParameters.url;
-    const {url, ...withoutUrlParameters} = fetchParameters;
 
-    sensor.state.lastRequest = {
-      ...fetchParameters,
+    context.registerQuickPiEvent(sensor.name, {
+      ...sensor.state,
+      lastRequest: {
+        ...fetchParameters,
+      },
+    });
+
+    const fetchArguments = {
+      method: fetchParameters.method,
+      headers: getRealValue(fetchParameters.headers),
+      body: getRealValue(fetchParameters.body),
     };
 
     let result = null;
     try {
       // @ts-ignore
-      result = await fetch(proxyUrl, withoutUrlParameters)
+      result = await fetch(proxyUrl, fetchArguments)
     } catch (e) {
       console.error(e);
       throw strings.messages.networkRequestFailed.format(fetchParameters.url);

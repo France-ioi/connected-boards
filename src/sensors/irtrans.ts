@@ -8,7 +8,7 @@ export function generateIrRemoteDialog(strings: any) {
     "   <div class=\"panel-heading\">" +
     "       <h2 class=\"sectionTitle\">" +
     "           <span class=\"iconTag\"><i class=\"icon fas fa-list-ul\"></i></span>" +
-    this.strings.messages.irRemoteControl +
+    strings.messages.irRemoteControl +
     "       </h2>" +
     "       <div class=\"exit\" id=\"picancel\"><i class=\"icon fas fa-times\"></i></div>" +
     "   </div>" +
@@ -19,7 +19,7 @@ export function generateIrRemoteDialog(strings: any) {
     "       </div>" +
     "   </div>" +
     "   <div class=\"singleButton\">" +
-    "       <button id=\"picancel2\" class=\"btn btn-centered\"><i class=\"icon fa fa-check\"></i>" + this.strings.messages.closeDialog + "</button>" +
+    "       <button id=\"picancel2\" class=\"btn btn-centered\"><i class=\"icon fa fa-check\"></i>" + strings.messages.closeDialog + "</button>" +
     "   </div>" +
     "</div>";
 }

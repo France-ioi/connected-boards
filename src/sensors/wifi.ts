@@ -1,10 +1,29 @@
-import {AbstractSensor, SensorDrawParameters} from "./abstract_sensor";
+import {AbstractSensor, SensorDrawParameters, SensorDrawTimeLineParameters} from "./abstract_sensor";
 import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {deepSubsetEqual, getImg, textEllipsis} from "../util";
 
+interface SensorWifiState {
+  active?: boolean,
+  activating?: boolean,
+  connecting?: boolean,
+  connected?: boolean,
+  ssid?: string,
+  password?: string,
+  scanning?: boolean,
+  lastRequest?: {
+    url: string,
+    method: string,
+    headers?: {[field: string]: string},
+    body?: {[field: string]: string},
+  }
+}
+
 export class SensorWifi extends AbstractSensor {
+  declare public state?: SensorWifiState;
   protected active: any;
+  private showingTooltip: boolean = false;
+  private lastWifiState: SensorWifiState;
   public type = 'wifi';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
@@ -21,7 +40,7 @@ export class SensorWifi extends AbstractSensor {
       valueMin: 0,
       valueMax: 100,
       pluggable: true,
-      getPercentageFromState: function (state) {
+      getPercentageFromState: function (state: SensorWifiState) {
         if (state.active) {
           if (state.connected) {
             return 1;
@@ -38,17 +57,17 @@ export class SensorWifi extends AbstractSensor {
         else
           return 0;
       },
-      getStateString: function(state) {
-        if (!state.active) {
-          return strings.messages.wifiStatusDisabled;
+      getStateString: function(state: SensorWifiState) {
+        if (state.connected) {
+          return strings.messages.wifiStatusConnected;
         }
-        if (!state.connected) {
+        if (state.active) {
           return strings.messages.wifiStatusDisconnected;
         }
 
-        return strings.messages.wifiStatusConnected;
+        return strings.messages.wifiStatusDisabled;
       },
-      compareState: function (state1, state2) {
+      compareState: function (state1: SensorWifiState, state2: SensorWifiState) {
         if (state1 === null && state2 === null) {
           return true;
         }
@@ -58,7 +77,7 @@ export class SensorWifi extends AbstractSensor {
 
         return deepSubsetEqual(state1, state2);
       },
-      getWrongStateString: function(failInfo) {
+      getWrongStateString: function(failInfo: {actual: SensorWifiState, expected: SensorWifiState, name: string, time: number}) {
         const {actual, expected, name, time} = failInfo;
 
         const expectedStatus = this.getStateString(expected);
@@ -104,7 +123,7 @@ export class SensorWifi extends AbstractSensor {
     };
   }
 
-  getInitialState() {
+  getInitialState(): SensorWifiState {
     return {
       active: false,
       connected: false,
@@ -113,7 +132,7 @@ export class SensorWifi extends AbstractSensor {
     };
   }
 
-  setLiveState(state, callback) {
+  setLiveState(state: SensorWifiState, callback) {
     var command = `setWifiState("${this.name}", [0, 0, 0])`;
 
     this.context.quickPiConnection.sendCommand(command, callback);
@@ -314,13 +333,13 @@ export class SensorWifi extends AbstractSensor {
           });
 
           $('#wifi_ssid').on('change', () => {
-            this.state.ssid = $('#wifi_ssid').val();
+            this.state.ssid = $('#wifi_ssid').val() as string;
             sensorHandler.warnClientSensorStateChanged(this);
             sensorHandler.getSensorDrawer().drawSensor(this);
           });
 
           $('#wifi_password').on('change', () => {
-            this.state.password = $('#wifi_password').val();
+            this.state.password = $('#wifi_password').val() as string;
             sensorHandler.warnClientSensorStateChanged(this);
             sensorHandler.getSensorDrawer().drawSensor(this);
           });
@@ -366,12 +385,10 @@ export class SensorWifi extends AbstractSensor {
     });
 
     let color = 'grey';
-    if (this.state?.active) {
-      if (this.state?.connected) {
-        color = 'green';
-      } else {
-        color = 'red';
-      }
+    if (this.state?.connected) {
+      color = 'green';
+    } else if (this.state?.active) {
+      color = 'red';
     }
 
     this.active.attr({
@@ -383,4 +400,102 @@ export class SensorWifi extends AbstractSensor {
       opacity: 1,
     });
   }
+
+  drawTimelineState(sensorHandler: SensorHandler, state: SensorWifiState, expectedState: SensorWifiState, type: string, drawParameters: SensorDrawTimeLineParameters) {
+    const {startx, ypositionmiddle, color, strokewidth} = drawParameters;
+
+    const sensorDef = sensorHandler.findSensorDefinition(this);
+    if (type != "actual" || !this.lastWifiState || !sensorDef.compareState(this.lastWifiState, state)) {
+      this.lastWifiState = state;
+      let stateBubble = this.context.paper.text(startx, ypositionmiddle + 10, '\uf27a');
+      stateBubble.attr({
+        "font": "Font Awesome 5 Free",
+        "stroke": color,
+        "fill": color,
+        "font-size": (strokewidth * 2) + "px"
+      });
+
+      stateBubble.node.style.fontFamily = '"Font Awesome 5 Free"';
+      stateBubble.node.style.fontWeight = "bold";
+
+      const showPopup = (event) => {
+        if (!this.showingTooltip) {
+          let textToDisplay = [];
+
+          const renderNewLine = (title: string, value: string, expectedValue: string) => {
+            if (null !== expectedValue && undefined !== expectedValue && value !== expectedValue) {
+              textToDisplay.push(`${title ? `${title} "${value}"` : value} (${this.strings.messages.insteadOf} "${expectedValue}")`);
+            } else {
+              textToDisplay.push(`${title ?`${title} "${value}"` : value}`);
+            }
+          };
+
+          let expectedStatus = expectedState ? sensorDef.getStateString(expectedState) : null;
+          let currentStatus = sensorDef.getStateString(state);
+
+          let displayFieldsFrom = 'wrong' === type && expectedState ? expectedState : state;
+
+          if ('connected' in displayFieldsFrom || 'active' in displayFieldsFrom) {
+            renderNewLine(this.strings.messages.wifiStatus, currentStatus, expectedStatus);
+          }
+          if (displayFieldsFrom.ssid) {
+            renderNewLine(this.strings.messages.wifiSsid, state.ssid, expectedState?.ssid);
+          }
+          if (displayFieldsFrom.password) {
+            renderNewLine(this.strings.messages.wifiPassword, state.password, expectedState?.password);
+          }
+          if (displayFieldsFrom.lastRequest) {
+            renderNewLine(null, state?.lastRequest ? `${state.lastRequest.method} ${state.lastRequest.url}` : this.strings.messages.wifiNoRequestShort, expectedState?.lastRequest ? `${expectedState?.lastRequest?.method} ${expectedState?.lastRequest?.url}` : null);
+            if (state?.lastRequest && displayFieldsFrom.lastRequest.headers) {
+              renderNewLine(this.strings.messages.wifiHeaders, `${serializeFields(state.lastRequest.headers) ?? ''}`, expectedState?.lastRequest?.headers ? `${serializeFields(expectedState?.lastRequest?.headers)}` : null);
+            }
+            if (state?.lastRequest && displayFieldsFrom.lastRequest.body) {
+              renderNewLine(this.strings.messages.wifiBody, `${serializeFields(state.lastRequest.body) ?? ''}`, expectedState?.lastRequest?.body ? `${serializeFields(expectedState?.lastRequest?.body ?? {})}` : null);
+            }
+          }
+
+          const div = document.createElement("div");
+          $(div).html(textToDisplay.join('<br/>'));
+
+          displayTooltip(event, div);
+
+          this.showingTooltip = true;
+        }
+      }
+
+      $(stateBubble.node).mouseenter(showPopup);
+      $(stateBubble.node).click(showPopup);
+
+      $(stateBubble.node).mouseleave((event) => {
+        this.showingTooltip = false;
+        $('#screentooltip').remove();
+      });
+
+      drawParameters.drawnElements.push(stateBubble);
+      this.context.sensorStates.push(stateBubble);
+    } else {
+      drawParameters.deleteLastDrawnElements = false;
+    }
+  }
+}
+
+function serializeFields(fields: {[field: string]: string}) {
+  if (!fields || 0 === Object.keys(fields).length) {
+    return null;
+  }
+
+  return Object.entries(fields).map(([key, value]) => `${key} = ${value}`).join(', ');
+}
+
+function displayTooltip(event: MouseEvent, mainDiv: HTMLDivElement) {
+  $("body").append('<div id="screentooltip"></div>');
+
+  $('#screentooltip')
+    .css("position", "absolute")
+    .css("border", "1px solid gray")
+    .css("background-color", "#efefef")
+    .css("padding", "3px")
+    .css("z-index", "1000")
+    .css("left", event.clientX+2).css("top", event.clientY+2)
+    .append(mainDiv);
 }

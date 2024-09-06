@@ -1,4 +1,4 @@
-import {AbstractSensor, SensorDrawParameters} from "./abstract_sensor";
+import {AbstractSensor, SensorDrawParameters, SensorDrawTimeLineParameters} from "./abstract_sensor";
 import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {deepEqual, getImg, isPrimitive} from "../util";
@@ -6,6 +6,8 @@ import {quickPiLocalLanguageStrings} from "../lang/language_strings";
 import {LocalQuickStore} from "./util/local_quickpi_store";
 
 export class SensorCloudStore extends AbstractSensor {
+  private lastScreenState: any;
+  private showingTooltip: boolean;
   public type = 'cloudstore';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
@@ -202,5 +204,69 @@ export class SensorCloudStore extends AbstractSensor {
 
     drawParameters.drawPortText = false;
     // drawName = false;
+  }
+
+  drawTimelineState(sensorHandler: SensorHandler, state: any, expectedState: any, type: string, drawParameters: SensorDrawTimeLineParameters) {
+    const {startx, ypositionmiddle, color} = drawParameters;
+
+    const sensorDef = sensorHandler.findSensorDefinition(this);
+    if (type != "actual" || !this.lastScreenState || !sensorDef.compareState(this.lastScreenState, state)) {
+      this.lastScreenState = state;
+      var stateBubble = this.context.paper.text(startx, ypositionmiddle + 10, '\uf044');
+
+      stateBubble.attr({
+        "font": "Font Awesome 5 Free",
+        "stroke": color,
+        "fill": color,
+        "font-size": (4 * 2) + "px"
+      });
+
+      stateBubble.node.style.fontFamily = '"Font Awesome 5 Free"';
+      stateBubble.node.style.fontWeight = "bold";
+
+      const showPopup = (event) => {
+        if (!this.showingTooltip) {
+          $( "body" ).append('<div id="screentooltip"></div>');
+
+          $('#screentooltip').css("position", "absolute");
+          $('#screentooltip').css("border", "1px solid gray");
+          $('#screentooltip').css("background-color", "#efefef");
+          $('#screentooltip').css("padding", "3px");
+          $('#screentooltip').css("z-index", "1000");
+          /*
+          $('#screentooltip').css("width", "262px");
+          $('#screentooltip').css("height", "70px");*/
+
+          $('#screentooltip').css("left", event.clientX+2).css("top", event.clientY+2);
+
+
+          if (expectedState && type == "wrong") {
+            var div = LocalQuickStore.renderDifferences(expectedState, state);
+            $('#screentooltip').append(div);
+          } else {
+            for (var property in state) {
+              var div = document.createElement("div");
+              $(div).text(property + " = " + state[property]);
+              $('#screentooltip').append(div);
+            }
+          }
+
+          this.showingTooltip = true;
+        }
+      };
+
+      $(stateBubble.node).mouseenter(showPopup);
+      $(stateBubble.node).click(showPopup);
+
+      $(stateBubble.node).mouseleave((event) => {
+        this.showingTooltip = false;
+        $('#screentooltip').remove();
+      });
+
+      drawParameters.drawnElements.push(stateBubble);
+      this.context.sensorStates.push(stateBubble);
+    } else {
+      drawParameters.deleteLastDrawnElements = false;
+    }
   }
 }

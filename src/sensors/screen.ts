@@ -1,4 +1,4 @@
-import {AbstractSensor, SensorDrawParameters} from "./abstract_sensor";
+import {AbstractSensor, SensorDrawParameters, SensorDrawTimeLineParameters} from "./abstract_sensor";
 import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
@@ -8,6 +8,10 @@ export class SensorScreen extends AbstractSensor {
   private screenrect: any;
   private canvasNode: any;
   private canvas: any;
+  private lastScreenState: any;
+  private tooltip;
+  private tooltipText;
+  private showingTooltip = false;
   public type = 'screen';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
@@ -112,8 +116,8 @@ export class SensorScreen extends AbstractSensor {
     };
   }
 
-  getInitialState(sensor) {
-    if (sensor.isDrawingScreen)
+  getInitialState() {
+    if (this.isDrawingScreen)
       return null;
     else
       return {line1: "", line2: ""};
@@ -232,6 +236,121 @@ export class SensorScreen extends AbstractSensor {
         drawParameters.stateanchor = "start";
         this.stateText.attr("")
       }
+    }
+  }
+
+  drawTimelineState(sensorHandler: SensorHandler, state: any, expectedState: any, type: string, drawParameters: SensorDrawTimeLineParameters) {
+    const {startx, ypositionmiddle, color, strokewidth, ypositiontop} = drawParameters;
+
+    var sensorDef = sensorHandler.findSensorDefinition(this);
+    if (type != "actual" || !this.lastScreenState || !sensorDef.compareState(this.lastScreenState, state))
+    {
+      this.lastScreenState = state;
+      let stateBubble;
+      if (state.isDrawingData) {
+        stateBubble = this.context.paper.text(startx, ypositiontop + 10, '\uf303');
+
+        stateBubble.attr({
+          "font": "Font Awesome 5 Free",
+          "stroke": color,
+          "fill": color,
+          "font-size": (4 * 2) + "px"
+        });
+
+        stateBubble.node.style.fontFamily = '"Font Awesome 5 Free"';
+        stateBubble.node.style.fontWeight = "bold";
+
+        $(stateBubble.node).css("z-index", "1");
+
+        const showPopup = (event) => {
+          if (!this.showingTooltip) {
+            $( "body" ).append('<div id="screentooltip"></div>');
+
+            $('#screentooltip').css("position", "absolute");
+            $('#screentooltip').css("border", "1px solid gray");
+            $('#screentooltip').css("background-color", "#efefef");
+            $('#screentooltip').css("padding", "3px");
+            $('#screentooltip').css("z-index", "1000");
+            $('#screentooltip').css("width", "262px");
+            $('#screentooltip').css("height", "70px");
+
+            $('#screentooltip').css("left", event.clientX+2).css("top", event.clientY+2);
+
+            var canvas = document.createElement("canvas");
+            canvas.id = "tooltipcanvas";
+            canvas.width = 128 * 2;
+            canvas.height = 32 * 2;
+            $('#screentooltip').append(canvas);
+
+
+            $(canvas).css("position", "absolute");
+            $(canvas).css("z-index", "1500");
+            $(canvas).css("left", 3).css("top", 3);
+
+            if (expectedState && type == "wrong") {
+              screenDrawing.renderDifferences(expectedState, state, canvas, 2);
+            } else {
+              screenDrawing.renderToCanvas(state, canvas, 2);
+            }
+
+            this.showingTooltip = true;
+          }
+        };
+
+        $(stateBubble.node).mouseenter(showPopup);
+        $(stateBubble.node).click(showPopup);
+
+        $(stateBubble.node).mouseleave((event) => {
+          this.showingTooltip = false;
+          $('#screentooltip').remove();
+        });
+
+      } else {
+        stateBubble = this.context.paper.text(startx, ypositionmiddle + 10, '\uf27a');
+        stateBubble.attr({
+          "font": "Font Awesome 5 Free",
+          "stroke": color,
+          "fill": color,
+          "font-size": (strokewidth * 2) + "px"
+        });
+
+        stateBubble.node.style.fontFamily = '"Font Awesome 5 Free"';
+        stateBubble.node.style.fontWeight = "bold";
+
+        const showPopup = () => {
+          if (!this.tooltip) {
+            this.tooltipText = this.context.paper.text(startx, ypositionmiddle + 50, state.line1 + "\n" + (state.line2 ? state.line2 : ""));
+
+            var textDimensions = this.tooltipText.getBBox();
+
+            this.tooltip = this.context.paper.rect(textDimensions.x - 15, textDimensions.y - 15, textDimensions.width + 30, textDimensions.height + 30);
+            this.tooltip.attr({
+              "stroke": "black",
+              "stroke-width": 2,
+              "fill": "white",
+            });
+
+            this.tooltipText.toFront();
+          }
+        }
+
+        stateBubble.click(showPopup);
+
+        stateBubble.hover(showPopup, () => {
+          if (this.tooltip) {
+            this.tooltip.remove();
+            this.tooltip = null;
+          }
+          if (this.tooltipText) {
+            this.tooltipText.remove();
+            this.tooltipText = null;
+          }
+        });
+      }
+      drawParameters.drawnElements.push(stateBubble);
+      this.context.sensorStates.push(stateBubble);
+    } else {
+      drawParameters.deleteLastDrawnElements = false;
     }
   }
 }

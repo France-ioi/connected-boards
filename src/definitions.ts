@@ -122,6 +122,7 @@ export interface QuickalgoLibrary {
   mainBoard: AbstractBoard,
   quickpi: any,
   currentTime: number,
+  sensorStates: any[],
 }
 
 export interface QuickAlgoConstant {

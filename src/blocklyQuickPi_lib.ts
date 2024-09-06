@@ -12,6 +12,7 @@ import {Sensor} from "./definitions";
 import {screenDrawing} from "./sensors/util/screen";
 import {SensorCollection} from "./sensors/sensor_collection";
 import {createSensor} from "./sensors/sensor_factory";
+import {SensorDrawTimeLineParameters} from "./sensors/abstract_sensor";
 
 const boards: {[board: string]: AbstractBoard} = {
     galaxia: galaxiaBoard,
@@ -2361,12 +2362,23 @@ var getContext = function (display, infos, curLevel) {
         var drawnElements = [];
         var deleteLastDrawnElements = true;
 
-        if (sensor.type == "accelerometer"
+        const drawParameters: SensorDrawTimeLineParameters = {
+            color,
+            deleteLastDrawnElements,
+            startx,
+            strokewidth,
+            ypositionmiddle,
+            drawnElements,
+            ypositiontop,
+        };
+
+        if (sensor.drawTimelineState) {
+            sensor.drawTimelineState(sensorHandler, state, expectedState, type, drawParameters);
+        } else if (sensor.type == "accelerometer"
           || sensor.type == "gyroscope"
           || sensor.type == "magnetometer"
           || sensor.type == "ledrgb"
         ) {
-
             if (state != null) {
             for (var i = 0; i < 3; i++) {
                 var startx = context.timelineStartx + (startTime * context.pixelsPerTime);
@@ -2422,7 +2434,7 @@ var getContext = function (display, infos, curLevel) {
                         }
 
                         var paperText = context.paper.text(startx, ypositiontop + offset - 10, stateText);
-                        drawnElements.push(paperText);
+                        drawParameters.drawnElements.push(paperText);
                         context.sensorStates.push(paperText);
 
                         sensor.timelinelastxlabel[i] = startx;
@@ -2441,15 +2453,14 @@ var getContext = function (display, infos, curLevel) {
                     "stroke-linecap": "round"
                 });
 
-                drawnElements.push(stateline);
+                drawParameters.drawnElements.push(stateline);
                 context.sensorStates.push(stateline);
             }
                 sensor.lastAnalogState = state == null ? [0, 0, 0] : state;
             }
 
 
-        } else
-        if (isAnalog || sensor.showAsAnalog) {
+        } else if (isAnalog || sensor.showAsAnalog) {
             var offset = (ypositionbottom - ypositiontop) * sensorHandler.findSensorDefinition(sensor).getPercentageFromState(state, sensor);
 
             if (type == "wrong") {
@@ -2508,7 +2519,7 @@ var getContext = function (display, infos, curLevel) {
                     }
 
                     var paperText = context.paper.text(startx, y, stateText);
-                    drawnElements.push(paperText);
+                    drawParameters.drawnElements.push(paperText);
                     context.sensorStates.push(paperText);
 
                     sensor.timelinelastxlabel = startx;
@@ -2529,7 +2540,7 @@ var getContext = function (display, infos, curLevel) {
                 "stroke-linecap": "round"
             });
 
-            drawnElements.push(stateline);
+            drawParameters.drawnElements.push(stateline);
             context.sensorStates.push(stateline);
         } else if (sensor.type == "stick") {
             var stateToFA = [
@@ -2574,7 +2585,7 @@ var getContext = function (display, infos, curLevel) {
                         "stroke-linecap": "round"
                     });
 
-                    drawnElements.push(stateline);
+                    drawParameters.drawnElements.push(stateline);
                     context.sensorStates.push(stateline);
 
                     if (type == "expected") {
@@ -2595,186 +2606,6 @@ var getContext = function (display, infos, curLevel) {
                 }
             }
 
-        } else if (sensor.type == "screen" && state) {
-            var sensorDef = sensorHandler.findSensorDefinition(sensor);
-            if (type != "actual" || !sensor.lastScreenState || !sensorDef.compareState(sensor.lastScreenState, state))
-            {
-                sensor.lastScreenState = state;
-                if (state.isDrawingData) {
-                    var stateBubble = context.paper.text(startx, ypositiontop + 10, '\uf303');
-
-                    stateBubble.attr({
-                        "font": "Font Awesome 5 Free",
-                        "stroke": color,
-                        "fill": color,
-                        "font-size": (4 * 2) + "px"
-                    });
-
-                    stateBubble.node.style.fontFamily = '"Font Awesome 5 Free"';
-                    stateBubble.node.style.fontWeight = "bold";
-
-                    $(stateBubble.node).css("z-index", "1");
-
-                    function showPopup(event) {
-
-                        if (!sensor.showingTooltip)
-                        {
-                            $( "body" ).append('<div id="screentooltip"></div>');
-
-                            $('#screentooltip').css("position", "absolute");
-                            $('#screentooltip').css("border", "1px solid gray");
-                            $('#screentooltip').css("background-color", "#efefef");
-                            $('#screentooltip').css("padding", "3px");
-                            $('#screentooltip').css("z-index", "1000");
-                            $('#screentooltip').css("width", "262px");
-                            $('#screentooltip').css("height", "70px");
-
-                            $('#screentooltip').css("left", event.clientX+2).css("top", event.clientY+2);
-
-                            var canvas = document.createElement("canvas");
-                            canvas.id = "tooltipcanvas";
-                            canvas.width = 128 * 2;
-                            canvas.height = 32 * 2;
-                            $('#screentooltip').append(canvas);
-
-
-                            $(canvas).css("position", "absolute");
-                            $(canvas).css("z-index", "1500");
-                            $(canvas).css("left", 3).css("top", 3);
-
-
-                            var ctx = canvas.getContext('2d');
-
-                            if (expectedState && type == "wrong") {
-                                screenDrawing.renderDifferences(expectedState, state, canvas, 2);
-                            } else {
-                                screenDrawing.renderToCanvas(state, canvas, 2);
-                            }
-
-                            sensor.showingTooltip = true;
-                        }
-                    };
-
-                    $(stateBubble.node).mouseenter(showPopup);
-                    $(stateBubble.node).click(showPopup);
-
-                    $(stateBubble.node).mouseleave(function(event) {
-                        sensor.showingTooltip = false;
-                        $('#screentooltip').remove();
-                    });
-
-                } else {
-                    var stateBubble = context.paper.text(startx, ypositionmiddle + 10, '\uf27a');
-
-                    stateBubble.attr({
-                        "font": "Font Awesome 5 Free",
-                        "stroke": color,
-                        "fill": color,
-                        "font-size": (strokewidth * 2) + "px"
-                    });
-
-                    stateBubble.node.style.fontFamily = '"Font Awesome 5 Free"';
-                    stateBubble.node.style.fontWeight = "bold";
-
-                    function showPopup() {
-                        if (!sensor.tooltip) {
-                            sensor.tooltipText = context.paper.text(startx, ypositionmiddle + 50, state.line1 + "\n" + (state.line2 ? state.line2 : ""));
-
-                            var textDimensions = sensor.tooltipText.getBBox();
-
-                            sensor.tooltip = context.paper.rect(textDimensions.x - 15, textDimensions.y - 15, textDimensions.width + 30, textDimensions.height + 30);
-                            sensor.tooltip.attr({
-                                "stroke": "black",
-                                "stroke-width": 2,
-                                "fill": "white",
-                            });
-
-                            sensor.tooltipText.toFront();
-                        }
-                    };
-
-                    stateBubble.click(showPopup);
-
-                    stateBubble.hover(showPopup, function () {
-                        if (sensor.tooltip) {
-                            sensor.tooltip.remove();
-                            sensor.tooltip = null;
-                        }
-                        if (sensor.tooltipText) {
-                            sensor.tooltipText.remove();
-                            sensor.tooltipText = null;
-                        }
-                    });
-                }
-                drawnElements.push(stateBubble);
-                context.sensorStates.push(stateBubble);
-            } else {
-                deleteLastDrawnElements = false;
-            }
-        } else if (sensor.type == "cloudstore") {
-            var sensorDef = sensorHandler.findSensorDefinition(sensor);
-            if (type != "actual" || !sensor.lastScreenState || !sensorDef.compareState(sensor.lastScreenState, state))
-            {
-                sensor.lastScreenState = state;
-                    var stateBubble = context.paper.text(startx, ypositionmiddle + 10, '\uf044');
-
-                    stateBubble.attr({
-                        "font": "Font Awesome 5 Free",
-                        "stroke": color,
-                        "fill": color,
-                        "font-size": (4 * 2) + "px"
-                    });
-
-                    stateBubble.node.style.fontFamily = '"Font Awesome 5 Free"';
-                    stateBubble.node.style.fontWeight = "bold";
-
-                    function showPopup(event) {
-
-                        if (!sensor.showingTooltip)
-                        {
-                            $( "body" ).append('<div id="screentooltip"></div>');
-
-                            $('#screentooltip').css("position", "absolute");
-                            $('#screentooltip').css("border", "1px solid gray");
-                            $('#screentooltip').css("background-color", "#efefef");
-                            $('#screentooltip').css("padding", "3px");
-                            $('#screentooltip').css("z-index", "1000");
-                            /*
-                            $('#screentooltip').css("width", "262px");
-                            $('#screentooltip').css("height", "70px");*/
-
-                            $('#screentooltip').css("left", event.clientX+2).css("top", event.clientY+2);
-
-
-                            if (expectedState && type == "wrong") {
-                                var div = LocalQuickStore.renderDifferences(expectedState, state);
-                                $('#screentooltip').append(div);
-                            } else {
-                                for (var property in state) {
-                                    var div = document.createElement("div");
-                                    $(div).text(property + " = " + state[property]);
-                                    $('#screentooltip').append(div);
-                                }
-                            }
-
-                            sensor.showingTooltip = true;
-                        }
-                    };
-
-                    $(stateBubble.node).mouseenter(showPopup);
-                    $(stateBubble.node).click(showPopup);
-
-                    $(stateBubble.node).mouseleave(function(event) {
-                        sensor.showingTooltip = false;
-                        $('#screentooltip').remove();
-                    });
-
-                drawnElements.push(stateBubble);
-                context.sensorStates.push(stateBubble);
-
-            } else {
-                deleteLastDrawnElements = false;
-            }
         } else if (percentage != 0) {
             if (type == "wrong" || type == "actual") {
                 ypositionmiddle += 2;
@@ -2796,7 +2627,7 @@ var getContext = function (display, infos, curLevel) {
 
                 c.animate({ width: stateLenght }, 200);
             }
-            drawnElements.push(c);
+            drawParameters.drawnElements.push(c);
             context.sensorStates.push(c);
         }
 
@@ -2820,7 +2651,7 @@ var getContext = function (display, infos, curLevel) {
         if(type == 'actual' || type == 'wrong') {
             if(!sensor.drawnGradingElements) {
                 sensor.drawnGradingElements = [];
-            } else if(deleteLastDrawnElements) {
+            } else if(drawParameters.deleteLastDrawnElements) {
                 for(var i = 0; i < sensor.drawnGradingElements.length; i++) {
                     var dge = sensor.drawnGradingElements[i];
                     if(dge.time >= startTime) {
@@ -2832,8 +2663,8 @@ var getContext = function (display, infos, curLevel) {
                     }
                 }
             }
-            if(drawnElements.length) {
-                sensor.drawnGradingElements.push({time: startTime, elements: drawnElements});
+            if (drawParameters.drawnElements.length) {
+                sensor.drawnGradingElements.push({time: startTime, elements: drawParameters.drawnElements});
             }
         }
 
@@ -3197,7 +3028,6 @@ var getContext = function (display, infos, curLevel) {
     }
 
     const customBlocks = mainBoard.getCustomBlocks(context, strings);
-    console.log('custom blocks', customBlocks);
     if (customBlocks.customBlocks) {
         context.customBlocks = customBlocks.customBlocks;
     }
@@ -3233,8 +3063,6 @@ var getContext = function (display, infos, curLevel) {
             }
         }
     }
-
-    console.log('final context', context);
 
     // Color indexes of block categories (as a hue in the range 0–420)
     context.provideBlocklyColours = function () {

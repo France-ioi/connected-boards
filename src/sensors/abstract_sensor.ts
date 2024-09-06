@@ -32,6 +32,16 @@ export interface SensorDrawParameters {
   scrolloffset: number,
 }
 
+export interface SensorDrawTimeLineParameters {
+  startx: number,
+  ypositionmiddle: number,
+  color: string,
+  strokewidth: number,
+  ypositiontop: number,
+  drawnElements: any[],
+  deleteLastDrawnElements: boolean,
+}
+
 export abstract class AbstractSensor {
   protected callsInTimeSlot?: number;
   protected drawInfo?: {
@@ -73,4 +83,8 @@ export abstract class AbstractSensor {
   }
 
   public abstract draw(sensorHandler: SensorHandler, parameters: SensorDrawParameters): void;
+
+  public drawTimelineState(sensorHandler: SensorHandler, state: any, expectedState: any, type: string, drawParameters: SensorDrawTimeLineParameters): void {
+
+  };
 }

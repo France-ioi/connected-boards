@@ -692,14 +692,18 @@ export function quickpiModuleDefinition(context: any, strings: any): ModuleDefin
 
 
     isButtonPressed: function (arg1, arg2) {
-      let callback = arg2;
-      let sensor = sensorHandler.findSensorByName(arg1, true);
-      let name = arg1;
+      let callback;
+      let sensor;
+      let name;
       if(typeof arg2 == "undefined") {
         // no arguments
-        let callback = arg1;
-        let sensor = sensorHandler.findSensorByType("button");
-        let name = sensor.name;
+        callback = arg1;
+        sensor = sensorHandler.findSensorByType("button");
+        name = sensor.name;
+      } else {
+        callback = arg2;
+        sensor = sensorHandler.findSensorByName(arg1, true);
+        name = arg1;
       }
 
       if (!context.display || context.autoGrading || context.offLineMode) {
@@ -800,8 +804,8 @@ export function quickpiModuleDefinition(context: any, strings: any): ModuleDefin
       let sensor = sensorHandler.findSensorByName(arg1, true);
       if(typeof arg2 == "undefined") {
         // no arguments
-        let callback = arg1;
-        let sensor = sensorHandler.findSensorByType("buzzer");
+        callback = arg1;
+        sensor = sensorHandler.findSensorByType("buzzer");
       }
 
       let command = "isBuzzerOn(\"" + sensor.name + "\")";
@@ -906,8 +910,8 @@ export function quickpiModuleDefinition(context: any, strings: any): ModuleDefin
       let sensor = sensorHandler.findSensorByName(arg1, true);
       if(typeof arg2 == "undefined") {
         // no arguments
-        let callback = arg1;
-        let sensor = sensorHandler.findSensorByType("led");
+        callback = arg1;
+        sensor = sensorHandler.findSensorByType("led");
       }
 
       let command = "getLedState(\"" + sensor.name + "\")";
@@ -947,8 +951,8 @@ export function quickpiModuleDefinition(context: any, strings: any): ModuleDefin
       let callback = arg3;
       if(typeof arg3 == "undefined") {
         // Only one argument
-        let line2 = null;
-        let callback = arg2;
+        line2 = null;
+        callback = arg2;
       }
 
       let sensor = sensorHandler.findSensorByType("screen");

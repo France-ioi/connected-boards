@@ -43,7 +43,7 @@ export class SensorLedDim extends AbstractSensor {
     this.context.quickPiConnection.sendCommand(command, callback);
   }
 
-  getInitialState(sensor) {
+  getInitialState() {
     return 0;
   }
 
