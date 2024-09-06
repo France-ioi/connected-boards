@@ -7,9 +7,7 @@ import {showConfig} from "./config/config";
 import {getSessionStorage, setSessionStorage} from "./helpers/session_storage";
 import {SensorHandler} from "./sensors/util/sensor_handler";
 import {showasConnecting} from "./display";
-import {LocalQuickStore} from "./sensors/util/local_quickpi_store";
 import {Sensor} from "./definitions";
-import {screenDrawing} from "./sensors/util/screen";
 import {SensorCollection} from "./sensors/sensor_collection";
 import {createSensor} from "./sensors/sensor_factory";
 import {SensorDrawTimeLineParameters} from "./sensors/abstract_sensor";
@@ -2370,96 +2368,13 @@ var getContext = function (display, infos, curLevel) {
             ypositionmiddle,
             drawnElements,
             ypositiontop,
+            stateLenght,
+            startTime,
+            endTime,
         };
 
         if (sensor.drawTimelineState) {
             sensor.drawTimelineState(sensorHandler, state, expectedState, type, drawParameters);
-        } else if (sensor.type == "accelerometer"
-          || sensor.type == "gyroscope"
-          || sensor.type == "magnetometer"
-          || sensor.type == "ledrgb"
-        ) {
-            if (state != null) {
-            for (var i = 0; i < 3; i++) {
-                var startx = context.timelineStartx + (startTime * context.pixelsPerTime);
-                var stateLenght = (endTime - startTime) * context.pixelsPerTime;
-
-                var yspace = context.timeLineSlotHeight / 3;
-                var ypositiontop = sensor.drawInfo.y + (yspace * i)
-                var ypositionbottom = ypositiontop + yspace;
-
-                var offset = (ypositionbottom - ypositiontop) * sensorHandler.findSensorDefinition(sensor).getPercentageFromState(state[i], sensor);
-
-                if (type == "expected" || type == "finnish") {
-                    color = "lightgrey";
-                    strokewidth = 4;
-                } else  if (type == "wrong") {
-                    color = "red";
-                    strokewidth = 2;
-                }
-                else if (type == "actual") {
-                    color = "yellow";
-                    strokewidth = 2;
-                }
-
-                if (sensor.lastAnalogState != null &&
-                    sensor.lastAnalogState[i] != state[i]) {
-
-                    var oldStatePercentage = sensorHandler.findSensorDefinition(sensor).getPercentageFromState(sensor.lastAnalogState[i], sensor);
-
-                    var previousOffset = (ypositionbottom - ypositiontop) * oldStatePercentage;
-
-                    var joinline = context.paper.path(["M", startx,
-                        ypositiontop + offset,
-                        "L", startx,
-                        ypositiontop + previousOffset]);
-
-                    joinline.attr({
-                        "stroke-width": strokewidth,
-                        "stroke": color,
-                        "stroke-linejoin": "round",
-                        "stroke-linecap": "round"
-                    });
-                    context.sensorStates.push(joinline);
-
-                    if (sensor.timelinelastxlabel == null)
-                        sensor.timelinelastxlabel = [0, 0, 0];
-
-                    if ((startx) - sensor.timelinelastxlabel[i] > 40)
-                    {
-                        var sensorDef = sensorHandler.findSensorDefinition(sensor);
-                        var stateText = state.toString();
-                        if(sensorDef && sensorDef.getStateString) {
-                            stateText = sensorDef.getStateString(state[i]);
-                        }
-
-                        var paperText = context.paper.text(startx, ypositiontop + offset - 10, stateText);
-                        drawParameters.drawnElements.push(paperText);
-                        context.sensorStates.push(paperText);
-
-                        sensor.timelinelastxlabel[i] = startx;
-                    }
-                }
-
-                var stateline = context.paper.path(["M", startx,
-                    ypositiontop + offset,
-                    "L", startx + stateLenght,
-                    ypositiontop + offset]);
-
-                stateline.attr({
-                    "stroke-width": strokewidth,
-                    "stroke": color,
-                    "stroke-linejoin": "round",
-                    "stroke-linecap": "round"
-                });
-
-                drawParameters.drawnElements.push(stateline);
-                context.sensorStates.push(stateline);
-            }
-                sensor.lastAnalogState = state == null ? [0, 0, 0] : state;
-            }
-
-
         } else if (isAnalog || sensor.showAsAnalog) {
             var offset = (ypositionbottom - ypositiontop) * sensorHandler.findSensorDefinition(sensor).getPercentageFromState(state, sensor);
 
@@ -2542,70 +2457,6 @@ var getContext = function (display, infos, curLevel) {
 
             drawParameters.drawnElements.push(stateline);
             context.sensorStates.push(stateline);
-        } else if (sensor.type == "stick") {
-            var stateToFA = [
-                "\uf062",
-                "\uf063",
-                "\uf060",
-                "\uf061",
-                "\uf111",
-            ]
-
-
-            var spacing = context.timeLineSlotHeight / 5;
-            for (var i = 0; i < 5; i++)
-            {
-                if (state && state[i])
-                {
-                    var ypos = sensor.drawInfo.y + (i * spacing);
-                    var startingpath = ["M", startx,
-                            ypos,
-                            "L", startx,
-                            ypos];
-
-                    var targetpath = ["M", startx,
-                            ypos,
-                            "L", startx + stateLenght,
-                            ypos];
-
-                    if (type == "expected")
-                    {
-                        var stateline = context.paper.path(targetpath);
-                    }
-                    else
-                    {
-                        var stateline = context.paper.path(startingpath);
-                        stateline.animate({path: targetpath}, 200);
-                    }
-
-                    stateline.attr({
-                        "stroke-width": 2,
-                        "stroke": color,
-                        "stroke-linejoin": "round",
-                        "stroke-linecap": "round"
-                    });
-
-                    drawParameters.drawnElements.push(stateline);
-                    context.sensorStates.push(stateline);
-
-                    if (type == "expected") {
-                        sensor.stateArrow = context.paper.text(startx, ypos + 7, stateToFA[i]);
-                        context.sensorStates.push(sensor.stateArrow);
-
-                        sensor.stateArrow.attr({
-                            "text-anchor": "start",
-                            "font": "Font Awesome 5 Free",
-                            "stroke": color,
-                            "fill": color,
-                            "font-size": (strokewidth * 2) + "px"
-                        });
-
-                        sensor.stateArrow.node.style.fontFamily = '"Font Awesome 5 Free"';
-                        sensor.stateArrow.node.style.fontWeight = "bold";
-                    }
-                }
-            }
-
         } else if (percentage != 0) {
             if (type == "wrong" || type == "actual") {
                 ypositionmiddle += 2;

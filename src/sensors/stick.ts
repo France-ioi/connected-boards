@@ -1,7 +1,8 @@
-import {AbstractSensor, SensorDrawParameters} from "./abstract_sensor";
+import {AbstractSensor, SensorDrawParameters, SensorDrawTimeLineParameters} from "./abstract_sensor";
 import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
+import {type} from "jquery";
 
 const gpios = [10, 9, 11, 8, 7];
 
@@ -11,6 +12,7 @@ export class SensorStick extends AbstractSensor {
   private imgleft: any;
   private imgright: any;
   private imgcenter: any;
+  private stateArrow: any;
   protected portText;
   public type = 'stick';
 
@@ -381,5 +383,70 @@ export class SensorStick extends AbstractSensor {
 
     this.focusrect.node.ontouchstart = this.focusrect.node.onmousedown;
     this.focusrect.node.ontouchend = this.focusrect.node.onmouseup;
+  }
+
+  drawTimelineState(sensorHandler: SensorHandler, state: any, expectedState: any, type: string, drawParameters: SensorDrawTimeLineParameters) {
+    const {startx, color, strokewidth, stateLenght} = drawParameters;
+
+    const stateToFA = [
+      "\uf062",
+      "\uf063",
+      "\uf060",
+      "\uf061",
+      "\uf111",
+    ]
+
+    let spacing = this.context.timeLineSlotHeight / 5;
+    for (let i = 0; i < 5; i++) {
+      if (state && state[i]) {
+        let ypos = this.drawInfo.y + (i * spacing);
+        let startingpath = ["M", startx,
+          ypos,
+          "L", startx,
+          ypos];
+
+        let targetpath = ["M", startx,
+          ypos,
+          "L", startx + stateLenght,
+          ypos];
+
+        let stateline;
+        if (type == "expected")
+        {
+          stateline = this.context.paper.path(targetpath);
+        }
+        else
+        {
+          stateline = this.context.paper.path(startingpath);
+          stateline.animate({path: targetpath}, 200);
+        }
+
+        stateline.attr({
+          "stroke-width": 2,
+          "stroke": color,
+          "stroke-linejoin": "round",
+          "stroke-linecap": "round"
+        });
+
+        drawParameters.drawnElements.push(stateline);
+        this.context.sensorStates.push(stateline);
+
+        if (type == "expected") {
+          this.stateArrow = this.context.paper.text(startx, ypos + 7, stateToFA[i]);
+          this.context.sensorStates.push(this.stateArrow);
+
+          this.stateArrow.attr({
+            "text-anchor": "start",
+            "font": "Font Awesome 5 Free",
+            "stroke": color,
+            "fill": color,
+            "font-size": (strokewidth * 2) + "px"
+          });
+
+          this.stateArrow.node.style.fontFamily = '"Font Awesome 5 Free"';
+          this.stateArrow.node.style.fontWeight = "bold";
+        }
+      }
+    }
   }
 }

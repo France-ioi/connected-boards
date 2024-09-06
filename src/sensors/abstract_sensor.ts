@@ -40,11 +40,14 @@ export interface SensorDrawTimeLineParameters {
   ypositiontop: number,
   drawnElements: any[],
   deleteLastDrawnElements: boolean,
+  stateLenght: number,
+  startTime: number,
+  endTime: number,
 }
 
 export abstract class AbstractSensor {
-  protected callsInTimeSlot?: number;
-  protected drawInfo?: {
+  public callsInTimeSlot?: number;
+  public drawInfo?: {
     x: number,
     y: number,
     width: number,
@@ -70,6 +73,8 @@ export abstract class AbstractSensor {
   public isDrawingScreen?: boolean;
   public removed?: boolean;
   public stateText: any;
+  public timelinelastxlabel?: number[];
+  public lastAnalogState?: any;
 
   protected context: QuickalgoLibrary;
   protected strings: any;

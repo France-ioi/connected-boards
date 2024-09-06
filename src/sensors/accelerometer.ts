@@ -1,7 +1,8 @@
-import {AbstractSensor, SensorDrawParameters} from "./abstract_sensor";
+import {AbstractSensor, SensorDrawParameters, SensorDrawTimeLineParameters} from "./abstract_sensor";
 import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
+import {type} from "jquery";
 
 export class SensorAccelerometer extends AbstractSensor {
   public type = 'accelerometer';
@@ -98,5 +99,9 @@ export class SensorAccelerometer extends AbstractSensor {
 
       sensorHandler.getSensorDrawer().removeSlider(this);
     }
+  }
+
+  drawTimelineState(sensorHandler: SensorHandler, state: any, expectedState: any, type: string, drawParameters: SensorDrawTimeLineParameters) {
+    sensorHandler.getSensorDrawer().drawMultipleTimeLine(this, state, expectedState, type, drawParameters);
   }
 }

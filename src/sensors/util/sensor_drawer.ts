@@ -1,6 +1,6 @@
 import {SensorHandler} from "./sensor_handler";
 import {QuickalgoLibrary, SensorDefinition} from "../../definitions";
-import {SensorDrawParameters} from "../abstract_sensor";
+import {AbstractSensor, SensorDrawParameters, SensorDrawTimeLineParameters} from "../abstract_sensor";
 
 export class SensorDrawer {
   private context: QuickalgoLibrary;
@@ -625,6 +625,90 @@ export class SensorDrawer {
     sliderobj.slider.toFront();
 
     return sliderobj;
+  }
+
+  drawMultipleTimeLine(sensor: AbstractSensor, state: any, expectedState: any, type: string, drawParameters: SensorDrawTimeLineParameters) {
+    let {color, strokewidth, startTime, endTime} = drawParameters;
+
+    if (state != null) {
+      for (var i = 0; i < 3; i++) {
+        var startx = this.context.timelineStartx + (startTime * this.context.pixelsPerTime);
+        var stateLenght = (endTime - startTime) * this.context.pixelsPerTime;
+
+        var yspace = this.context.timeLineSlotHeight / 3;
+        var ypositiontop = sensor.drawInfo.y + (yspace * i)
+        var ypositionbottom = ypositiontop + yspace;
+
+        var offset = (ypositionbottom - ypositiontop) * this.sensorHandler.findSensorDefinition(sensor).getPercentageFromState(state[i], sensor);
+
+        if (type == "expected" || type == "finnish") {
+          color = "lightgrey";
+          strokewidth = 4;
+        } else  if (type == "wrong") {
+          color = "red";
+          strokewidth = 2;
+        }
+        else if (type == "actual") {
+          color = "yellow";
+          strokewidth = 2;
+        }
+
+        if (sensor.lastAnalogState != null &&
+          sensor.lastAnalogState[i] != state[i]) {
+
+          var oldStatePercentage = this.sensorHandler.findSensorDefinition(sensor).getPercentageFromState(sensor.lastAnalogState[i], sensor);
+
+          var previousOffset = (ypositionbottom - ypositiontop) * oldStatePercentage;
+
+          var joinline = this.context.paper.path(["M", startx,
+            ypositiontop + offset,
+            "L", startx,
+            ypositiontop + previousOffset]);
+
+          joinline.attr({
+            "stroke-width": strokewidth,
+            "stroke": color,
+            "stroke-linejoin": "round",
+            "stroke-linecap": "round"
+          });
+          this.context.sensorStates.push(joinline);
+
+          if (sensor.timelinelastxlabel == null)
+            sensor.timelinelastxlabel = [0, 0, 0];
+
+          if ((startx) - sensor.timelinelastxlabel[i] > 40) {
+            let sensorDef = this.sensorHandler.findSensorDefinition(sensor);
+            let stateText = state.toString();
+            if(sensorDef && sensorDef.getStateString) {
+              stateText = sensorDef.getStateString(state[i]);
+            }
+
+            let paperText = this.context.paper.text(startx, ypositiontop + offset - 10, stateText);
+            drawParameters.drawnElements.push(paperText);
+            this.context.sensorStates.push(paperText);
+
+            sensor.timelinelastxlabel[i] = startx;
+          }
+        }
+
+        var stateline = this.context.paper.path(["M", startx,
+          ypositiontop + offset,
+          "L", startx + stateLenght,
+          ypositiontop + offset]);
+
+        stateline.attr({
+          "stroke-width": strokewidth,
+          "stroke": color,
+          "stroke-linejoin": "round",
+          "stroke-linecap": "round"
+        });
+
+        drawParameters.drawnElements.push(stateline);
+        this.context.sensorStates.push(stateline);
+      }
+
+      sensor.lastAnalogState = state == null ? [0, 0, 0] : state;
+    }
   }
 }
 

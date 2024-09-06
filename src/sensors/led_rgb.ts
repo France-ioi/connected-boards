@@ -1,4 +1,4 @@
-import {AbstractSensor} from "./abstract_sensor";
+import {AbstractSensor, SensorDrawTimeLineParameters} from "./abstract_sensor";
 import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {getImg} from "../util";
 import {SensorHandler} from "./util/sensor_handler";
@@ -94,5 +94,9 @@ export class SensorLedRgb extends AbstractSensor {
 
       sensorHandler.getSensorDrawer().removeSlider(this);
     }
+  }
+
+  drawTimelineState(sensorHandler: SensorHandler, state: any, expectedState: any, type: string, drawParameters: SensorDrawTimeLineParameters) {
+    sensorHandler.getSensorDrawer().drawMultipleTimeLine(this, state, expectedState, type, drawParameters);
   }
 }

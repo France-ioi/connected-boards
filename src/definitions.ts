@@ -123,6 +123,9 @@ export interface QuickalgoLibrary {
   quickpi: any,
   currentTime: number,
   sensorStates: any[],
+  timeLineSlotHeight: number,
+  timelineStartx: number,
+  pixelsPerTime: number,
 }
 
 export interface QuickAlgoConstant {
@@ -158,7 +161,7 @@ export interface SensorDefinition {
   selectorImages?: string[],
   valueType?: string,
   pluggable?: boolean,
-  getPercentageFromState?: (state: any, sensor?: Sensor) => number,
+  getPercentageFromState?: (state: any, sensor?: AbstractSensor) => number,
   getStateFromPercentage?: (percentage: number) => any,
   getStateFromPwm?: (pwmDuty: number) => any,
   getStateString?: (state: any) => string,
