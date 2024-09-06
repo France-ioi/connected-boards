@@ -89,7 +89,7 @@ export abstract class AbstractSensor {
 
   public abstract draw(sensorHandler: SensorHandler, parameters: SensorDrawParameters): void;
 
-  public drawTimelineState(sensorHandler: SensorHandler, state: any, expectedState: any, type: string, drawParameters: SensorDrawTimeLineParameters): void {
-
-  };
+  // public drawTimelineState(sensorHandler: SensorHandler, state: any, expectedState: any, type: string, drawParameters: SensorDrawTimeLineParameters): void {
+  //
+  // };
 }
