@@ -70,7 +70,7 @@ export function urequestsModuleDefinition(context: any, strings): ModuleDefiniti
     classImplementations: {
       Response: {
         __constructor: function* (self, statusCode, text) {
-          self.statusCode = statusCode;
+          self.status_code = statusCode;
           self.text = text;
         },
         json: function* (self) {
@@ -96,6 +96,9 @@ export function urequestsModuleDefinition(context: any, strings): ModuleDefiniti
         const [url, headers] = args;
 
         const sensor = context.sensorHandler.findSensorByType('wifi');
+        if (!sensor) {
+          throw `There is no Wi-Fi sensor to make the request.`;
+        }
         if (!sensor.state?.active) {
           throw strings.messages.wifiNotActive;
         }
@@ -114,6 +117,9 @@ export function urequestsModuleDefinition(context: any, strings): ModuleDefiniti
         const [url, data, headers] = args;
 
         const sensor = context.sensorHandler.findSensorByType('wifi');
+        if (!sensor) {
+          throw `There is no Wi-Fi sensor to make the request.`;
+        }
         if (!sensor.state?.active) {
           throw strings.messages.wifiNotActive;
         }
