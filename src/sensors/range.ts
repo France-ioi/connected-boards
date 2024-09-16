@@ -27,6 +27,7 @@ export class SensorRange extends AbstractSensor {
       getStateFromPercentage: function (percentage) {
         return Math.round(percentage * 500);
       },
+      disablePinControl: true,
       subTypes: [{
         subType: "vl53l0x",
         description: strings.messages.timeofflightranger,

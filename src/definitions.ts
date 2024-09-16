@@ -176,6 +176,7 @@ export interface SensorDefinition {
   gpiosNames?: string[],
   gpios?: number[],
   getButtonState?: (buttonname: string, state: any) => boolean,
+  disablePinControl?: boolean,
 }
 
 export {};

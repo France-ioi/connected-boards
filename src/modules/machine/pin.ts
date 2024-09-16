@@ -34,13 +34,16 @@ export function machinePinModuleDefinition(context: any, strings): ModuleDefinit
             throw `There is no sensor connected to the digital port D${self.pinNumber}`;
           }
 
-          let command = "turnPortOn(\"" + sensor.name + "\")";
-
-          context.registerQuickPiEvent(sensor.name, true);
+          const sensorDef = context.sensorHandler.findSensorDefinition(sensor);
+          if (!sensorDef.disablePinControl) {
+            context.registerQuickPiEvent(sensor.name, true);
+          }
 
           if (!context.display || context.autoGrading || context.offLineMode) {
             context.waitDelay(callback);
           } else {
+            let command = "turnPortOn(\"" + sensor.name + "\")";
+
             let cb = context.runner.waitCallback(callback);
 
             context.quickPiConnection.sendCommand(command, cb);
@@ -54,7 +57,10 @@ export function machinePinModuleDefinition(context: any, strings): ModuleDefinit
 
           let command = "turnPortOff(\"" + sensor.name + "\")";
 
-          context.registerQuickPiEvent(sensor.name, false);
+          const sensorDef = context.sensorHandler.findSensorDefinition(sensor);
+          if (!sensorDef.disablePinControl) {
+            context.registerQuickPiEvent(sensor.name, false);
+          }
 
           if (!context.display || context.autoGrading || context.offLineMode) {
             context.waitDelay(callback);

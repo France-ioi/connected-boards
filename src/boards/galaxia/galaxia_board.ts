@@ -14,6 +14,7 @@ import galaxiaSvg from '../../../images/galaxia.svg';
 import {networkWlanModuleDefinition} from "../../modules/network/wlan";
 import {urequestsModuleDefinition} from "../../modules/urequests/requests";
 import {ujsonModuleDefinition} from "../../modules/ujson/json";
+import {machinePulseModuleDefinition} from "../../modules/machine/pulse";
 
 interface GalaxiaBoardInnerState {
   connected?: boolean,
@@ -224,6 +225,7 @@ export class GalaxiaBoard extends AbstractBoard {
     const ledModule = thingzLedModuleDefinition(context, strings);
     const pinModule = machinePinModuleDefinition(context, strings);
     const pwmModule = machinePwmModuleDefinition(context, strings);
+    const pulseModule = machinePulseModuleDefinition(context, strings);
     const utimeModule = utimeSleepModuleDefinition(context, strings);
     const wlanModule = networkWlanModuleDefinition(context, strings);
     const requestsModule = urequestsModuleDefinition(context, strings);
@@ -271,12 +273,14 @@ export class GalaxiaBoard extends AbstractBoard {
         utime: utimeModule.blockImplementations,
         urequests: requestsModule.blockImplementations,
         ujson: jsonModule.blockImplementations,
+        machine: pulseModule.blockImplementations,
       },
       customBlocks: {
         thingz: temperatureModule.blockDefinitions,
         utime: utimeModule.blockDefinitions,
         urequests: requestsModule.blockDefinitions,
         ujson: jsonModule.blockDefinitions,
+        machine: pulseModule.blockDefinitions,
       },
     };
   }
