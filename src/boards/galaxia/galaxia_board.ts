@@ -1,6 +1,5 @@
 import {AbstractBoard} from "../abstract_board";
 import {BoardCustomBlocks, BoardDefinition, ConnectionMethod} from "../../definitions";
-import {getGalaxiaConnection} from "./galaxia_connexion";
 import {thingzAccelerometerModuleDefinition} from "../../modules/thingz/accelerometer";
 import {thingzButtonsModuleDefinition} from "../../modules/thingz/buttons";
 import {deepMerge} from "../../util";
@@ -15,6 +14,7 @@ import {networkWlanModuleDefinition} from "../../modules/network/wlan";
 import {urequestsModuleDefinition} from "../../modules/urequests/requests";
 import {ujsonModuleDefinition} from "../../modules/ujson/json";
 import {machinePulseModuleDefinition} from "../../modules/machine/pulse";
+import {GalaxiaConnection} from "./galaxia_connexion";
 
 interface GalaxiaBoardInnerState {
   connected?: boolean,
@@ -22,6 +22,7 @@ interface GalaxiaBoardInnerState {
 }
 
 let galaxiaSvgInline = null;
+let galaxiaConnection = null;
 
 export class GalaxiaBoard extends AbstractBoard {
   buttonStatesUpdators = {};
@@ -215,7 +216,13 @@ export class GalaxiaBoard extends AbstractBoard {
   }
 
   getConnection() {
-    return getGalaxiaConnection;
+    if (!galaxiaConnection) {
+      galaxiaConnection = function (userName, _onConnect, _onDisconnect, _onChangeBoard) {
+        return new GalaxiaConnection(userName, _onConnect, _onDisconnect, _onChangeBoard);
+      }
+    }
+
+    return galaxiaConnection;
   }
 
   getCustomBlocks(context, strings): BoardCustomBlocks {

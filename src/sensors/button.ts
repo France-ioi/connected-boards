@@ -38,8 +38,12 @@ export class SensorButton extends AbstractSensor {
 
   getLiveState(callback) {
     this.context.quickPiConnection.sendCommand("isButtonPressed(\"" + this.name + "\")", function (retVal) {
-      var intVal = parseInt(retVal, 10);
-      callback(intVal != 0);
+      if ('boolean' === typeof retVal) {
+        callback(retVal);
+      } else {
+        const intVal = parseInt(retVal, 10);
+        callback(intVal != 0);
+      }
     });
   }
 

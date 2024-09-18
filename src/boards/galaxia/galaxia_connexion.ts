@@ -51,16 +51,34 @@ let sensorValues = {
   "heading": 0
 }
 
-let g_instance = null;
-export const getGalaxiaConnection = function (userName, _onConnect, _onDisconnect, _onChangeBoard) {
-  this.onConnect = _onConnect;
-  this.onDisconnect = _onDisconnect;
+export class GalaxiaConnection {
+  private userName: string;
+  private _onConnect;
+  private _onDisconnect;
+  private _onChangeBoard;
+  private connecting: boolean = false;
+  private connected: boolean = false;
+  private releasing: boolean = false;
+  private serial: any;
+  private currentOutput: string = "";
+  private outputCallback: any;
+  private executionQueue: any[];
+  private executing: boolean = false;
+  private releaseTimeout: any;
+  private currentExecutionCallback: any;
+  private currentOutputId: string;
+  private nbCommandsExecuted: number;
+  private reader: any;
 
-  if (g_instance) {
-    return g_instance;
+  constructor (userName, _onConnect, _onDisconnect, _onChangeBoard) {
+    this.userName = userName;
+    this._onConnect = _onConnect;
+    this._onDisconnect = _onDisconnect;
+    this._onChangeBoard = _onChangeBoard;
+    this.resetProperties();
   }
 
-  this.resetProperties = function () {
+  resetProperties() {
     this.connecting = false;
     this.connected = false;
     this.releasing = false;
@@ -69,17 +87,22 @@ export const getGalaxiaConnection = function (userName, _onConnect, _onDisconnec
     this.outputCallback = null;
     this.executionQueue = [];
     this.executing = false;
+    this.releaseTimeout = null;
+    this.currentExecutionCallback = null;
+    this.currentOutputId = "";
+    this.nbCommandsExecuted = 0;
   }
-  this.resetProperties();
 
-  this.onConnect = _onConnect;
-  this.onDisconnect = function () {
+  onDisconnect(wasConnected: boolean, wrongversion: boolean = false) {
     this.releaseLock();
-    _onDisconnect.apply(this, arguments);
+    this._onDisconnect.apply(this, arguments);
   }
-  this.onChangeBoard = _onChangeBoard;
 
-  this.processGalaxiaOutput = function (data) {
+  onChangeBoard(board: string) {
+    this._onChangeBoard.apply(this, arguments);
+  }
+
+  processGalaxiaOutput(data) {
     let text = new TextDecoder().decode(data);
     this.currentOutput += text;
     let lines = this.currentOutput.split('\r\n');
@@ -92,20 +115,20 @@ export const getGalaxiaConnection = function (userName, _onConnect, _onDisconnec
     }
     window.currentOutput = this.currentOutput;
 
-    if (this.outputCallback && lines[lines.length - 1].startsWith('>>> ') && lines[lines.length - 2].startsWith(currentOutputId)) {
+    if (this.outputCallback && lines[lines.length - 1].startsWith('>>> ') && lines[lines.length - 2].startsWith(this.currentOutputId)) {
       this.outputCallback(lines[lines.length - 4]);
       this.outputCallback = null;
     }
   }
 
-  this.connect = async function (url) {
+  async connect(url) {
     this.resetProperties();
     this.connecting = true;
     try {
       this.serial = await getSerial([{usbProductId: 0x4003, usbVendorId: 0x303A}]);
     } catch (e) {
       this.connecting = false;
-      _onDisconnect(false);
+      this._onDisconnect(false);
       return;
     }
 
@@ -120,10 +143,10 @@ export const getGalaxiaConnection = function (userName, _onConnect, _onDisconnec
     this.connecting = false;
     this.connected = true;
 
-    this.onConnect();
+    this._onConnect();
   }
 
-  this.serialStartRead = async function (port, callback) {
+  async serialStartRead(port) {
     this.reader = port.readable.getReader();
     while (true) {
       const {value, done} = await this.reader.read();
@@ -136,7 +159,7 @@ export const getGalaxiaConnection = function (userName, _onConnect, _onDisconnec
   }
 
 
-  this.transferPythonLib = async function () {
+  async transferPythonLib() {
     await serialWrite(this.serial, "f = open(\"fioilib.py\", \"w\")\r\nf.write(" + JSON.stringify(pythonLib).replace(/\n/g, "\r\n") + ")\r\nf.close()\r\n");
     await new Promise(resolve => setTimeout(resolve, 1000));
     await serialWrite(this.serial, "exec(open(\"fioilib.py\", \"r\").read())\r\n");
@@ -145,30 +168,30 @@ export const getGalaxiaConnection = function (userName, _onConnect, _onDisconnec
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
 
-  this.isAvailable = function (ipaddress, callback) {
+  isAvailable(ipaddress, callback) {
     callback(ipaddress == "localhost");
   }
 
-  this.onclose = function () {
+  onclose() {
   }
 
-  this.wasLocked = function () {
+  wasLocked() {
   }
 
-  this.isConnecting = function () {
+  isConnecting() {
     return this.connecting;
   }
 
-  this.isConnected = function () {
+  isConnected() {
     return this.connected;
   }
 
-  this.executeProgram = function (pythonProgram) {
+  executeProgram(pythonProgram) {
     // TODO
   }
 
 
-  this.installProgram = function (pythonProgram, oninstall) {
+  installProgram(pythonProgram, oninstall) {
     let fullProgram = pythonProgram;
     let cmds = [
       "f = open(\"program.py\", \"w\")"
@@ -180,14 +203,14 @@ export const getGalaxiaConnection = function (userName, _onConnect, _onDisconnec
     cmds.push("f.close()");
     let idx = -1;
 
-    function executeNext() {
+    const executeNext = () => {
       idx += 1;
       if (idx >= cmds.length) {
         oninstall();
-        executeSerial("exec(open(\"program.py\", \"r\").read())", () => {
+        this.executeSerial("exec(open(\"program.py\", \"r\").read())", () => {
         });
       }
-      executeSerial(cmds[idx] + "\r\n", function () {
+      this.executeSerial(cmds[idx] + "\r\n", () => {
         setTimeout(executeNext, 500)
       });
     }
@@ -195,104 +218,122 @@ export const getGalaxiaConnection = function (userName, _onConnect, _onDisconnec
     executeNext();
   }
 
-  this.runDistributed = function (pythonProgram, graphDefinition, oninstall) {
+  runDistributed(pythonProgram, graphDefinition, oninstall) {
     return;
   }
 
-  this.stopProgram = function () {
+  stopProgram() {
     // TODO
   }
 
-  let releaseTimeout = null;
-  this.releaseLock = function () {
+  releaseLock() {
     if (!this.serial) {
       return;
     }
-    let that = this;
     this.releasing = true;
 
-    async function endRelease() {
-      if (!releaseTimeout) {
+    const endRelease = async () => {
+      if (!this.releaseTimeout) {
         return;
       }
-      that.reader.cancel().catch(() => {
+      this.reader.cancel().catch(() => {
       });
       await new Promise(resolve => setTimeout(resolve, 100));
-      that.serial.close();
-      that.serial = null;
-      that.connecting = null;
-      that.connected = null;
-      releaseTimeout = null;
-      that.onDisconnect(false);
+      this.serial.close();
+      this.serial = null;
+      this.connecting = null;
+      this.connected = null;
+      this.releaseTimeout = null;
+      this.onDisconnect(false);
     }
 
-    serialWrite(this.serial, "\x04").then(() => {
-      that.reader.closed.then(() => {
-        // For some reason, if we don't use a timeout, the reader is still locked and we can't close the serial port
-        setTimeout(endRelease, 100);
+    serialWrite(this.serial, "\x04")
+      .then(() => {
+        this.reader.closed.then(() => {
+          // For some reason, if we don't use a timeout, the reader is still locked and we can't close the serial port
+          setTimeout(endRelease, 100);
+        });
       });
-    });
-    releaseTimeout = setTimeout(endRelease, 5000);
+
+    this.releaseTimeout = setTimeout(endRelease, 5000);
   }
 
-  this.startNewSession = function () {
+  startNewSession() {
     // TODO
   }
 
-  this.startTransaction = function () {
+  startTransaction() {
     // TODO
   }
 
-  this.endTransaction = function () {
+  endTransaction() {
     // TODO
   }
 
-
-  let currentExecutionCallback = null;
-  let currentOutputId = "";
-  let nbCommandsExecuted = 0;
-
-  function executeSerial(command, callback) {
+  executeSerial(command, callback) {
     if (this.executing) {
       this.executionQueue.push([command, callback]);
       return;
     }
     this.executing = true;
     let that = this;
-    nbCommandsExecuted += 1;
-    if (nbCommandsExecuted > 500) {
+    this.nbCommandsExecuted += 1;
+    if (this.nbCommandsExecuted > 500) {
       this.executionQueue.push(["\x04", () => {
       }]);
       this.executionQueue.push(["exec(open(\"fioilib.py\", \"r\").read())\r\n", () => {
       }]);
-      nbCommandsExecuted = 0;
+      this.nbCommandsExecuted = 0;
     }
-    currentOutputId = Math.random().toString(36).substring(7);
-    currentExecutionCallback = callback;
-    serialWrite(this.serial, command + "\r\nprint(\"" + currentOutputId + "\")\r\n").then(() => {
-      that.outputCallback = function (data) {
-        if (currentExecutionCallback) {
-          currentExecutionCallback(data);
+    this.currentOutputId = Math.random().toString(36).substring(7);
+    this.currentExecutionCallback = callback;
+    serialWrite(this.serial, command + "\r\nprint(\"" + this.currentOutputId + "\")\r\n").then(() => {
+      that.outputCallback = (data) => {
+        if (this.currentExecutionCallback) {
+          this.currentExecutionCallback(data);
         }
         that.executing = false;
         if (that.executionQueue.length > 0) {
           let [command, callback] = that.executionQueue.shift();
-          executeSerial(command, callback);
+          this.executeSerial(command, callback);
         }
       }
     })
   }
 
-  window.exec = executeSerial.bind(this);
+  // window.exec = executeSerial.bind(this);
 
-  this.genericSendCommand = function (command, callback) {
-    executeSerial(`print(${command})`,
-      function (data) {
-        callback(JSON.stringify(JSON.parse(data)));
-      });
+  convertResultData(data) {
+    if ('True' === data) {
+      return true;
+    }
+    if ('False' === data) {
+      return false;
+    }
+
+    return data;
   }
 
-  this.sendCommand = function (command, callback) {
+  genericSendCommand(command, callback) {
+    console.log('generic send command', command);
+
+    this.executeSerial(`print(${command})`, (data) => {
+      const convertedData = this.convertResultData(data);
+      console.log('received data', {data, convertedData, command});
+
+      callback(convertedData);
+    });
+  }
+
+  sendCommand(command, callback) {
+    if (-1 !== command.indexOf('sensorTable =')) {
+      callback();
+      return;
+    }
+
+    this.genericSendCommand(command, callback);
+    return;
+
     if (command == "readAccelBMI160()") {
       this.genericSendCommand(command, callback);
 
@@ -314,45 +355,45 @@ export const getGalaxiaConnection = function (userName, _onConnect, _onDisconnec
       if (DEBUG_SILENCE_SENSORS) {
         return callback(true);
       }
-      executeSerial("led.set_colors(100, 20, 20)\r\nprint(True)", callback);
+      this.executeSerial("led.set_colors(100, 20, 20)\r\nprint(True)", callback);
     } else if (command == "setLedState(\"led\",0)" || command == "turnLedOff()") {
       if (DEBUG_SILENCE_SENSORS) {
         return callback(true);
       }
-      executeSerial("led.set_colors(0, 0, 0)\r\nprint(True)", callback);
+      this.executeSerial("led.set_colors(0, 0, 0)\r\nprint(True)", callback);
     } else if (command == "readAcceleration(\"x\")") {
       if (DEBUG_SILENCE_SENSORS) {
         return callback(0);
       }
-      executeSerial("print(accelerometer.get_x())", function (data) {
+      this.executeSerial("print(accelerometer.get_x())", function (data) {
         callback(Math.round(JSON.parse(data) / 10) / 10);
       });
     } else if (command == "readAcceleration(\"y\")") {
       if (DEBUG_SILENCE_SENSORS) {
         return callback(0);
       }
-      executeSerial("print(accelerometer.get_y())", function (data) {
+      this.executeSerial("print(accelerometer.get_y())", function (data) {
         callback(Math.round(JSON.parse(data) / 10) / 10);
       });
     } else if (command == "readAcceleration(\"z\")") {
       if (DEBUG_SILENCE_SENSORS) {
         return callback(0);
       }
-      executeSerial("print(accelerometer.get_z())", function (data) {
+      this.executeSerial("print(accelerometer.get_z())", function (data) {
         callback(Math.round(JSON.parse(data) / 10) / 10);
       });
     } else if (command == "isButtonPressed(\"btnA\")") {
       if (DEBUG_SILENCE_SENSORS) {
         return callback(0);
       }
-      executeSerial("print(button_a.is_pressed())", function (data) {
+      this.executeSerial("print(button_a.is_pressed())", function (data) {
         callback(data == 'True' ? 1 : 0);
       });
     } else if (command == "isButtonPressed(\"btnB\")") {
       if (DEBUG_SILENCE_SENSORS) {
         return callback(0);
       }
-      executeSerial("print(button_b.is_pressed())", function (data) {
+      this.executeSerial("print(button_b.is_pressed())", function (data) {
         callback(data == 'True' ? 1 : 0);
       });
     } else if (command.startsWith("setServoAngle(\"servo\",")) {
@@ -367,12 +408,12 @@ export const getGalaxiaConnection = function (userName, _onConnect, _onDisconnec
         angle = 180;
       }
       let duty = Math.floor(0.025 * 1023 + angle * 0.1 * 1023 / 180);
-      executeSerial("pwm7.duty(" + duty + ")\r\nprint(True)", callback);
+      this.executeSerial("pwm7.duty(" + duty + ")\r\nprint(True)", callback);
     } else if (command == "getServoAngle(\"servo\")") {
       if (DEBUG_SILENCE_SENSORS) {
         return callback(90);
       }
-      executeSerial("print(pwm7.duty())", function (data) {
+      this.executeSerial("print(pwm7.duty())", function (data) {
         let duty = parseInt(data);
         let angle = Math.floor((duty - SERVO_MIN_DUTY) * 180 / (SERVO_MAX_DUTY - SERVO_MIN_DUTY));
         callback(angle);
@@ -386,15 +427,12 @@ export const getGalaxiaConnection = function (userName, _onConnect, _onDisconnec
       if (state == "True" || state == "1") {
         target = "on";
       }
-      executeSerial("p7." + target + "()\r\nprint(True)", callback);
+      this.executeSerial("p7." + target + "()\r\nprint(True)", callback);
     } else {
       console.log("unknown command", command);
       callback();
     }
   }
-
-  g_instance = this;
-  return this;
 }
 
 
@@ -436,10 +474,18 @@ def turnLedOff():
     setLedState("led", 0)
 
 def isButtonPressed(name):
-    if name == "btnA":
+    if name == "button_a":
         return button_a.is_pressed()
-    elif name == "btnB":
+    elif name == "button_b":
         return button_b.is_pressed()
+    elif name == "touch_n":
+        return touch_n.is_touched()
+    elif name == "touch_s":
+        return touch_s.is_touched()
+    elif name == "touch_e":
+        return touch_e.is_touched()
+    elif name == "touch_w":
+        return touch_w.is_touched()
     else:
         throw("Unknown button")
 
