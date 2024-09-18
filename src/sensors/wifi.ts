@@ -19,7 +19,7 @@ interface SensorWifiState {
   }
 }
 
-export class SensorWifi extends AbstractSensor {
+export class SensorWifi extends AbstractSensor<SensorWifiState> {
   declare public state?: SensorWifiState;
   protected active: any;
   private showingTooltip: boolean = false;

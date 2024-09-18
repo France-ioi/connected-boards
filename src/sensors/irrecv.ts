@@ -4,7 +4,7 @@ import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
 import {generateIrRemoteDialog} from "./irtrans";
 
-export class SensorIrRecv extends AbstractSensor {
+export class SensorIrRecv extends AbstractSensor<any> {
   private buttonon: any;
   private buttonoff: any;
   private waitingForIrMessage: (code: string) => void;

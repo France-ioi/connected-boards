@@ -3,7 +3,7 @@ import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
 
-export class SensorHumidity extends AbstractSensor {
+export class SensorHumidity extends AbstractSensor<any> {
   public type = 'humidity';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {

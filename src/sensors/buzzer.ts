@@ -4,7 +4,7 @@ import {SensorHandler} from "./util/sensor_handler";
 import {buzzerSound} from "./util/buzzer_sound";
 import {getImg} from "../util";
 
-export class SensorBuzzer extends AbstractSensor {
+export class SensorBuzzer extends AbstractSensor<any> {
   private buzzeron: any;
   private buzzeroff: any;
   private muteBtn: any;

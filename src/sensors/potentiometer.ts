@@ -3,7 +3,7 @@ import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
 
-export class SensorPotentiometer extends AbstractSensor {
+export class SensorPotentiometer extends AbstractSensor<any> {
   private pale: any;
   public type = 'potentiometer';
 

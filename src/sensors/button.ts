@@ -3,7 +3,7 @@ import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
 
-export class SensorButton extends AbstractSensor {
+export class SensorButton extends AbstractSensor<any> {
   private buttonon: any;
   private buttonoff: any;
   private wasPressed: boolean;

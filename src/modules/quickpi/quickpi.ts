@@ -1573,16 +1573,16 @@ export function quickpiModuleDefinition(context: any, strings: any): ModuleDefin
     },
 
     setInfraredState: function (name, state, callback) {
-      let sensor = sensorHandler.findSensorByName(name, true);
+      const sensor = sensorHandler.findSensorByName(name, true);
 
-      context.registerQuickPiEvent(name, state ? true : false);
+      context.registerQuickPiEvent(name, !!state);
 
       if (!context.display || context.autoGrading || context.offLineMode) {
         context.waitDelay(callback);
       } else {
         let cb = context.runner.waitCallback(callback);
 
-        sensorHandler.findSensorDefinition(sensor).setLiveState(sensor, state, cb);
+        sensor.setLiveState(state, cb);
       }
     },
 

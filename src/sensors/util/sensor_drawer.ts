@@ -627,7 +627,7 @@ export class SensorDrawer {
     return sliderobj;
   }
 
-  drawMultipleTimeLine(sensor: AbstractSensor, state: any, expectedState: any, type: string, drawParameters: SensorDrawTimeLineParameters) {
+  drawMultipleTimeLine(sensor: AbstractSensor<any>, state: any, expectedState: any, type: string, drawParameters: SensorDrawTimeLineParameters) {
     let {color, strokewidth, startTime, endTime} = drawParameters;
 
     if (state != null) {

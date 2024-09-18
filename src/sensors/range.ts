@@ -3,7 +3,7 @@ import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
 
-export class SensorRange extends AbstractSensor {
+export class SensorRange extends AbstractSensor<any> {
   private rangedistance: any;
   private rangedistancestart: any;
   private rangedistanceend: any;

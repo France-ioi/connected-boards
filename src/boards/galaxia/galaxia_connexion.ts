@@ -440,13 +440,6 @@ let pythonLib = `
 from machine import *
 from thingz import *
 
-#pwm7 = PWM(Pin(7), freq=50, duty=205)
-#pwm7 = PWM(Pin(7), freq=50, duty_u16=0)
-p7 = Pin(7, Pin.OUT)
-
-SERVO_MIN_DUTY = ${SERVO_MIN_DUTY}
-SERVO_MAX_DUTY = ${SERVO_MAX_DUTY}
-
 def readAcceleration(axis):
     if axis == "x":
         val = accelerometer.get_x()
@@ -467,12 +460,21 @@ def setLedState(name, state):
     else:
         led.set_colors(0, 0, 0)
 
+def readLightIntensity(pin):
+	  return led.read_light_level()
+
+def readTemperature(pin):
+    return temperature()
+
 def turnLedOn():
     setLedState("led", 1)
 
 def turnLedOff():
     setLedState("led", 0)
 
+def setLedRgbState(pin, rgb):
+    led.set_colors(rgb[0], rgb[1], rgb[2])
+ 
 def isButtonPressed(name):
     if name == "button_a":
         return button_a.is_pressed()
@@ -488,27 +490,6 @@ def isButtonPressed(name):
         return touch_w.is_touched()
     else:
         throw("Unknown button")
-
-def setServoAngle(name, angle):
-    if angle < 0:
-        angle = 0
-    if angle > 180:
-        angle = 180
-    
-    duty = round(SERVO_MIN_DUTY+angle*(SERVO_MAX_DUTY - SERVO_MIN_DUTY)/180);
-    pwm7.duty(duty)
-
-def getServoAngle(name):
-    duty = pwm7.duty()
-    angle = round((duty - SERVO_MIN_DUTY) * 180 / (SERVO_MAX_DUTY - SERVO_MIN_DUTY))
-    return angle
-
-def setBuzzerState(name, state):
-    if state == True or state == 1:
-        p7.on()
-    else:
-        p7.off()
-
 `;
 
 let mainLib = `

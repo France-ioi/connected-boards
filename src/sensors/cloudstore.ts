@@ -5,7 +5,7 @@ import {deepEqual, getImg, isPrimitive} from "../util";
 import {quickPiLocalLanguageStrings} from "../lang/language_strings";
 import {LocalQuickStore} from "./util/local_quickpi_store";
 
-export class SensorCloudStore extends AbstractSensor {
+export class SensorCloudStore extends AbstractSensor<any> {
   private lastScreenState: any;
   private showingTooltip: boolean;
   public type = 'cloudstore';

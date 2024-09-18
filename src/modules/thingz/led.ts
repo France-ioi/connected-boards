@@ -26,16 +26,15 @@ export function thingzLedModuleDefinition(context: any, strings: any): ModuleDef
         set_colors: function (self, red, green, blue, callback) {
           const sensor = context.sensorHandler.findSensorByType('ledrgb');
 
-          let command = "setLedColors(\"" + sensor.name + "\"," + red + "," + green + "," + blue + ")";
-
-          context.registerQuickPiEvent(sensor.name, [red, green, blue]);
+          const newState = [red, green, blue];
+          context.registerQuickPiEvent(sensor.name, newState);
 
           if (!context.display || context.autoGrading || context.offLineMode) {
             context.waitDelay(callback);
           } else {
             let cb = context.runner.waitCallback(callback);
 
-            context.quickPiConnection.sendCommand(command, cb);
+            sensor.setLiveState(newState, cb);
           }
         },
         read_light_level: function (self, callback) {

@@ -3,7 +3,7 @@ import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
 
-export class SensorServo extends AbstractSensor {
+export class SensorServo extends AbstractSensor<any> {
   private pale: any;
   private center: any;
   private updatetimeout: any;

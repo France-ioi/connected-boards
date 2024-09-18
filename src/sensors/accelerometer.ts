@@ -4,7 +4,7 @@ import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
 import {type} from "jquery";
 
-export class SensorAccelerometer extends AbstractSensor {
+export class SensorAccelerometer extends AbstractSensor<any> {
   public type = 'accelerometer';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {

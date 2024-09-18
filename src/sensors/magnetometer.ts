@@ -3,7 +3,7 @@ import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
 
-export class SensorMagnetometer extends AbstractSensor {
+export class SensorMagnetometer extends AbstractSensor<any> {
   private needle: any;
   public type = 'magnetometer';
 

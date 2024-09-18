@@ -24,7 +24,7 @@ export function generateIrRemoteDialog(strings: any) {
     "</div>";
 }
 
-export class SensorIrTrans extends AbstractSensor {
+export class SensorIrTrans extends AbstractSensor<any> {
   private ledon: any;
   private ledoff: any;
   public type = 'irtrans';

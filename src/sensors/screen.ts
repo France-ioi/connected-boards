@@ -4,7 +4,7 @@ import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
 import {screenDrawing} from "./util/screen";
 
-export class SensorScreen extends AbstractSensor {
+export class SensorScreen extends AbstractSensor<any> {
   private screenrect: any;
   private canvasNode: any;
   private canvas: any;

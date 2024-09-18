@@ -45,7 +45,7 @@ export interface SensorDrawTimeLineParameters {
   endTime: number,
 }
 
-export abstract class AbstractSensor {
+export abstract class AbstractSensor<T> {
   public callsInTimeSlot?: number;
   public drawInfo?: {
     x: number,
@@ -67,7 +67,7 @@ export abstract class AbstractSensor {
   public subType?: string;
   public suggestedName?: string;
   public port?: string;
-  public state?: any;
+  public state?: T;
   public builtin?: boolean;
   public showAsAnalog?: boolean;
   public isDrawingScreen?: boolean;
@@ -88,6 +88,8 @@ export abstract class AbstractSensor {
   }
 
   public abstract draw(sensorHandler: SensorHandler, parameters: SensorDrawParameters): void;
+  public setLiveState?(state: T, callback): void;
+  public getInitialState?(): T;
 
   // public drawTimelineState(sensorHandler: SensorHandler, state: any, expectedState: any, type: string, drawParameters: SensorDrawTimeLineParameters): void {
   //

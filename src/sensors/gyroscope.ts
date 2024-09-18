@@ -4,7 +4,7 @@ import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
 import {gyroscope3D} from "./util/gyroscope3d";
 
-export class SensorGyroscope extends AbstractSensor {
+export class SensorGyroscope extends AbstractSensor<any> {
   private canvas: any;
   private canvasNode: any;
   private screenrect: any;

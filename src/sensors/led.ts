@@ -3,7 +3,7 @@ import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {getImg} from "../util";
 import {SensorHandler} from "./util/sensor_handler";
 
-export class SensorLed extends AbstractSensor {
+export class SensorLed extends AbstractSensor<any> {
   private ledon: any;
   private ledoff: any;
   public type = 'led';

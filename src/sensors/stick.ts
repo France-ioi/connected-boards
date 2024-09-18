@@ -6,7 +6,7 @@ import {type} from "jquery";
 
 const gpios = [10, 9, 11, 8, 7];
 
-export class SensorStick extends AbstractSensor {
+export class SensorStick extends AbstractSensor<any> {
   private imgup: any;
   private imgdown: any;
   private imgleft: any;

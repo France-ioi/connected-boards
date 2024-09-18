@@ -42,7 +42,7 @@ export class SensorHandler {
     return name + (maxvalue + 1);
   }
 
-  findSensorDefinition(sensor: AbstractSensor): SensorDefinition {
+  findSensorDefinition(sensor: AbstractSensor<any>): SensorDefinition {
     let sensorDef = null;
     for (let iType = 0; iType < this.sensorDefinitions.length; iType++) {
       let type = this.sensorDefinitions[iType];
@@ -89,7 +89,7 @@ export class SensorHandler {
     return false;
   }
 
-  findSensorByName(name, error=false): AbstractSensor|null {
+  findSensorByName(name, error=false): AbstractSensor<any>|null {
     if (isNaN(name.substring(0, 1)) && !isNaN(name.substring(1))) {
       for (let sensor of this.context.sensorsList.all()) {
         if (sensor.port.toUpperCase() == name.toUpperCase()) {
@@ -114,7 +114,7 @@ export class SensorHandler {
     return null;
   }
 
-  findSensorByType(type: string): AbstractSensor|null {
+  findSensorByType(type: string): AbstractSensor<any>|null {
     for (let sensor of this.context.sensorsList.all()) {
       if (sensor.type == type) {
         return sensor;
@@ -124,7 +124,7 @@ export class SensorHandler {
     return null;
   }
 
-  findSensorByPort(port: string): AbstractSensor|null {
+  findSensorByPort(port: string): AbstractSensor<any>|null {
     for (let sensor of this.context.sensorsList.all()) {
       if (sensor.port == port) {
         return sensor;

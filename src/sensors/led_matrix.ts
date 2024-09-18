@@ -2,7 +2,7 @@ import {AbstractSensor} from "./abstract_sensor";
 import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 
-export class SensorLedMatrix extends AbstractSensor {
+export class SensorLedMatrix extends AbstractSensor<any> {
   private ledmatrix: any;
   public type = 'ledmatrix';
 

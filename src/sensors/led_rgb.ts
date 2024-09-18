@@ -3,7 +3,7 @@ import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {getImg} from "../util";
 import {SensorHandler} from "./util/sensor_handler";
 
-export class SensorLedRgb extends AbstractSensor {
+export class SensorLedRgb extends AbstractSensor<any> {
   private ledimage: any;
   private ledcolor: any;
   public type = 'ledrgb';
@@ -39,8 +39,8 @@ export class SensorLedRgb extends AbstractSensor {
     };
   }
 
-  setLiveState (state, callback) {
-    var command = `setLedRgbState("${this.name}", [0, 0, 0])`;
+  setLiveState(state, callback) {
+    var command = `setLedRgbState("${this.name}", [${state.join(', ')}])`;
 
     this.context.quickPiConnection.sendCommand(command, callback);
   }
