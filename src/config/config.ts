@@ -830,11 +830,16 @@ export function showConfig({context, strings, mainBoard}) {
       [ConnectionMethod.WebSerial]: onPiconWebSerialClick,
     };
 
+    const isConnected = context.quickPiConnection.isConnected();
+    if (!isConnected) {
+      setSessionStorage('connectionMethod', availableConnectionMethods[0].toLocaleUpperCase());
+    }
+
     if ((getSessionStorage('connectionMethod') ?? '').toLocaleLowerCase() in availableMethodsHandlers) {
       availableMethodsHandlers[getSessionStorage('connectionMethod').toLocaleLowerCase()]();
     }
 
-    if (context.quickPiConnection.isConnected()) {
+    if (isConnected) {
       if (getSessionStorage('connectionMethod') == "USB") {
         $('#piconwifi').removeClass('active');
         $('#piconusb').addClass('active');
@@ -863,8 +868,6 @@ export function showConfig({context, strings, mainBoard}) {
       } else if (getSessionStorage('connectionMethod') == "LOCAL") {
         $('#piconlocal').trigger("click");
       }
-    } else {
-      setSessionStorage('connectionMethod', availableConnectionMethods[0].toLocaleUpperCase());
     }
 
     if (context.quickPiConnection.isConnecting()) {
