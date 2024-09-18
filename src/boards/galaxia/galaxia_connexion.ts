@@ -43,16 +43,7 @@ async function serialWrite(port, data) {
   writer.releaseLock();
 }
 
-let sensorValues = {
-  "light": 0,
-  "acx": 12,
-  "acy": 10,
-  "acz": 20,
-  "heading": 0
-}
-
 export class GalaxiaConnection {
-  private userName: string;
   private _onConnect;
   private _onDisconnect;
   private _onChangeBoard;
@@ -71,7 +62,6 @@ export class GalaxiaConnection {
   private reader: any;
 
   constructor (userName, _onConnect, _onDisconnect, _onChangeBoard) {
-    this.userName = userName;
     this._onConnect = _onConnect;
     this._onDisconnect = _onDisconnect;
     this._onChangeBoard = _onChangeBoard;
@@ -160,12 +150,26 @@ export class GalaxiaConnection {
 
 
   async transferPythonLib() {
-    await serialWrite(this.serial, "f = open(\"fioilib.py\", \"w\")\r\nf.write(" + JSON.stringify(pythonLib).replace(/\n/g, "\r\n") + ")\r\nf.close()\r\n");
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const size = 1200; // Max 1kb size
+    const waitDelay = 500;
+    const numChunks = Math.ceil(pythonLib.length / size);
+
+    await serialWrite(this.serial, "f = open(\"fioilib.py\", \"w\")\r\n");
+    await new Promise(resolve => setTimeout(resolve, waitDelay));
+
+    for (let i = 0, o = 0; i < numChunks; ++i, o += size) {
+      const chunk = pythonLib.substring(o, o + size);
+
+      await serialWrite(this.serial, "f.write(" + JSON.stringify(chunk).replace(/\n/g, "\r\n") + ")\r\n");
+      await new Promise(resolve => setTimeout(resolve, waitDelay));
+    }
+
+    await serialWrite(this.serial, "f.close()\r\n");
+    await new Promise(resolve => setTimeout(resolve, waitDelay));
     await serialWrite(this.serial, "exec(open(\"fioilib.py\", \"r\").read())\r\n");
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, waitDelay));
     await serialWrite(this.serial, "f = open(\"main.py\", \"w\")\r\nf.write(" + JSON.stringify(mainLib).replace(/\n/g, "\r\n") + ")\r\nf.close()\r\n");
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, waitDelay));
   }
 
   isAvailable(ipaddress, callback) {
@@ -301,8 +305,6 @@ export class GalaxiaConnection {
     })
   }
 
-  // window.exec = executeSerial.bind(this);
-
   convertResultData(data) {
     if ('True' === data) {
       return true;
@@ -325,120 +327,63 @@ export class GalaxiaConnection {
     });
   }
 
-  sendCommand(command, callback) {
+  sendCommand(command: string, callback) {
     if (-1 !== command.indexOf('sensorTable =')) {
-      callback();
+      this.executeSerial(command, callback);
       return;
     }
 
     this.genericSendCommand(command, callback);
-    return;
-
-    if (command == "readAccelBMI160()") {
-      this.genericSendCommand(command, callback);
-
-      // callback(JSON.stringify([sensorValues.acx, sensorValues.acy, sensorValues.acz]));
-      // if (DEBUG_SILENCE_SENSORS) {
-      //   return callback(JSON.stringify([0, 0, 0]))
-      // }
-      // executeSerial("print([accelerometer.get_x(), accelerometer.get_y(), accelerometer.get_z()])",
-      //   function (data) {
-      //   console.log('old receive data', data);
-      //     callback(JSON.stringify(JSON.parse(data).map(x => Math.round(x / 10) / 10)));
-      //   });
-
-      // executeSerial("print(readAccelBMI160())",
-      //   function (data) {
-      //     callback(JSON.stringify(JSON.parse(data)));
-      //   });
-    } else if (command == "setLedState(\"led\",1)" || command == "turnLedOn()") {
-      if (DEBUG_SILENCE_SENSORS) {
-        return callback(true);
-      }
-      this.executeSerial("led.set_colors(100, 20, 20)\r\nprint(True)", callback);
-    } else if (command == "setLedState(\"led\",0)" || command == "turnLedOff()") {
-      if (DEBUG_SILENCE_SENSORS) {
-        return callback(true);
-      }
-      this.executeSerial("led.set_colors(0, 0, 0)\r\nprint(True)", callback);
-    } else if (command == "readAcceleration(\"x\")") {
-      if (DEBUG_SILENCE_SENSORS) {
-        return callback(0);
-      }
-      this.executeSerial("print(accelerometer.get_x())", function (data) {
-        callback(Math.round(JSON.parse(data) / 10) / 10);
-      });
-    } else if (command == "readAcceleration(\"y\")") {
-      if (DEBUG_SILENCE_SENSORS) {
-        return callback(0);
-      }
-      this.executeSerial("print(accelerometer.get_y())", function (data) {
-        callback(Math.round(JSON.parse(data) / 10) / 10);
-      });
-    } else if (command == "readAcceleration(\"z\")") {
-      if (DEBUG_SILENCE_SENSORS) {
-        return callback(0);
-      }
-      this.executeSerial("print(accelerometer.get_z())", function (data) {
-        callback(Math.round(JSON.parse(data) / 10) / 10);
-      });
-    } else if (command == "isButtonPressed(\"btnA\")") {
-      if (DEBUG_SILENCE_SENSORS) {
-        return callback(0);
-      }
-      this.executeSerial("print(button_a.is_pressed())", function (data) {
-        callback(data == 'True' ? 1 : 0);
-      });
-    } else if (command == "isButtonPressed(\"btnB\")") {
-      if (DEBUG_SILENCE_SENSORS) {
-        return callback(0);
-      }
-      this.executeSerial("print(button_b.is_pressed())", function (data) {
-        callback(data == 'True' ? 1 : 0);
-      });
-    } else if (command.startsWith("setServoAngle(\"servo\",")) {
-      if (DEBUG_SILENCE_SENSORS) {
-        return callback(true);
-      }
-      let angle = parseInt(command.substring(22, command.length - 1));
-      if (!angle || angle < 0) {
-        angle = 0;
-      }
-      if (angle > 180) {
-        angle = 180;
-      }
-      let duty = Math.floor(0.025 * 1023 + angle * 0.1 * 1023 / 180);
-      this.executeSerial("pwm7.duty(" + duty + ")\r\nprint(True)", callback);
-    } else if (command == "getServoAngle(\"servo\")") {
-      if (DEBUG_SILENCE_SENSORS) {
-        return callback(90);
-      }
-      this.executeSerial("print(pwm7.duty())", function (data) {
-        let duty = parseInt(data);
-        let angle = Math.floor((duty - SERVO_MIN_DUTY) * 180 / (SERVO_MAX_DUTY - SERVO_MIN_DUTY));
-        callback(angle);
-      });
-    } else if (command.startsWith("setBuzzerState(\"buzzer\",")) {
-      if (DEBUG_SILENCE_SENSORS) {
-        return callback(true);
-      }
-      let state = command.substring(24, command.length - 1);
-      let target = "off";
-      if (state == "True" || state == "1") {
-        target = "on";
-      }
-      this.executeSerial("p7." + target + "()\r\nprint(True)", callback);
-    } else {
-      console.log("unknown command", command);
-      callback();
-    }
   }
 }
 
 
 let pythonLib = `
+
+try:
+    sensorTable
+except:
+    sensorTable = []
+
 from machine import *
 from thingz import *
+
+servo_angle = {}
+
+def normalizePin(pin):
+    returnpin = 0
+    hadporttype = False
+
+    pin = str(pin)
+
+    if pin.isdigit():
+        returnpin = pin
+    elif len(pin) >= 2 and pin[0].isalpha() and pin[1:].isdigit():
+        returnpin = pin[1:]
+    elif pin.upper().startswith("I2C"):
+        returnpin = pin[3:]
+    else:
+        returnpin = normalizePin(nameToPin(pin))
+
+    return int(returnpin)
+
+def nameToPin(name):
+    for sensor in sensorTable:
+        if sensor["name"] == name:
+            return sensor["port"]
+
+    return 0
+
+def nameToDef(name, type):
+    for sensor in sensorTable:
+        if sensor["name"] == name:
+            return sensor
+
+    for sensor in sensorTable:
+        if sensor["type"] == type:
+            return sensor
+
+    return None
 
 def readAcceleration(axis):
     if axis == "x":
@@ -454,11 +399,14 @@ def readAcceleration(axis):
 def readAccelBMI160():
     return [readAcceleration("x"), readAcceleration("y"), readAcceleration("z")]
 
-def setLedState(name, state):
-    if state == 1:
-        led.set_colors(100, 20, 20)
+def setLedState(pin, state):
+    pin = normalizePin(pin)
+
+    led = Pin(pin, Pin.OUT)
+    if state:
+        led.on()
     else:
-        led.set_colors(0, 0, 0)
+        led.off()
 
 def readLightIntensity(pin):
 	  return led.read_light_level()
@@ -474,6 +422,9 @@ def turnLedOff():
 
 def setLedRgbState(pin, rgb):
     led.set_colors(rgb[0], rgb[1], rgb[2])
+
+def setLedDimState(pin, state):
+    pwmDuty(pin, int(state*1023))
  
 def isButtonPressed(name):
     if name == "button_a":
@@ -490,6 +441,57 @@ def isButtonPressed(name):
         return touch_w.is_touched()
     else:
         throw("Unknown button")
+        
+def setServoAngle(pin, angle):
+    pin = normalizePin(pin)
+
+    if pin != 0:
+        print(pin)
+        servo_angle[pin] = 0
+
+        angle = int(angle)
+
+        if angle < 0:
+            angle = 0
+        elif angle > 180:
+            angle = 180
+            
+        pin = PWM(Pin(pin), freq=50, duty=0)
+        pin.duty(int(0.025*1023 + (angle*0.1*1023)/180))
+        
+def getServoAngle(pin):
+    pin = normalizePin(pin)
+    angle = 0
+
+    try:
+        angle = servo_angle[pin]
+    except:
+        pass
+
+    return angle
+
+def pwmDuty(pin, duty):
+    pin = normalizePin(pin)
+    if pin != 0:
+        print(pin)
+        print(duty)
+        pinElement = PWM(Pin(pin), freq=50, duty=0)
+        pinElement.duty(duty)
+
+def turnPortOn(pin):
+    pin = normalizePin(pin)
+
+    if pin != 0:
+        pinElement = Pin(pin, Pin.OUT)
+        pinElement.on()
+
+def turnPortOff(pin):
+    pin = normalizePin(pin)
+
+    if pin != 0:
+        pinElement = Pin(pin, Pin.OUT)
+        pinElement.off()
+
 `;
 
 let mainLib = `

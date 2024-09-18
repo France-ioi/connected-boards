@@ -33,7 +33,7 @@ export function machinePwmModuleDefinition(context: any, strings): ModuleDefinit
 
           const newState = sensorDef.getStateFromPwm(duty);
 
-          let command = "pwmDuty(\"" + sensor.name + "\", " + duty + ")";
+          let command = "pwmDuty(" + self.pin.pinNumber + ", " + duty + ")";
           self.currentDuty = duty;
 
           context.registerQuickPiEvent(sensor.name, newState);

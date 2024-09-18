@@ -37,8 +37,7 @@ export class SensorLedDim extends AbstractSensor<any> {
   }
 
   setLiveState(state, callback) {
-    var ledstate = state ? 1 : 0;
-    var command = "setLedState(\"" + this.name + "\"," + ledstate + ")";
+    const command = "setLedDimState(\"" + this.name + "\"," + state + ")";
 
     this.context.quickPiConnection.sendCommand(command, callback);
   }
