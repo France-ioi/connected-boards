@@ -1,6 +1,6 @@
 import {ModuleDefinition} from "../module_definition";
 
-export function ujsonModuleDefinition(context: any, strings): ModuleDefinition {
+export function jsonModuleDefinition(context: any, strings): ModuleDefinition {
   return {
     blockDefinitions: {
       actuator: [

@@ -7,12 +7,12 @@ import {thingzTemperatureModuleDefinition} from "../../modules/thingz/temperatur
 import {thingzLedModuleDefinition} from "../../modules/thingz/led";
 import {machinePinModuleDefinition} from "../../modules/machine/pin";
 import {machinePwmModuleDefinition} from "../../modules/machine/pwm";
-import {utimeSleepModuleDefinition} from "../../modules/utime/sleep";
+import {timeSleepModuleDefinition} from "../../modules/time/sleep";
 // @ts-ignore
 import galaxiaSvg from '../../../images/galaxia.svg';
 import {networkWlanModuleDefinition} from "../../modules/network/wlan";
-import {urequestsModuleDefinition} from "../../modules/urequests/requests";
-import {ujsonModuleDefinition} from "../../modules/ujson/json";
+import {requestsModuleDefinition} from "../../modules/requests/requests";
+import {jsonModuleDefinition} from "../../modules/json/json";
 import {machinePulseModuleDefinition} from "../../modules/machine/pulse";
 import {GalaxiaConnection} from "./galaxia_connexion";
 
@@ -233,10 +233,10 @@ export class GalaxiaBoard extends AbstractBoard {
     const pinModule = machinePinModuleDefinition(context, strings);
     const pwmModule = machinePwmModuleDefinition(context, strings);
     const pulseModule = machinePulseModuleDefinition(context, strings);
-    const utimeModule = utimeSleepModuleDefinition(context, strings);
+    const timeModule = timeSleepModuleDefinition(context, strings);
     const wlanModule = networkWlanModuleDefinition(context, strings);
-    const requestsModule = urequestsModuleDefinition(context, strings);
-    const jsonModule = ujsonModuleDefinition(context, strings);
+    const requestsModule = requestsModuleDefinition(context, strings);
+    const jsonModule = jsonModuleDefinition(context, strings);
 
     return {
       customClasses: {
@@ -250,7 +250,7 @@ export class GalaxiaBoard extends AbstractBoard {
           pwmModule.classDefinitions,
         ),
         network: wlanModule.classDefinitions,
-        urequests: requestsModule.classDefinitions,
+        requests: requestsModule.classDefinitions,
       },
       customConstants: {
         network: wlanModule.constants,
@@ -273,20 +273,20 @@ export class GalaxiaBoard extends AbstractBoard {
           pwmModule.classImplementations,
         ),
         network: wlanModule.classImplementations,
-        urequests: requestsModule.classImplementations,
+        requests: requestsModule.classImplementations,
       },
       customBlockImplementations: {
         thingz: temperatureModule.blockImplementations,
-        utime: utimeModule.blockImplementations,
-        urequests: requestsModule.blockImplementations,
-        ujson: jsonModule.blockImplementations,
+        time: timeModule.blockImplementations,
+        requests: requestsModule.blockImplementations,
+        json: jsonModule.blockImplementations,
         machine: pulseModule.blockImplementations,
       },
       customBlocks: {
         thingz: temperatureModule.blockDefinitions,
-        utime: utimeModule.blockDefinitions,
-        urequests: requestsModule.blockDefinitions,
-        ujson: jsonModule.blockDefinitions,
+        time: timeModule.blockDefinitions,
+        requests: requestsModule.blockDefinitions,
+        json: jsonModule.blockDefinitions,
         machine: pulseModule.blockDefinitions,
       },
     };

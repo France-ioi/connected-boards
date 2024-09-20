@@ -1,7 +1,7 @@
 import {ModuleDefinition} from "../module_definition";
 import {quickpiModuleDefinition} from "../quickpi/quickpi";
 
-export function utimeSleepModuleDefinition(context: any, strings): ModuleDefinition {
+export function timeSleepModuleDefinition(context: any, strings): ModuleDefinition {
   const quickPiModuleDefinition = quickpiModuleDefinition(context, strings);
 
   return {

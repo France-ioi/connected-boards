@@ -19,7 +19,7 @@ function getRealValue(object: any) {
   return object;
 }
 
-export function urequestsModuleDefinition(context: any, strings): ModuleDefinition {
+export function requestsModuleDefinition(context: any, strings): ModuleDefinition {
   async function makeRequest(sensor: SensorWifi, fetchParameters: FetchParameters, callback) {
     const proxyUrl = fetchParameters.url;
 

@@ -345,9 +345,12 @@ try:
 except:
     sensorTable = []
 
-from machine import *
 from thingz import *
-from utime import *
+from machine import *
+from time import *
+from network import *
+from requests import *
+from json import *
 
 servo_angle = {}
 distance_last_value = {}
