@@ -23,18 +23,19 @@ export function urequestsModuleDefinition(context: any, strings): ModuleDefiniti
   async function makeRequest(sensor: SensorWifi, fetchParameters: FetchParameters, callback) {
     const proxyUrl = fetchParameters.url;
 
-    context.registerQuickPiEvent(sensor.name, {
-      ...sensor.state,
-      lastRequest: {
-        ...fetchParameters,
-      },
-    });
-
     const fetchArguments = {
       method: fetchParameters.method,
       headers: getRealValue(fetchParameters.headers),
       body: getRealValue(fetchParameters.body),
     };
+
+    context.registerQuickPiEvent(sensor.name, {
+      ...sensor.state,
+      lastRequest: {
+        url: proxyUrl,
+        ...fetchArguments,
+      },
+    });
 
     let result = null;
     try {
@@ -46,6 +47,7 @@ export function urequestsModuleDefinition(context: any, strings): ModuleDefiniti
     }
 
     const text = await result.text();
+
     callback({
       __className: 'Response',
       arguments: [

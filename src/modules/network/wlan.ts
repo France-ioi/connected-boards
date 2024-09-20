@@ -28,6 +28,9 @@ export function networkWlanModuleDefinition(context: any, strings): ModuleDefini
         },
         active: function (self, active, callback) {
           const sensor = context.sensorHandler.findSensorByType('wifi');
+          if (!sensor) {
+            throw `There is no Wi-Fi sensor.`;
+          }
 
           let command = "wifiSetActive(\"" + sensor.name + "\", " + active + ")";
 
@@ -50,6 +53,9 @@ export function networkWlanModuleDefinition(context: any, strings): ModuleDefini
         },
         scan: function (self, callback) {
           const sensor = context.sensorHandler.findSensorByType('wifi');
+          if (!sensor) {
+            throw `There is no Wi-Fi sensor.`;
+          }
 
           if (!sensor.state?.active) {
             throw strings.messages.wifiNotActive;
@@ -81,6 +87,9 @@ export function networkWlanModuleDefinition(context: any, strings): ModuleDefini
         },
         connect: function (self, ssid, password, callback) {
           const sensor = context.sensorHandler.findSensorByType('wifi');
+          if (!sensor) {
+            throw `There is no Wi-Fi sensor.`;
+          }
 
           if (!sensor.state?.active) {
             throw strings.messages.wifiNotActive;
@@ -107,6 +116,9 @@ export function networkWlanModuleDefinition(context: any, strings): ModuleDefini
         },
         isconnected: function (self, callback) {
           const sensor = context.sensorHandler.findSensorByType('wifi');
+          if (!sensor) {
+            throw `There is no Wi-Fi sensor.`;
+          }
 
           if (!context.display || context.autoGrading || context.offLineMode) {
             const state = context.getSensorState(sensor.name);
@@ -126,6 +138,9 @@ export function networkWlanModuleDefinition(context: any, strings): ModuleDefini
         },
         ifconfig: function (self, callback) {
           const sensor = context.sensorHandler.findSensorByType('wifi');
+          if (!sensor) {
+            throw `There is no Wi-Fi sensor.`;
+          }
 
           if (!context.display || context.autoGrading || context.offLineMode) {
             const state = context.getSensorState(sensor.name);
