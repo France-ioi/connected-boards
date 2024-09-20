@@ -347,8 +347,10 @@ except:
 
 from machine import *
 from thingz import *
+from utime import *
 
 servo_angle = {}
+distance_last_value = {}
 
 def normalizePin(pin):
     returnpin = 0
@@ -491,7 +493,40 @@ def turnPortOff(pin):
     if pin != 0:
         pinElement = Pin(pin, Pin.OUT)
         pinElement.off()
-
+        
+def getTimePulseUs(pin, pulseLevel, timeoutUs):
+    pin = normalizePin(pin)
+    if pin != 0:
+        echo = Pin(pin, Pin.IN)
+        
+        return time_pulse_us(echo, pulseLevel, timeoutUs)
+        
+def readDistance(pin):
+  pin = normalizePin(pin)
+  if pin != 0:
+      trig = Pin(pin, Pin.OUT)
+      trig.off()
+      sleep_us(2)
+      trig.on()
+      sleep_us(10)
+      trig.off()
+      echo = Pin(pin, Pin.IN)
+      timeout_us = 30000
+      duration = time_pulse_us(echo, 1, timeout_us)/1e6 # t_echo in seconds
+      
+      last_value = 0
+      try:
+          last_value = distance_last_value[pin]
+      except:
+          pass
+        
+      if duration > 0:
+          distance = round(343 * duration/2 * 100, 1)
+          distance_last_value[pin] = distance
+          
+          return distance
+      else:
+          return last_value
 `;
 
 let mainLib = `

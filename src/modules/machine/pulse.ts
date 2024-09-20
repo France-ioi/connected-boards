@@ -16,7 +16,7 @@ export function machinePulseModuleDefinition(context: any, strings): ModuleDefin
           throw `There is no sensor connected to the digital port D${pin.pinNumber}`;
         }
 
-        let command = "getDistance(\"" + sensor.name + "\")";
+        let command = "getTimePulseUs(\"" + sensor.name + `", ${pulseLevel}, ${timeoutUs})`;
 
         if (!context.display || context.autoGrading || context.offLineMode) {
           let distance = context.getSensorState(sensor.name);
