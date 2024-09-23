@@ -11,6 +11,8 @@ interface SensorWifiState {
   connected?: boolean,
   ssid?: string,
   password?: string,
+  ssidInput?: string,
+  passwordInput?: string,
   scanning?: boolean,
   lastRequest?: {
     url: string,
@@ -125,20 +127,20 @@ export class SensorWifi extends AbstractSensor<SensorWifiState> {
   }
 
   getLiveState(callback) {
-    this.context.quickPiConnection.sendCommand(`wifiGetStatus("${this.name}")`, function(val) {
-      console.log('status val', val);
+    this.context.quickPiConnection.sendCommand(`wifiGetStatus("${this.name}")`, (val) => {
       const [active, status, ssid] = JSON.parse(val);
 
       callback({
+        ...this.state,
         active,
         connected: 1010 === status,
+        connecting: 1001 === status,
         ssid,
       });
     });
   }
 
   setLiveState(state: SensorWifiState, callback) {
-    console.log('set live state', state);
     var command = `setWifiState("${this.name}", [0, 0, 0])`;
 
     this.context.quickPiConnection.sendCommand(command, callback);
@@ -155,8 +157,63 @@ export class SensorWifi extends AbstractSensor<SensorWifiState> {
         connected: false,
         ssid: '',
         password: '',
+        ssidInput: '',
+        passwordInput: '',
       };
     }
+
+    const redrawModalState = () => {
+      $('#wifi_ssid').val(this.state.ssidInput);
+      $('#wifi_password').val(this.state.passwordInput);
+
+      if (!this.context.autoGrading && (!this.context.runner || !this.context.runner.isRunning())) {
+        $('#wifi_ssid').prop('disabled', false);
+        $('#wifi_password').prop('disabled', false);
+      } else {
+        $('#wifi_ssid').prop('disabled', true);
+        $('#wifi_password').prop('disabled', true);
+      }
+
+      if (this.state.active) {
+        if (this.state.connected) {
+          $('#wifi_enable').hide();
+          $('#wifi_disable').show();
+          $('#wifi_connect').hide();
+          $('#wifi_disconnect').show();
+        } else {
+          $('#wifi_enable').hide();
+          $('#wifi_disable').show();
+          $('#wifi_connect').show();
+          $('#wifi_disconnect').hide();
+        }
+      } else {
+        $('#wifi_enable').show();
+        $('#wifi_disable').hide();
+        $('#wifi_connect').hide();
+        $('#wifi_disconnect').hide();
+      }
+
+      if (this.state.activating) {
+        $('#wifi_activating').show();
+        $('#wifi_enable_icon').hide();
+      } else {
+        $('#wifi_activating').hide();
+        $('#wifi_enable_icon').show();
+      }
+
+      if (this.state.connecting) {
+        $('#wifi_connecting').show();
+        $('#wifi_connect_icon').hide();
+      } else {
+        $('#wifi_connecting').hide();
+        $('#wifi_connect_icon').show();
+      }
+
+      const realStatus = !this.state.active ? 'disabled' : (this.state.connected ? 'connected' : 'disconnected');
+      $('#wifi_status').val(realStatus);
+    };
+
+    redrawModalState();
 
     if (!this.img || sensorHandler.isElementRemoved(this.img)) {
       this.img = this.context.paper.image(getImg('wifi.png'), imgx, imgy, imgw, imgh);
@@ -230,57 +287,6 @@ export class SensorWifi extends AbstractSensor<SensorWifiState> {
         </div>
       `;
 
-        const redrawModalState = () => {
-          $('#wifi_ssid').val(this.state.ssid);
-          $('#wifi_password').val(this.state.password);
-
-          if (!this.context.autoGrading && (!this.context.runner || !this.context.runner.isRunning())) {
-            $('#wifi_ssid').prop('disabled', false);
-            $('#wifi_password').prop('disabled', false);
-          } else {
-            $('#wifi_ssid').prop('disabled', true);
-            $('#wifi_password').prop('disabled', true);
-          }
-
-          if (this.state.active) {
-            if (this.state.connected) {
-              $('#wifi_enable').hide();
-              $('#wifi_disable').show();
-              $('#wifi_connect').hide();
-              $('#wifi_disconnect').show();
-            } else {
-              $('#wifi_enable').hide();
-              $('#wifi_disable').show();
-              $('#wifi_connect').show();
-              $('#wifi_disconnect').hide();
-            }
-          } else {
-            $('#wifi_enable').show();
-            $('#wifi_disable').hide();
-            $('#wifi_connect').hide();
-            $('#wifi_disconnect').hide();
-          }
-
-          if (this.state.activating) {
-            $('#wifi_activating').show();
-            $('#wifi_enable_icon').hide();
-          } else {
-            $('#wifi_activating').hide();
-            $('#wifi_enable_icon').show();
-          }
-
-          if (this.state.connecting) {
-            $('#wifi_connecting').show();
-            $('#wifi_connect_icon').hide();
-          } else {
-            $('#wifi_connecting').hide();
-            $('#wifi_connect_icon').show();
-          }
-
-          const realStatus = !this.state.active ? 'disabled' : (this.state.connected ? 'connected' : 'disconnected');
-          $('#wifi_status').val(realStatus);
-        };
-
         const sendCommandAndFetchState = (command: string) => {
           this.context.quickPiConnection.sendCommand(command, () => {
             this.getLiveState((returnVal) => {
@@ -331,7 +337,7 @@ export class SensorWifi extends AbstractSensor<SensorWifiState> {
                 redrawModalState();
               } else {
                 const command = `wifiSetActive("${this.name}", 0)`;
-                this.context.quickPiConnection.sendCommand(command, sendCommandAndFetchState);
+                sendCommandAndFetchState(command);
               }
             } else {
               sensorHandler.getSensorDrawer().actuatorsInRunningModeError();
@@ -341,19 +347,43 @@ export class SensorWifi extends AbstractSensor<SensorWifiState> {
           $('#wifi_connect').click(() => {
             if (!this.context.autoGrading && (!this.context.runner || !this.context.runner.isRunning())) {
               if (!this.context.display || this.context.autoGrading || this.context.offLineMode) {
-                this.state.connecting = true;
-                redrawModalState();
-
-                setTimeout(() => {
+                if (this.state.connecting) {
+                  this.state.connected = false;
                   this.state.connecting = false;
-                  this.state.connected = true;
                   sensorHandler.warnClientSensorStateChanged(this);
                   sensorHandler.getSensorDrawer().drawSensor(this);
                   redrawModalState();
-                }, 500);
+                } else {
+                  this.state.connecting = true;
+                  redrawModalState();
+
+                  setTimeout(() => {
+                    this.state.connecting = false;
+                    this.state.connected = true;
+                    sensorHandler.warnClientSensorStateChanged(this);
+                    sensorHandler.getSensorDrawer().drawSensor(this);
+                    redrawModalState();
+                  }, 500);
+                }
               } else {
-                const command = "wifiConnect(\"" + this.name + "\", \"" + this.state.ssid + "\", \"" + this.state.password + "\")";
-                this.context.quickPiConnection.sendCommand(command, sendCommandAndFetchState);
+                if (this.state.connecting) {
+                  this.state.connecting = false;
+
+                  const command = "wifiDisconnect(\"" + this.name + "\")";
+                  sendCommandAndFetchState(command);
+
+                  redrawModalState();
+                } else {
+                  const ssid = $('#wifi_ssid').val() as string;
+                  const password = $('#wifi_password').val() as string;
+
+                  this.state.connecting = true;
+
+                  const command = "wifiConnect(\"" + this.name + "\", \"" + ssid + "\", \"" + password + "\")";
+                  sendCommandAndFetchState(command);
+
+                  redrawModalState();
+                }
               }
             } else {
               sensorHandler.getSensorDrawer().actuatorsInRunningModeError();
@@ -369,21 +399,21 @@ export class SensorWifi extends AbstractSensor<SensorWifiState> {
                 redrawModalState();
               } else {
                 const command = "wifiDisconnect(\"" + this.name + "\")";
-                this.context.quickPiConnection.sendCommand(command, sendCommandAndFetchState);
+                sendCommandAndFetchState(command);
               }
             } else {
               sensorHandler.getSensorDrawer().actuatorsInRunningModeError();
             }
           });
 
-          $('#wifi_ssid').on('change', () => {
-            this.state.ssid = $('#wifi_ssid').val() as string;
+          $('#wifi_ssid').on('input', () => {
+            this.state.ssidInput = $('#wifi_ssid').val() as string;
             sensorHandler.warnClientSensorStateChanged(this);
             sensorHandler.getSensorDrawer().drawSensor(this);
           });
 
-          $('#wifi_password').on('change', () => {
-            this.state.password = $('#wifi_password').val() as string;
+          $('#wifi_password').on('input', () => {
+            this.state.passwordInput = $('#wifi_password').val() as string;
             sensorHandler.warnClientSensorStateChanged(this);
             sensorHandler.getSensorDrawer().drawSensor(this);
           });

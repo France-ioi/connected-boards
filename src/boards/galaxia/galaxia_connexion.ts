@@ -1,11 +1,9 @@
 import {getSessionStorage, setSessionStorage} from "../../helpers/session_storage";
 import {galaxiaPythonLib} from "./galaxia_python_lib";
+import {galaxiaRequestsModule} from "./galaxia_requests_module";
 
-let DEBUG_SILENCE_SENSORS = false;
 let DEBUG_OUTPUT_IN_CONSOLE = true;
-let DEBUG_FULL_OUTPUT = true;
-let SERVO_MIN_DUTY = 26;
-let SERVO_MAX_DUTY = 124;
+let DEBUG_FULL_OUTPUT = false;
 
 
 async function getSerial(filters) {
@@ -32,13 +30,11 @@ async function getSerial(filters) {
 }
 
 async function serialWrite(port, data) {
-  console.log('start write');
   const writer = port.writable.getWriter();
   const encoder = new TextEncoder();
   await writer.write(encoder.encode(data));
   await writer.ready;
   writer.releaseLock();
-  console.log('end write');
 }
 
 export class GalaxiaConnection {
@@ -49,6 +45,7 @@ export class GalaxiaConnection {
   private connected: boolean = false;
   private releasing: boolean = false;
   private serial: any;
+  private currentOutputLine: string = '';
   private currentOutput: string = "";
   private outputCallback: any;
   private executionQueue: any[];
@@ -72,6 +69,7 @@ export class GalaxiaConnection {
     this.releasing = false;
     this.serial = null;
     this.currentOutput = "";
+    this.currentOutputLine = '';
     this.outputCallback = null;
     this.executionQueue = [];
     this.executing = false;
@@ -92,18 +90,27 @@ export class GalaxiaConnection {
 
   processGalaxiaOutput(data) {
     let text = new TextDecoder().decode(data);
-    this.currentOutput += text;
-    let lines = this.currentOutput.split('\r\n');
-    if (!DEBUG_FULL_OUTPUT) {
-      lines = lines.slice(-50);
+    this.currentOutputLine += text;
+
+    let currentLines = this.currentOutputLine.split('\r\n');
+    if (currentLines.length > 1) {
+      this.currentOutputLine = [...currentLines].pop();
+      const linesToAdd = currentLines.slice(0, -1).join('\r\n');
+      this.currentOutput += linesToAdd + '\r\n';
+      if (DEBUG_OUTPUT_IN_CONSOLE && !DEBUG_FULL_OUTPUT) {
+        console.log(linesToAdd);
+      }
     }
+
+    let lines = this.currentOutput.split('\r\n');
     this.currentOutput = lines.join('\r\n');
-    if (DEBUG_OUTPUT_IN_CONSOLE) {
+    if (DEBUG_OUTPUT_IN_CONSOLE && DEBUG_FULL_OUTPUT) {
       console.log(this.currentOutput);
     }
+
     window.currentOutput = this.currentOutput;
 
-    if (this.outputCallback && lines[lines.length - 1].startsWith('>>> ') && lines[lines.length - 2].startsWith(this.currentOutputId)) {
+    if (this.outputCallback && this.currentOutputLine.startsWith('>>> ') && lines[lines.length - 2].startsWith(this.currentOutputId)) {
       this.outputCallback(lines[lines.length - 4]);
       this.outputCallback = null;
     }
@@ -146,28 +153,35 @@ export class GalaxiaConnection {
     }
   }
 
-
   async transferPythonLib() {
-    const size = 1200; // Max 1kb size
     const waitDelay = 500;
-    const numChunks = Math.ceil(galaxiaPythonLib.length / size);
 
-    await serialWrite(this.serial, "f = open(\"fioilib.py\", \"w\")\r\n");
+    await this.transferModule('fioilib.py', galaxiaPythonLib, waitDelay);
+    await this.transferModule('requests.py', galaxiaRequestsModule, waitDelay);
+
+    await new Promise(resolve => setTimeout(resolve, waitDelay));
+    await serialWrite(this.serial, "f = open(\"main.py\", \"w\")\r\nf.write(" + JSON.stringify(mainLib).replace(/\n/g, "\r\n") + ")\r\nf.close()\r\n");
+    await new Promise(resolve => setTimeout(resolve, waitDelay));
+  }
+
+  async transferModule(moduleFile, moduleContent, waitDelay) {
+    const size = 1200; // Max 1kb size
+    const numChunks = Math.ceil(moduleContent.length / size);
+
+    await serialWrite(this.serial, `f = open("${moduleFile}", "w")\r
+`);
     await new Promise(resolve => setTimeout(resolve, waitDelay));
 
     for (let i = 0, o = 0; i < numChunks; ++i, o += size) {
-      const chunk = galaxiaPythonLib.substring(o, o + size);
+      const chunk = moduleContent.substring(o, o + size);
 
       await serialWrite(this.serial, "f.write(" + JSON.stringify(chunk).replace(/\n/g, "\r\n") + ")\r\n");
       await new Promise(resolve => setTimeout(resolve, waitDelay));
     }
-
     await serialWrite(this.serial, "f.close()\r\n");
     await new Promise(resolve => setTimeout(resolve, waitDelay));
-    await serialWrite(this.serial, "exec(open(\"fioilib.py\", \"r\").read())\r\n");
-    await new Promise(resolve => setTimeout(resolve, waitDelay));
-    await serialWrite(this.serial, "f = open(\"main.py\", \"w\")\r\nf.write(" + JSON.stringify(mainLib).replace(/\n/g, "\r\n") + ")\r\nf.close()\r\n");
-    await new Promise(resolve => setTimeout(resolve, waitDelay));
+    await serialWrite(this.serial, `exec(open("${moduleFile}", "r").read())\r
+`);
   }
 
   isAvailable(ipaddress, callback) {
@@ -304,11 +318,8 @@ export class GalaxiaConnection {
   }
 
   genericSendCommand(command, callback) {
-    console.log('generic send command', command);
-
     this.executeSerial(`print(dumps(${command}))`, (data) => {
       const convertedData = data;
-      console.log('received data', {data, convertedData, command});
 
       callback(convertedData);
     });

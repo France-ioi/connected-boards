@@ -59,16 +59,21 @@ export function requestsModuleDefinition(context: any, strings): ModuleDefinitio
     } else {
       let command;
       if ('GET' === fetchArguments.method) {
-        command = `requestsGet("${sensor.name}", "${fetchUrl}", "${JSON.stringify(fetchArguments.headers)}")`;
+        command = `requestsGet("${sensor.name}", "${fetchUrl}", '${JSON.stringify(fetchArguments.headers ?? {})}')`;
       } else {
-        command = `requestsPost("${sensor.name}", "${fetchUrl}", "${JSON.stringify(fetchArguments.body)}", "${JSON.stringify(fetchArguments.headers)}")`;
+        command = `requestsPost("${sensor.name}", "${fetchUrl}", '${JSON.stringify(fetchArguments.body ?? {})}', '${JSON.stringify(fetchArguments.headers ?? {})}')`;
       }
 
-      const cb = context.runner.waitCallback(callback);
-
       context.quickPiConnection.sendCommand(command, (result) => {
-        console.log('requests result', {result});
-        cb(JSON.parse(result));
+        const [status, text] = JSON.parse(result);
+
+        callback({
+          __className: 'Response',
+          arguments: [
+            status,
+            text,
+          ],
+        });
       });
     }
   }

@@ -197,6 +197,7 @@ def wifiSetActive(sensor, active):
           
 def wifiConnect(sensor, ssid, password):
     wlan = WLAN(STA_IF)
+    wlan.disconnect()
     wlan.connect(ssid, password)
 
 def wifiDisconnect(sensor):
@@ -229,9 +230,15 @@ def wifiScan(sensor):
     return wlan.scan()
 
 def requestsGet(sensor, url, headers):
-    return get(url, headers)
+    response = get(url, headers=loads(headers))
+    
+    return [response.status_code, response.text]
 
 def requestsPost(sensor, url, data, headers):
-    return post(url, data, headers)
+    data_parsed = loads(data)
+    data_encoded = '&'.join(k+"="+data_parsed[k] for k in data_parsed)
+    response = post(url, data=data_encoded, headers=loads(headers))
+    
+    return [response.status_code, response.text]
 
 `;
