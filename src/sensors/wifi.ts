@@ -2,6 +2,7 @@ import {AbstractSensor, SensorDrawParameters, SensorDrawTimeLineParameters} from
 import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {deepSubsetEqual, getImg, textEllipsis} from "../util";
+import {networkWlanModuleDefinition} from "../modules/network/wlan";
 
 interface SensorWifiState {
   active?: boolean,
@@ -32,7 +33,7 @@ export class SensorWifi extends AbstractSensor<SensorWifiState> {
       suggestedName: strings.messages.sensorNameWifi,
       description: strings.messages.wifi,
       isAnalog: false,
-      isSensor: false,
+      isSensor: true,
       portType: "D",
 
       selectorImages: ["wifi.png"],
@@ -123,31 +124,44 @@ export class SensorWifi extends AbstractSensor<SensorWifiState> {
     };
   }
 
-  getInitialState(): SensorWifiState {
-    return {
-      active: false,
-      connected: false,
-      ssid: '',
-      password: '',
-    };
+  getLiveState(callback) {
+    this.context.quickPiConnection.sendCommand(`wifiGetStatus("${this.name}")`, function(val) {
+      console.log('status val', val);
+      const [active, status, ssid] = JSON.parse(val);
+
+      callback({
+        active,
+        connected: 1010 === status,
+        ssid,
+      });
+    });
   }
 
   setLiveState(state: SensorWifiState, callback) {
+    console.log('set live state', state);
     var command = `setWifiState("${this.name}", [0, 0, 0])`;
 
     this.context.quickPiConnection.sendCommand(command, callback);
   }
 
   draw(sensorHandler: SensorHandler, {imgx, imgy, imgw, imgh, fadeopacity, state1x, state1y}: SensorDrawParameters) {
-    if (this.stateText)
+    if (this.stateText) {
       this.stateText.remove();
+    }
+
+    if (!this.state) {
+      this.state = {
+        active: false,
+        connected: false,
+        ssid: '',
+        password: '',
+      };
+    }
 
     if (!this.img || sensorHandler.isElementRemoved(this.img)) {
       this.img = this.context.paper.image(getImg('wifi.png'), imgx, imgy, imgw, imgh);
 
       this.focusrect.click(() => {
-        const state = this.state;
-
         let wifiDialog = `
         <div class="content qpi" id="wifi_dialog">
           <div class="panel-heading" id="bim">
@@ -217,8 +231,8 @@ export class SensorWifi extends AbstractSensor<SensorWifiState> {
       `;
 
         const redrawModalState = () => {
-          $('#wifi_ssid').val(state.ssid);
-          $('#wifi_password').val(state.password);
+          $('#wifi_ssid').val(this.state.ssid);
+          $('#wifi_password').val(this.state.password);
 
           if (!this.context.autoGrading && (!this.context.runner || !this.context.runner.isRunning())) {
             $('#wifi_ssid').prop('disabled', false);
@@ -228,8 +242,8 @@ export class SensorWifi extends AbstractSensor<SensorWifiState> {
             $('#wifi_password').prop('disabled', true);
           }
 
-          if (state.active) {
-            if (state.connected) {
+          if (this.state.active) {
+            if (this.state.connected) {
               $('#wifi_enable').hide();
               $('#wifi_disable').show();
               $('#wifi_connect').hide();
@@ -247,7 +261,7 @@ export class SensorWifi extends AbstractSensor<SensorWifiState> {
             $('#wifi_disconnect').hide();
           }
 
-          if (state.activating) {
+          if (this.state.activating) {
             $('#wifi_activating').show();
             $('#wifi_enable_icon').hide();
           } else {
@@ -255,7 +269,7 @@ export class SensorWifi extends AbstractSensor<SensorWifiState> {
             $('#wifi_enable_icon').show();
           }
 
-          if (state.connecting) {
+          if (this.state.connecting) {
             $('#wifi_connecting').show();
             $('#wifi_connect_icon').hide();
           } else {
@@ -263,8 +277,18 @@ export class SensorWifi extends AbstractSensor<SensorWifiState> {
             $('#wifi_connect_icon').show();
           }
 
-          const realStatus = !state.active ? 'disabled' : (state.connected ? 'connected' : 'disconnected');
+          const realStatus = !this.state.active ? 'disabled' : (this.state.connected ? 'connected' : 'disconnected');
           $('#wifi_status').val(realStatus);
+        };
+
+        const sendCommandAndFetchState = (command: string) => {
+          this.context.quickPiConnection.sendCommand(command, () => {
+            this.getLiveState((returnVal) => {
+              this.state = returnVal;
+              redrawModalState();
+              sensorHandler.drawSensor(this);
+            });
+          });
         }
 
         window.displayHelper.showPopupDialog(wifiDialog, () => {
@@ -277,16 +301,21 @@ export class SensorWifi extends AbstractSensor<SensorWifiState> {
 
           $('#wifi_enable').click(() => {
             if (!this.context.autoGrading && (!this.context.runner || !this.context.runner.isRunning())) {
-              this.state.activating = true;
-              redrawModalState();
-
-              setTimeout(() => {
-                this.state.activating = false;
-                this.state.active = true;
-                sensorHandler.warnClientSensorStateChanged(this);
-                sensorHandler.getSensorDrawer().drawSensor(this);
+              if (!this.context.display || this.context.autoGrading || this.context.offLineMode) {
+                this.state.activating = true;
                 redrawModalState();
-              }, 500);
+
+                setTimeout(() => {
+                  this.state.activating = false;
+                  this.state.active = true;
+                  sensorHandler.warnClientSensorStateChanged(this);
+                  sensorHandler.getSensorDrawer().drawSensor(this);
+                  redrawModalState();
+                }, 500);
+              } else {
+                const command = `wifiSetActive("${this.name}", 1)`;
+                this.context.quickPiConnection.sendCommand(command, sendCommandAndFetchState);
+                }
             } else {
               sensorHandler.getSensorDrawer().actuatorsInRunningModeError();
             }
@@ -294,11 +323,16 @@ export class SensorWifi extends AbstractSensor<SensorWifiState> {
 
           $('#wifi_disable').click(() => {
             if (!this.context.autoGrading && (!this.context.runner || !this.context.runner.isRunning())) {
-              this.state.active = false;
-              this.state.connected = false;
-              sensorHandler.warnClientSensorStateChanged(this);
-              sensorHandler.getSensorDrawer().drawSensor(this);
-              redrawModalState();
+              if (!this.context.display || this.context.autoGrading || this.context.offLineMode) {
+                this.state.active = false;
+                this.state.connected = false;
+                sensorHandler.warnClientSensorStateChanged(this);
+                sensorHandler.getSensorDrawer().drawSensor(this);
+                redrawModalState();
+              } else {
+                const command = `wifiSetActive("${this.name}", 0)`;
+                this.context.quickPiConnection.sendCommand(command, sendCommandAndFetchState);
+              }
             } else {
               sensorHandler.getSensorDrawer().actuatorsInRunningModeError();
             }
@@ -306,16 +340,21 @@ export class SensorWifi extends AbstractSensor<SensorWifiState> {
 
           $('#wifi_connect').click(() => {
             if (!this.context.autoGrading && (!this.context.runner || !this.context.runner.isRunning())) {
-              this.state.connecting = true;
-              redrawModalState();
-
-              setTimeout(() => {
-                this.state.connecting = false;
-                this.state.connected = true;
-                sensorHandler.warnClientSensorStateChanged(this);
-                sensorHandler.getSensorDrawer().drawSensor(this);
+              if (!this.context.display || this.context.autoGrading || this.context.offLineMode) {
+                this.state.connecting = true;
                 redrawModalState();
-              }, 500);
+
+                setTimeout(() => {
+                  this.state.connecting = false;
+                  this.state.connected = true;
+                  sensorHandler.warnClientSensorStateChanged(this);
+                  sensorHandler.getSensorDrawer().drawSensor(this);
+                  redrawModalState();
+                }, 500);
+              } else {
+                const command = "wifiConnect(\"" + this.name + "\", \"" + this.state.ssid + "\", \"" + this.state.password + "\")";
+                this.context.quickPiConnection.sendCommand(command, sendCommandAndFetchState);
+              }
             } else {
               sensorHandler.getSensorDrawer().actuatorsInRunningModeError();
             }
@@ -323,10 +362,15 @@ export class SensorWifi extends AbstractSensor<SensorWifiState> {
 
           $('#wifi_disconnect').click(() => {
             if (!this.context.autoGrading && (!this.context.runner || !this.context.runner.isRunning())) {
-              this.state.connected = false;
-              sensorHandler.warnClientSensorStateChanged(this);
-              sensorHandler.getSensorDrawer().drawSensor(this);
-              redrawModalState();
+              if (!this.context.display || this.context.autoGrading || this.context.offLineMode) {
+                this.state.connected = false;
+                sensorHandler.warnClientSensorStateChanged(this);
+                sensorHandler.getSensorDrawer().drawSensor(this);
+                redrawModalState();
+              } else {
+                const command = "wifiDisconnect(\"" + this.name + "\")";
+                this.context.quickPiConnection.sendCommand(command, sendCommandAndFetchState);
+              }
             } else {
               sensorHandler.getSensorDrawer().actuatorsInRunningModeError();
             }

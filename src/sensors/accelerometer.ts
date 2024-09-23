@@ -51,7 +51,7 @@ export class SensorAccelerometer extends AbstractSensor<any> {
 
   getLiveState(callback) {
     this.context.quickPiConnection.sendCommand("readAccelBMI160()", function(val) {
-      var array = JSON.parse(val);
+      const array = JSON.parse(val);
       callback(array);
     });
   }

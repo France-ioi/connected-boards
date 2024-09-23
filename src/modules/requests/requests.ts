@@ -21,7 +21,7 @@ function getRealValue(object: any) {
 
 export function requestsModuleDefinition(context: any, strings): ModuleDefinition {
   async function makeRequest(sensor: SensorWifi, fetchParameters: FetchParameters, callback) {
-    const proxyUrl = fetchParameters.url;
+    const fetchUrl = fetchParameters.url;
 
     const fetchArguments = {
       method: fetchParameters.method,
@@ -29,32 +29,48 @@ export function requestsModuleDefinition(context: any, strings): ModuleDefinitio
       body: getRealValue(fetchParameters.body),
     };
 
-    context.registerQuickPiEvent(sensor.name, {
-      ...sensor.state,
-      lastRequest: {
-        url: proxyUrl,
-        ...fetchArguments,
-      },
-    });
+    if (!context.display || context.autoGrading || context.offLineMode) {
+      context.registerQuickPiEvent(sensor.name, {
+        ...sensor.state,
+        lastRequest: {
+          url: fetchUrl,
+          ...fetchArguments,
+        },
+      });
 
-    let result = null;
-    try {
-      // @ts-ignore
-      result = await fetch(proxyUrl, fetchArguments)
-    } catch (e) {
-      console.error(e);
-      throw strings.messages.networkRequestFailed.format(fetchParameters.url);
+      let result = null;
+      try {
+        // @ts-ignore
+        result = await fetch(fetchUrl, fetchArguments)
+      } catch (e) {
+        console.error(e);
+        throw strings.messages.networkRequestFailed.format(fetchParameters.url);
+      }
+
+      const text = await result.text();
+
+      callback({
+        __className: 'Response',
+        arguments: [
+          result.status,
+          text,
+        ],
+      });
+    } else {
+      let command;
+      if ('GET' === fetchArguments.method) {
+        command = `requestsGet("${sensor.name}", "${fetchUrl}", "${JSON.stringify(fetchArguments.headers)}")`;
+      } else {
+        command = `requestsPost("${sensor.name}", "${fetchUrl}", "${JSON.stringify(fetchArguments.body)}", "${JSON.stringify(fetchArguments.headers)}")`;
+      }
+
+      const cb = context.runner.waitCallback(callback);
+
+      context.quickPiConnection.sendCommand(command, (result) => {
+        console.log('requests result', {result});
+        cb(JSON.parse(result));
+      });
     }
-
-    const text = await result.text();
-
-    callback({
-      __className: 'Response',
-      arguments: [
-        result.status,
-        text,
-      ],
-    });
   }
 
   return {

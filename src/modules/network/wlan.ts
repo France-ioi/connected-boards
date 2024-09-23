@@ -15,6 +15,7 @@ export function networkWlanModuleDefinition(context: any, strings): ModuleDefini
             {name: "active", params: ["Boolean"]},
             {name: "scan"},
             {name: "connect", params: ["String", "String"]},
+            {name: "disconnect"},
             {name: "isconnected", yieldsValue: "bool"},
             {name: "ifconfig", yieldsValue: "String"},
           ],
@@ -32,10 +33,8 @@ export function networkWlanModuleDefinition(context: any, strings): ModuleDefini
             throw `There is no Wi-Fi sensor.`;
           }
 
-          let command = "wifiSetActive(\"" + sensor.name + "\", " + active + ")";
-
           if (!context.display || context.autoGrading || context.offLineMode) {
-            let cb = context.runner.waitCallback(callback);
+            const cb = context.runner.waitCallback(callback);
 
             setTimeout(() => {
               context.registerQuickPiEvent(sensor.name, {
@@ -46,8 +45,8 @@ export function networkWlanModuleDefinition(context: any, strings): ModuleDefini
               cb();
             }, 500);
           } else {
-            let cb = context.runner.waitCallback(callback);
-
+            const cb = context.runner.waitCallback(callback);
+            const command = `wifiSetActive("${sensor.name}", ${active ? 1 : 0})`;
             context.quickPiConnection.sendCommand(command, cb);
           }
         },
@@ -57,13 +56,11 @@ export function networkWlanModuleDefinition(context: any, strings): ModuleDefini
             throw `There is no Wi-Fi sensor.`;
           }
 
-          if (!sensor.state?.active) {
-            throw strings.messages.wifiNotActive;
-          }
-
-          let command = "wifiScan(\"" + sensor.name + "\")";
-
           if (!context.display || context.autoGrading || context.offLineMode) {
+            if (!sensor.state?.active) {
+              throw strings.messages.wifiNotActive;
+            }
+
             context.registerQuickPiEvent(sensor.name, {
               ...sensor.state,
               scanning: true,
@@ -80,9 +77,11 @@ export function networkWlanModuleDefinition(context: any, strings): ModuleDefini
               cb();
             }, 1000);
           } else {
-            let cb = context.runner.waitCallback(callback);
-
-            context.quickPiConnection.sendCommand(command, cb);
+            const cb = context.runner.waitCallback(callback);
+            const command = "wifiScan(\"" + sensor.name + "\")";
+            context.quickPiConnection.sendCommand(command, (result) => {
+              cb(JSON.parse(result));
+            });
           }
         },
         connect: function (self, ssid, password, callback) {
@@ -91,12 +90,12 @@ export function networkWlanModuleDefinition(context: any, strings): ModuleDefini
             throw `There is no Wi-Fi sensor.`;
           }
 
-          if (!sensor.state?.active) {
-            throw strings.messages.wifiNotActive;
-          }
-
           if (!context.display || context.autoGrading || context.offLineMode) {
-            let cb = context.runner.waitCallback(callback);
+            if (!sensor.state?.active) {
+              throw strings.messages.wifiNotActive;
+            }
+
+            const cb = context.runner.waitCallback(callback);
 
             setTimeout(() => {
               context.registerQuickPiEvent(sensor.name, {
@@ -109,8 +108,37 @@ export function networkWlanModuleDefinition(context: any, strings): ModuleDefini
               cb();
             }, 500);
           } else {
-            let cb = context.runner.waitCallback(callback);
-            let command = "wifiConnect(\"" + sensor.name + "\", \"" + ssid + "\", \"" + password + "\")";
+            const cb = context.runner.waitCallback(callback);
+            const command = "wifiConnect(\"" + sensor.name + "\", \"" + ssid + "\", \"" + password + "\")";
+            context.quickPiConnection.sendCommand(command, cb);
+          }
+        },
+        disconnect: function (self, callback) {
+          const sensor = context.sensorHandler.findSensorByType('wifi');
+          if (!sensor) {
+            throw `There is no Wi-Fi sensor.`;
+          }
+
+          if (!context.display || context.autoGrading || context.offLineMode) {
+            if (!sensor.state?.active) {
+              throw strings.messages.wifiNotActive;
+            }
+
+            const cb = context.runner.waitCallback(callback);
+
+            setTimeout(() => {
+              context.registerQuickPiEvent(sensor.name, {
+                ...sensor.state,
+                connected: false,
+                ssid: null,
+                password: null,
+              });
+
+              cb();
+            }, 500);
+          } else {
+            const cb = context.runner.waitCallback(callback);
+            const command = "wifiDisconnect(\"" + sensor.name + "\")";
             context.quickPiConnection.sendCommand(command, cb);
           }
         },
@@ -122,17 +150,14 @@ export function networkWlanModuleDefinition(context: any, strings): ModuleDefini
 
           if (!context.display || context.autoGrading || context.offLineMode) {
             const state = context.getSensorState(sensor.name);
-            if (!state?.active) {
-              throw strings.messages.wifiNotActive;
-            }
 
             context.runner.noDelay(callback, !!state.connected);
           } else {
-            let command = "wifiIsConnected(\"" + sensor.name + "\")";
-            let cb = context.runner.waitCallback(callback);
+            const cb = context.runner.waitCallback(callback);
+            const command = "wifiIsConnected(\"" + sensor.name + "\")";
 
             context.quickPiConnection.sendCommand(command, function (returnVal) {
-              cb(!!returnVal.connected);
+              cb(!!returnVal);
             });
           }
         },
@@ -152,11 +177,11 @@ export function networkWlanModuleDefinition(context: any, strings): ModuleDefini
 
             context.runner.noDelay(callback, ips);
           } else {
-            let command = "wifiIfconfig(\"" + sensor.name + "\")";
-            let cb = context.runner.waitCallback(callback);
+            const command = "wifiIfConfig(\"" + sensor.name + "\")";
+            const cb = context.runner.waitCallback(callback);
 
-            context.quickPiConnection.sendCommand(command, function (returnVal) {
-              cb(returnVal);
+            context.quickPiConnection.sendCommand(command, (result) => {
+              cb(JSON.parse(result));
             });
           }
         },
