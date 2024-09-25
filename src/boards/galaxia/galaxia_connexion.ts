@@ -159,29 +159,23 @@ export class GalaxiaConnection {
     await this.transferModule('fioilib.py', galaxiaPythonLib, waitDelay);
     await this.transferModule('requests.py', galaxiaRequestsModule, waitDelay);
 
-    await new Promise(resolve => setTimeout(resolve, waitDelay));
-    await serialWrite(this.serial, "f = open(\"main.py\", \"w\")\r\nf.write(" + JSON.stringify(mainLib).replace(/\n/g, "\r\n") + ")\r\nf.close()\r\n");
-    await new Promise(resolve => setTimeout(resolve, waitDelay));
+    await new Promise(resolve => this.executeSerial("f = open(\"main.py\", \"w\")\r\nf.write(" + JSON.stringify(mainLib).replace(/\n/g, "\r\n") + ")\r\nf.close()\r\n", resolve));
   }
 
   async transferModule(moduleFile, moduleContent, waitDelay) {
     const size = 1200; // Max 1kb size
     const numChunks = Math.ceil(moduleContent.length / size);
 
-    await serialWrite(this.serial, `f = open("${moduleFile}", "w")\r
-`);
-    await new Promise(resolve => setTimeout(resolve, waitDelay));
+    await new Promise(resolve => this.executeSerial(`f = open("${moduleFile}", "w")\r\n`, resolve));
 
     for (let i = 0, o = 0; i < numChunks; ++i, o += size) {
       const chunk = moduleContent.substring(o, o + size);
 
-      await serialWrite(this.serial, "f.write(" + JSON.stringify(chunk).replace(/\n/g, "\r\n") + ")\r\n");
-      await new Promise(resolve => setTimeout(resolve, waitDelay));
+      await new Promise(resolve => this.executeSerial("f.write(" + JSON.stringify(chunk).replace(/\n/g, "\r\n") + ")\r\n", resolve));
     }
-    await serialWrite(this.serial, "f.close()\r\n");
-    await new Promise(resolve => setTimeout(resolve, waitDelay));
-    await serialWrite(this.serial, `exec(open("${moduleFile}", "r").read())\r
-`);
+
+    await new Promise(resolve => this.executeSerial("f.close()\r\n", resolve));
+    await new Promise(resolve => this.executeSerial(`exec(open("${moduleFile}", "r").read())\r\n`, resolve));
   }
 
   isAvailable(ipaddress, callback) {
