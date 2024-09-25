@@ -91,6 +91,8 @@ def isButtonPressed(name):
         return button_a.is_pressed()
     elif name == "button_b":
         return button_b.is_pressed()
+    elif name == "pin_logo":
+        return pin_logo.is_touched()
     else:
         throw("Unknown button")
     
