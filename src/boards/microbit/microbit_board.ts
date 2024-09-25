@@ -215,65 +215,34 @@ export class MicrobitBoard extends AbstractBoard {
     const accelerometerModule = thingzAccelerometerModuleDefinition(context, strings);
     const buttonModule = thingzButtonsModuleDefinition(context, strings);
     const temperatureModule = thingzTemperatureModuleDefinition(context, strings);
-    const ledModule = thingzLedModuleDefinition(context, strings);
-    const pinModule = machinePinModuleDefinition(context, strings);
-    const pwmModule = machinePwmModuleDefinition(context, strings);
-    const pulseModule = machinePulseModuleDefinition(context, strings);
     const timeModule = timeSleepModuleDefinition(context, strings);
-    const wlanModule = networkWlanModuleDefinition(context, strings);
-    const requestsModule = requestsModuleDefinition(context, strings);
-    const jsonModule = jsonModuleDefinition(context, strings);
 
     return {
       customClasses: {
-        thingz: deepMerge(
+        microbit: deepMerge(
           accelerometerModule.classDefinitions,
           buttonModule.classDefinitions,
-          ledModule.classDefinitions,
         ),
-        machine: deepMerge(
-          pinModule.classDefinitions,
-          pwmModule.classDefinitions,
-        ),
-        network: wlanModule.classDefinitions,
-        requests: requestsModule.classDefinitions,
-      },
-      customConstants: {
-        network: wlanModule.constants,
       },
       customClassInstances: {
-        thingz: deepMerge(
+        microbit: deepMerge(
           accelerometerModule.classInstances,
           buttonModule.classInstances,
-          ledModule.classInstances,
         ),
       },
       customClassImplementations: {
-        thingz: deepMerge(
+        microbit: deepMerge(
           accelerometerModule.classImplementations,
           buttonModule.classImplementations,
-          ledModule.classImplementations,
         ),
-        machine: deepMerge(
-          pinModule.classImplementations,
-          pwmModule.classImplementations,
-        ),
-        network: wlanModule.classImplementations,
-        requests: requestsModule.classImplementations,
       },
       customBlockImplementations: {
-        thingz: temperatureModule.blockImplementations,
+        microbit: temperatureModule.blockImplementations,
         time: timeModule.blockImplementations,
-        requests: requestsModule.blockImplementations,
-        json: jsonModule.blockImplementations,
-        machine: pulseModule.blockImplementations,
       },
       customBlocks: {
-        thingz: temperatureModule.blockDefinitions,
+        microbit: temperatureModule.blockDefinitions,
         time: timeModule.blockDefinitions,
-        requests: requestsModule.blockDefinitions,
-        json: jsonModule.blockDefinitions,
-        machine: pulseModule.blockDefinitions,
       },
     };
   }

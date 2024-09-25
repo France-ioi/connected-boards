@@ -1439,7 +1439,7 @@ export function quickpiModuleDefinition(context: any, strings: any): ModuleDefin
 
         let command = "readAcceleration(\"" + axis + "\")";
         context.quickPiConnection.sendCommand(command, function (returnVal) {
-          cb(returnVal);
+          cb(Number(returnVal));
         });
       }
     },
