@@ -162,7 +162,7 @@ export class GalaxiaBoard extends AbstractBoard {
     } else if (sensor === 'disconnected') {
       this.innerState.connected = false;
       this.setConnected(false);
-    } else if (sensor.name.substring(0, 3) == 'btn') {
+    } else if (sensor.name.substring(0, 7) == 'button_' || sensor.name.substring(0, 6) == 'touch_') {
       this.innerState[sensor.name] = sensor.state;
       if (!this.initialized) {
         return;

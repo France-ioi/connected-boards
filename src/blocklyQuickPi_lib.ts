@@ -1266,6 +1266,41 @@ var getContext = function (display, infos, curLevel) {
         // }while(newSensors.length < infos.quickPiSensors.length)
     }
 
+    function installPythonCode(code) {
+        if (context.runner)
+            context.runner.stop();
+
+        context.installing = true;
+        $('#piinstallprogresss').show();
+        $('#piinstallcheck').hide();
+
+        console.log('install python code', code);
+
+        context.quickPiConnection.installProgram(code, function () {
+            context.justinstalled = true;
+            $('#piinstallprogresss').hide();
+            $('#piinstallcheck').show();
+        });
+    }
+
+    function piInstallProgram() {
+        context.blocklyHelper.reportValues = false;
+
+        var python_code = context.generatePythonSensorTable();
+        python_code += "\n\n";
+        if(context.blocklyHelper.getCode) {
+            python_code += context.blocklyHelper.getCode('python');
+            python_code = python_code.replace("from quickpi import *", "");
+            installPythonCode(python_code);
+        } else {
+            window.task.getAnswer(function (answer) {
+                python_code += JSON.parse(answer).easy.document.lines.join("\n");
+                python_code = python_code.replace("from quickpi import *", "");
+                installPythonCode(python_code);
+            });
+        }
+    }
+
     // Reset the context's display
     context.createDisplay = function () {
         // Do something here
@@ -1442,26 +1477,7 @@ var getContext = function (display, infos, curLevel) {
             if(!context.quickPiConnection.isConnected()) { 
                 showConfig(showConfigSettings);
             }else{
-                context.blocklyHelper.reportValues = false;
-
-                var python_code = context.generatePythonSensorTable();
-                python_code += "\n\n";
-                python_code += window.task.displayedSubTask.blocklyHelper.getCode('python');
-
-                python_code = python_code.replace("from quickpi import *", "");
-
-                if (context.runner)
-                    context.runner.stop();
-
-                context.installing = true;
-                $('#piinstallprogresss').show();
-                $('#piinstallcheck').hide();
-
-                context.quickPiConnection.installProgram(python_code, function () {
-                    context.justinstalled = true;
-                    $('#piinstallprogresss').hide();
-                    $('#piinstallcheck').show();
-                });
+                piInstallProgram();
             }
         });
         $('#pichangehat').click(() => {
@@ -1631,39 +1647,7 @@ var getContext = function (display, infos, curLevel) {
                 });
         });
 
-        function installPythonCode(code) {
-            if (context.runner)
-                context.runner.stop();
-
-            context.installing = true;
-            $('#piinstallprogresss').show();
-            $('#piinstallcheck').hide();
-
-            context.quickPiConnection.installProgram(code, function () {
-                context.justinstalled = true;
-                $('#piinstallprogresss').hide();
-                $('#piinstallcheck').show();
-            });
-        }
-
-        $('#piinstall').click(function () {
-            context.blocklyHelper.reportValues = false;
-
-            var python_code = context.generatePythonSensorTable();
-            python_code += "\n\n";
-            if(context.blocklyHelper.getCode) {
-                python_code += context.blocklyHelper.getCode('python');
-                python_code = python_code.replace("from quickpi import *", "");
-                installPythonCode(python_code);
-            } else {
-                window.task.getAnswer(function (answer) {
-                    python_code += JSON.parse(answer).easy.document.lines.join("\n");
-                    python_code = python_code.replace("from quickpi import *", "");
-                    installPythonCode(python_code);
-                });
-            }
-        });
-
+        $('#piinstall').click(piInstallProgram);
 
         if (parseInt(getSessionStorage('autoConnect'))) {
             if (!context.quickPiConnection.isConnected() && !context.quickPiConnection.isConnecting()) {

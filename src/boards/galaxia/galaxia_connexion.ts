@@ -156,13 +156,13 @@ export class GalaxiaConnection {
   async transferPythonLib() {
     const waitDelay = 500;
 
-    await this.transferModule('fioilib.py', galaxiaPythonLib, waitDelay);
-    await this.transferModule('requests.py', galaxiaRequestsModule, waitDelay);
+    await this.transferModule('fioilib.py', galaxiaPythonLib);
+    await this.transferModule('requests.py', galaxiaRequestsModule);
 
     await new Promise(resolve => this.executeSerial("f = open(\"main.py\", \"w\")\r\nf.write(" + JSON.stringify(mainLib).replace(/\n/g, "\r\n") + ")\r\nf.close()\r\n", resolve));
   }
 
-  async transferModule(moduleFile, moduleContent, waitDelay) {
+  async transferModule(moduleFile, moduleContent) {
     const size = 1200; // Max 1kb size
     const numChunks = Math.ceil(moduleContent.length / size);
 
@@ -202,30 +202,34 @@ export class GalaxiaConnection {
 
 
   installProgram(pythonProgram, oninstall) {
-    let fullProgram = pythonProgram;
-    let cmds = [
-      "f = open(\"program.py\", \"w\")"
-    ]
-    while (fullProgram.length > 0) {
-      cmds.push("f.write(" + JSON.stringify(fullProgram.substring(0, 128)) + ")");
-      fullProgram = fullProgram.substring(128);
-    }
-    cmds.push("f.close()");
-    let idx = -1;
+    this.transferModule('program.py', pythonProgram)
+      .then(oninstall);
 
-    const executeNext = () => {
-      idx += 1;
-      if (idx >= cmds.length) {
-        oninstall();
-        this.executeSerial("exec(open(\"program.py\", \"r\").read())", () => {
-        });
-      }
-      this.executeSerial(cmds[idx] + "\r\n", () => {
-        setTimeout(executeNext, 500)
-      });
-    }
-
-    executeNext();
+    // let fullProgram = pythonProgram;
+    // let cmds = [
+    //   "f = open(\"program.py\", \"w\")"
+    // ];
+    //
+    // while (fullProgram.length > 0) {
+    //   cmds.push("f.write(" + JSON.stringify(fullProgram.substring(0, 128)) + ")");
+    //   fullProgram = fullProgram.substring(128);
+    // }
+    // cmds.push("f.close()");
+    // let idx = -1;
+    //
+    // const executeNext = () => {
+    //   idx += 1;
+    //   if (idx >= cmds.length) {
+    //     oninstall();
+    //     this.executeSerial("exec(open(\"program.py\", \"r\").read())", () => {
+    //     });
+    //   }
+    //   this.executeSerial(cmds[idx] + "\r\n", () => {
+    //     setTimeout(executeNext, 500)
+    //   });
+    // }
+    //
+    // executeNext();
   }
 
   runDistributed(pythonProgram, graphDefinition, oninstall) {
@@ -313,7 +317,12 @@ export class GalaxiaConnection {
 
   genericSendCommand(command, callback) {
     this.executeSerial(`print(dumps(${command}))`, (data) => {
-      const convertedData = data;
+      let convertedData = data;
+      if ('false' === data) {
+        convertedData = false;
+      } else if ('true' === data) {
+        convertedData = true;
+      }
 
       callback(convertedData);
     });
