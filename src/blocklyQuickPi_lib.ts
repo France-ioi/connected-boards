@@ -1274,8 +1274,6 @@ var getContext = function (display, infos, curLevel) {
         $('#piinstallprogresss').show();
         $('#piinstallcheck').hide();
 
-        console.log('install python code', code);
-
         context.quickPiConnection.installProgram(code, function () {
             context.justinstalled = true;
             $('#piinstallprogresss').hide();
