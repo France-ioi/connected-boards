@@ -11,9 +11,11 @@ import {Sensor} from "./definitions";
 import {SensorCollection} from "./sensors/sensor_collection";
 import {createSensor} from "./sensors/sensor_factory";
 import {SensorDrawTimeLineParameters} from "./sensors/abstract_sensor";
+import {microbitBoard} from "./boards/microbit/microbit_board";
 
 const boards: {[board: string]: AbstractBoard} = {
     galaxia: galaxiaBoard,
+    microbit: microbitBoard,
     quickpi: quickPiBoard,
 };
 

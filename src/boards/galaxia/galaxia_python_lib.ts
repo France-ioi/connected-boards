@@ -74,7 +74,7 @@ def setLedState(pin, state):
         led.off()
 
 def readLightIntensity(pin):
-	  return led.read_light_level()
+    return led.read_light_level()
 
 def readTemperature(pin):
     return temperature()

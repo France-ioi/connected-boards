@@ -1,6 +1,5 @@
 import {getSessionStorage, setSessionStorage} from "../../helpers/session_storage";
-import {galaxiaPythonLib} from "./galaxia_python_lib";
-import {galaxiaRequestsModule} from "./galaxia_requests_module";
+import {microbitPythonLib} from "./microbit_python_lib";
 
 let DEBUG_OUTPUT_IN_CONSOLE = true;
 let DEBUG_FULL_OUTPUT = false;
@@ -8,7 +7,7 @@ let DEBUG_FULL_OUTPUT = false;
 
 async function getSerial(filters) {
   const allPorts = await navigator.serial.getPorts();
-  const savedBoard = getSessionStorage('galaxia_board');
+  const savedBoard = getSessionStorage('microbit_board');
 
   let port: SerialPort;
   if (null !== savedBoard) {
@@ -21,10 +20,13 @@ async function getSerial(filters) {
     });
   }
 
+  console.log('before port open');
   await port.open({baudRate: 115200});
+  console.log('after port open');
 
   const info = port.getInfo();
-  setSessionStorage('galaxia_board', JSON.stringify(info));
+  console.log({info})
+  setSessionStorage('microbit_board', JSON.stringify(info));
 
   return port;
 }
@@ -37,7 +39,7 @@ async function serialWrite(port, data) {
   writer.releaseLock();
 }
 
-export class GalaxiaConnection {
+export class MicrobitConnection {
   private _onConnect;
   private _onDisconnect;
   private _onChangeBoard;
@@ -88,7 +90,7 @@ export class GalaxiaConnection {
     this._onChangeBoard.apply(this, arguments);
   }
 
-  processGalaxiaOutput(data) {
+  processMicrobitOutput(data) {
     let text = new TextDecoder().decode(data);
     this.currentOutputLine += text;
 
@@ -120,7 +122,7 @@ export class GalaxiaConnection {
     this.resetProperties();
     this.connecting = true;
     try {
-      this.serial = await getSerial([{usbProductId: 0x4003, usbVendorId: 0x303A}]);
+      this.serial = await getSerial([{usbProductId: 0x0204, usbVendorId: 0x0d28}]);
     } catch (e) {
       this.connecting = false;
       this._onDisconnect(false);
@@ -145,7 +147,7 @@ export class GalaxiaConnection {
     this.reader = port.readable.getReader();
     while (true) {
       const {value, done} = await this.reader.read();
-      this.processGalaxiaOutput(value);
+      this.processMicrobitOutput(value);
       if (done || this.releasing) {
         this.reader.cancel();
         break;
@@ -154,10 +156,13 @@ export class GalaxiaConnection {
   }
 
   async transferPythonLib() {
-    await this.transferModule('fioilib.py', galaxiaPythonLib);
-    await this.transferModule('requests.py', galaxiaRequestsModule);
+    console.log('start transfer');
+    await serialWrite(this.serial, "\x03")
+    await this.transferModule('fioilib.py', microbitPythonLib);
 
-    await new Promise(resolve => this.executeSerial("f = open(\"main.py\", \"w\")\r\nf.write(" + JSON.stringify(mainLib).replace(/\n/g, "\r\n") + ")\r\nf.close()\r\n", resolve));
+    await new Promise(resolve => this.executeSerial("f = open(\"main.py\", \"w\")\r\n", resolve));
+    await new Promise(resolve => this.executeSerial("f.write(" + JSON.stringify(mainLib).replace(/\n/g, "\r\n") + ")\r\n", resolve));
+    await new Promise(resolve => this.executeSerial("f.close()\r\n", resolve));
   }
 
   async transferModule(moduleFile, moduleContent) {
@@ -257,6 +262,7 @@ export class GalaxiaConnection {
   }
 
   executeSerial(command, callback) {
+    console.log('send command', command);
     if (this.executing) {
       this.executionQueue.push([command, callback]);
       return;
@@ -288,11 +294,11 @@ export class GalaxiaConnection {
   }
 
   genericSendCommand(command, callback) {
-    this.executeSerial(`print(dumps(${command}))`, (data) => {
+    this.executeSerial(`print(${command})`, (data) => {
       let convertedData = data;
-      if ('false' === data) {
+      if ('False' === data) {
         convertedData = false;
-      } else if ('true' === data) {
+      } else if ('True' === data) {
         convertedData = true;
       }
 
@@ -313,7 +319,7 @@ export class GalaxiaConnection {
 let mainLib = `
 import os
 from machine import *
-from thingz import *
+from microbit import *
 
 program_exists = False
 
