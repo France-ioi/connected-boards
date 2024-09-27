@@ -4,20 +4,15 @@ import {thingzAccelerometerModuleDefinition} from "../../modules/thingz/accelero
 import {thingzButtonsModuleDefinition} from "../../modules/thingz/buttons";
 import {deepMerge} from "../../util";
 import {thingzTemperatureModuleDefinition} from "../../modules/thingz/temperature";
-import {thingzLedModuleDefinition} from "../../modules/thingz/led";
-import {machinePinModuleDefinition} from "../../modules/machine/pin";
-import {machinePwmModuleDefinition} from "../../modules/machine/pwm";
 import {timeSleepModuleDefinition} from "../../modules/time/sleep";
 // @ts-ignore
 import microbitSvg from '../../../images/microbit.svg';
-import {networkWlanModuleDefinition} from "../../modules/network/wlan";
-import {requestsModuleDefinition} from "../../modules/requests/requests";
-import {jsonModuleDefinition} from "../../modules/json/json";
-import {machinePulseModuleDefinition} from "../../modules/machine/pulse";
 import {MicrobitConnection} from "./microbit_connexion";
+import {displayModuleDefinition} from "../../modules/microbit/display";
 
 interface MicrobitBoardInnerState {
   connected?: boolean,
+  ledmatrix?: number[][],
 }
 
 let microbitSvgInline = null;
@@ -137,13 +132,17 @@ export class MicrobitBoard extends AbstractBoard {
     this.buttonStatesUpdators[buttonName] = {'down': buttonDown, 'up': buttonUp};
   }
 
-  setLed(color) {
-    if (!this.initialized || !color) {
+  setLedMatrix(state) {
+    if (!this.initialized) {
       return;
     }
-
-    let led = this.microbitSvg.find('#led');
-    led.css('fill', Array.isArray(color) ? `rgb(${color.join(',')})` : '#d3d3d3');
+    console.log('set led matrix', state);
+    for (var y = 0; y < 5; y++) {
+      for (var x = 0; x < 5; x++) {
+        var led = this.microbitSvg.find('#ledmatrix-' + x + '-' + y);
+        led.attr('opacity', state[y][x] / 10);
+      }
+    }
   }
 
   setConnected(isConnected) {
@@ -167,6 +166,9 @@ export class MicrobitBoard extends AbstractBoard {
         return;
       }
       this.buttonStatesUpdators[sensor.name][sensor.state ? 'down' : 'up'](true);
+    } else if(sensor.type === 'ledmatrix') {
+      this.innerState.ledmatrix = sensor.state;
+      this.setLedMatrix(sensor.state);
     }
   }
 
@@ -175,6 +177,7 @@ export class MicrobitBoard extends AbstractBoard {
     for (let id in this.buttonStatesUpdators) {
       this.buttonStatesUpdators[id][this.innerState[id] ? 'down' : 'up'](true);
     }
+    this.setLedMatrix(this.innerState.ledmatrix);
     this.setConnected(this.innerState.connected);
   }
 
@@ -186,6 +189,7 @@ export class MicrobitBoard extends AbstractBoard {
         portTypes: {
           "D": [0, 1, 2, 6, 7, 8, 12, 13, 14, 15, 16, 19, 20],
           "A": [0, 1, 2, 6, 7, 8, 12, 13, 14, 15, 16, 19, 20],
+          "i2c": ["i2c"],
         },
         builtinSensors: [
           {type: "button", suggestedName: 'button_a'},
@@ -216,24 +220,28 @@ export class MicrobitBoard extends AbstractBoard {
     const buttonModule = thingzButtonsModuleDefinition(context, strings);
     const temperatureModule = thingzTemperatureModuleDefinition(context, strings);
     const timeModule = timeSleepModuleDefinition(context, strings);
+    const displayModule = displayModuleDefinition(context, strings);
 
     return {
       customClasses: {
         microbit: deepMerge(
           accelerometerModule.classDefinitions,
           buttonModule.classDefinitions,
+          displayModule.classDefinitions,
         ),
       },
       customClassInstances: {
         microbit: deepMerge(
           accelerometerModule.classInstances,
           buttonModule.classInstances,
+          displayModule.classInstances,
         ),
       },
       customClassImplementations: {
         microbit: deepMerge(
           accelerometerModule.classImplementations,
           buttonModule.classImplementations,
+          displayModule.classImplementations,
         ),
       },
       customBlockImplementations: {

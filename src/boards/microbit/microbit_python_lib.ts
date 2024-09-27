@@ -109,4 +109,16 @@ def turnPortOff(pin):
     if pin != 0:
         pinElement = Pin(pin, Pin.OUT)
         pinElement.off()
+        
+def ledMatrixShowImage(pin, image):
+    display.show(image)
+    
+def ledMatrixClear(pin):
+    display.clear()
+    
+def ledMatrixGetPixel(pin, x, y):
+    return display.get_pixel(x, y)
+    
+def ledMatrixSetPixel(pin, x, y, intensity):
+    return display.set_pixel(x, y, intensity)
 `;

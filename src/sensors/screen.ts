@@ -3,6 +3,7 @@ import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
 import {screenDrawing} from "./util/screen";
+import {quickpiModuleDefinition} from "../modules/quickpi/quickpi";
 
 export class SensorScreen extends AbstractSensor<any> {
   private screenrect: any;
@@ -213,7 +214,9 @@ export class SensorScreen extends AbstractSensor<any> {
 
         this.screenrect.attr({"opacity": 0});
 
-        this.context.quickpi.initScreenDrawing(this);
+        const quickPiModuleDefinition = quickpiModuleDefinition(this.context, this.strings);
+        quickPiModuleDefinition.blockImplementations.initScreenDrawing(this);
+
         //sensor.screenDrawing.copyToCanvas(sensor.canvas, screenScale);
         screenDrawing.renderToCanvas(this.state, this.canvas, screenScale);
       } else {

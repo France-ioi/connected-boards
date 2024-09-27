@@ -3,7 +3,9 @@ import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 
 export class SensorLedMatrix extends AbstractSensor<any> {
-  private ledmatrix: any;
+  private ledmatrixOff: any;
+  private ledmatrixOn: any;
+  private paper: any;
   public type = 'ledmatrix';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
@@ -42,8 +44,8 @@ export class SensorLedMatrix extends AbstractSensor<any> {
   }
 
   setLiveState(state, callback) {
-    var command = "setLedMatrixState(\"" + this.name + "\"," + JSON.stringify(state) + ")";
-
+    const stateString = state.map(a => a.join('')).join(':');
+    const command = `ledMatrixShowImage("${this.name}", Image("${stateString}"))`;
     this.context.quickPiConnection.sendCommand(command, callback);
   }
 
@@ -59,47 +61,63 @@ export class SensorLedMatrix extends AbstractSensor<any> {
       this.state = [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]];
 
     let ledmatrixOnAttr = {
-      "fill": "red",
-      "stroke": "darkgray"
-    };
-    let ledmatrixOffAttr = {
-      "fill": "lightgray",
-      "stroke": "darkgray"
+      fill: 'red',
+      stroke: 'transparent',
+      opacity: 0,
     };
 
-    if (!this.ledmatrix || sensorHandler.isElementRemoved(this.ledmatrix[0][0])) {
-      this.ledmatrix = [];
-      for (let i = 0; i < 5; i++) {
-        this.ledmatrix[i] = [];
-        for (let j = 0; j < 5; j++) {
-          this.ledmatrix[i][j] = this.context.paper.rect(imgx + (imgw / 5) * i, imgy + (imgh / 5) * j, imgw / 5, imgh / 5);
-          this.ledmatrix[i][j].attr(ledmatrixOffAttr);
+    let ledmatrixOffAttr = {
+      fill: 'lightgray',
+      stroke: 'darkgray',
+    };
+
+    if (!this.ledmatrixOff || sensorHandler.isElementRemoved(this.ledmatrixOff[0][0])) {
+      this.ledmatrixOff = [];
+      this.ledmatrixOn = [];
+      for (let y = 0; y < 5; y++) {
+        this.ledmatrixOff[y] = [];
+        this.ledmatrixOn[y] = [];
+        for (let x = 0; x < 5; x++) {
+          this.ledmatrixOff[y][x] = this.context.paper.rect(imgx + (imgw / 5) * x, imgy + (imgh / 5) * y, imgw / 5, imgh / 5);
+          this.ledmatrixOff[y][x].attr(ledmatrixOffAttr);
+
+          this.ledmatrixOn[y][x] = this.context.paper.rect(imgx + (imgw / 5) * x, imgy + (imgh / 5) * y, imgw / 5, imgh / 5);
+          this.ledmatrixOn[y][x].attr(ledmatrixOnAttr);
         }
       }
     }
 
-    for (let i = 0; i < 5; i++) {
-      for (let j = 0; j < 5; j++) {
-        if (this.state[i][j]) {
-          this.ledmatrix[i][j].attr(ledmatrixOnAttr);
-        } else {
-          this.ledmatrix[i][j].attr(ledmatrixOffAttr);
-        }
+    for (let y = 0; y < 5; y++) {
+      for (let x = 0; x < 5; x++) {
+        this.ledmatrixOn[y][x].attr({
+          opacity: this.state[y][x] / 10,
+        });
       }
     }
 
     const ledMatrixListener = (imgx, imgy, imgw, imgh, sensor) => {
       return (e) => {
-        let i = Math.floor((e.offsetX - imgx) / (imgw / 5));
-        let j = Math.floor((e.offsetY - imgy) / (imgh / 5));
-        sensor.state[i][j] = !sensor.state[i][j] ? 1 : 0;
-        sensor.setLiveState(sensor.state, () => {
-        });
-        sensorHandler.getSensorDrawer().drawSensor(sensor);
+        if (!this.context.autoGrading && (!this.context.runner || !this.context.runner.isRunning())) {
+          let x = Math.floor((e.offsetX - imgx) / (imgw / 5));
+          let y = Math.floor((e.offsetY - imgy) / (imgh / 5));
+          sensor.state[y][x] = (sensor.state[y][x] + 1) % 10;
+          sensorHandler.warnClientSensorStateChanged(this);
+          sensorHandler.drawSensor(this);
+
+          if ((!this.context.runner || !this.context.runner.isRunning()) && !this.context.offLineMode) {
+            this.setLiveState(this.state, function () {});
+          }
+        } else {
+          sensorHandler.actuatorsInRunningModeError();
+        }
       }
     }
 
     this.focusrect.unclick();
     this.focusrect.click(ledMatrixListener(imgx, imgy, imgw, imgh, this));
+
+    if ((!this.context.runner || !this.context.runner.isRunning()) && !this.context.offLineMode) {
+      this.setLiveState(this.state, function() {});
+    }
   }
 }
