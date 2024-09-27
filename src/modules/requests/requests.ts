@@ -30,7 +30,7 @@ export function requestsModuleDefinition(context: any, strings): ModuleDefinitio
     const fetchArguments = {
       method: fetchParameters.method,
       headers: getRealValue(fetchParameters.headers),
-      body: getRealValue(fetchParameters.body),
+      ...(fetchParameters.body ? {body: getRealValue(fetchParameters.body)} : {}),
     };
 
     if (!context.display || context.autoGrading || context.offLineMode) {
@@ -49,7 +49,10 @@ export function requestsModuleDefinition(context: any, strings): ModuleDefinitio
       let result = null;
       try {
         // @ts-ignore
-        result = await fetch(fetchUrl, fetchArguments)
+        result = await fetch(fetchUrl, {
+          ...fetchArguments,
+          ...(fetchArguments.body ? {body: new URLSearchParams(fetchArguments.body)} : {}),
+        })
       } catch (e) {
         console.error(e);
         throw strings.messages.networkRequestFailed.format(fetchParameters.url);

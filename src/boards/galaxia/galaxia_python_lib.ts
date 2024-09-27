@@ -235,9 +235,7 @@ def requestsGet(sensor, url, headers):
     return [response.status_code, response.text]
 
 def requestsPost(sensor, url, data, headers):
-    data_parsed = loads(data)
-    data_encoded = '&'.join(k+"="+data_parsed[k] for k in data_parsed)
-    response = post(url, data=data_encoded, headers=loads(headers))
+    response = post(url, data=loads(data), headers=loads(headers))
     
     return [response.status_code, response.text]
 
