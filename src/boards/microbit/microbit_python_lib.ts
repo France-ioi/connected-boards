@@ -9,6 +9,7 @@ from microbit import *
 from micropython import *
 from machine import *
 from time import *
+import music
 
 servo_angle = {}
 distance_last_value = {}
@@ -138,4 +139,17 @@ def ledMatrixSetPixel(pin, x, y, intensity):
     
 def readSoundLevel(pin):
     return microphone.sound_level()
+    
+def setBuzzerState(name, state):
+    if state == 0:
+      music.stop()
+
+def setBuzzerNote(pin, frequency):
+    music.pitch(frequency)
+
+def turnBuzzerOn(pin=12):
+    setBuzzerState("buzzer1", 1)
+
+def turnBuzzerOff(pin=12):
+    setBuzzerState("buzzer1", 0)
 `;

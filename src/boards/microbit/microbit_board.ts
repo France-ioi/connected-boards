@@ -11,6 +11,7 @@ import {displayModuleDefinition} from "../../modules/microbit/display";
 import {thingzCompassModuleDefinition} from "../../modules/thingz/compass";
 import {microphoneModuleDefinition} from "../../modules/microbit/microphone";
 import {mergeModuleDefinitions} from "../board_util";
+import {musicModuleDefinition} from "../../modules/microbit/music";
 
 interface MicrobitBoardInnerState {
   connected?: boolean,
@@ -225,6 +226,7 @@ export class MicrobitBoard extends AbstractBoard {
     const timeModule = timeSleepModuleDefinition(context, strings);
     const displayModule = displayModuleDefinition(context, strings);
     const microphoneModule = microphoneModuleDefinition(context, strings);
+    const musicModule = musicModuleDefinition(context, strings);
 
     return mergeModuleDefinitions({
       microbit: [
@@ -234,6 +236,9 @@ export class MicrobitBoard extends AbstractBoard {
         temperatureModule,
         displayModule,
         microphoneModule,
+      ],
+      music: [
+        musicModule,
       ],
       time: [
         timeModule,
