@@ -15,6 +15,7 @@ import {requestsModuleDefinition} from "../../modules/requests/requests";
 import {jsonModuleDefinition} from "../../modules/json/json";
 import {machinePulseModuleDefinition} from "../../modules/machine/pulse";
 import {GalaxiaConnection} from "./galaxia_connexion";
+import {thingzCompassModuleDefinition} from "../../modules/thingz/compass";
 
 interface GalaxiaBoardInnerState {
   connected?: boolean,
@@ -227,6 +228,7 @@ export class GalaxiaBoard extends AbstractBoard {
 
   getCustomBlocks(context, strings): BoardCustomBlocks {
     const accelerometerModule = thingzAccelerometerModuleDefinition(context, strings);
+    const compassModule = thingzCompassModuleDefinition(context, strings);
     const buttonModule = thingzButtonsModuleDefinition(context, strings);
     const temperatureModule = thingzTemperatureModuleDefinition(context, strings);
     const ledModule = thingzLedModuleDefinition(context, strings);
@@ -242,6 +244,7 @@ export class GalaxiaBoard extends AbstractBoard {
       customClasses: {
         thingz: deepMerge(
           accelerometerModule.classDefinitions,
+          compassModule.classDefinitions,
           buttonModule.classDefinitions,
           ledModule.classDefinitions,
         ),
@@ -258,6 +261,7 @@ export class GalaxiaBoard extends AbstractBoard {
       customClassInstances: {
         thingz: deepMerge(
           accelerometerModule.classInstances,
+          compassModule.classInstances,
           buttonModule.classInstances,
           ledModule.classInstances,
         ),
@@ -265,6 +269,7 @@ export class GalaxiaBoard extends AbstractBoard {
       customClassImplementations: {
         thingz: deepMerge(
           accelerometerModule.classImplementations,
+          compassModule.classImplementations,
           buttonModule.classImplementations,
           ledModule.classImplementations,
         ),

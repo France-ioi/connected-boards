@@ -64,6 +64,20 @@ def readAcceleration(axis):
 def readAccelBMI160():
     return [readAcceleration("x"), readAcceleration("y"), readAcceleration("z")]
 
+def readMagneticForce(axis):
+    if axis == "x":
+        val = compass.get_x()
+    elif axis == "y":
+        val = compass.get_y()
+    elif axis == "z":
+        val = compass.get_z()
+    else:
+        throw("Unknown axis")
+    return round(val/100, 1)
+
+def readMagnetometerLSM303C(allowcalibration=True):
+    return [readMagneticForce("x"), readMagneticForce("y"), readMagneticForce("z")]
+
 def setLedState(pin, state):
     pin = normalizePin(pin)
 

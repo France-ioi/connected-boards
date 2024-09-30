@@ -1510,7 +1510,7 @@ export function quickpiModuleDefinition(context: any, strings: any): ModuleDefin
         context.waitDelay(callback, sensor.state[index]);
       } else {
         let cb = context.runner.waitCallback(callback);
-        let sensor = context.findSensor("magnetometer", "i2c");
+        let sensor = sensorHandler.findSensorByType("magnetometer");
 
         sensor.getLiveState(function(returnVal) {
           sensor.state = returnVal;
@@ -1539,7 +1539,7 @@ export function quickpiModuleDefinition(context: any, strings: any): ModuleDefin
         context.runner.noDelay(callback, heading);
       } else {
         let cb = context.runner.waitCallback(callback);
-        let sensor = context.findSensor("magnetometer", "i2c");
+        let sensor = sensorHandler.findSensorByType("magnetometer");
 
         context.quickPiConnection.sendCommand("readMagnetometerLSM303C()", function(returnVal) {
           sensor.state = JSON.parse(returnVal);

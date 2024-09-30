@@ -9,6 +9,7 @@ import {timeSleepModuleDefinition} from "../../modules/time/sleep";
 import microbitSvg from '../../../images/microbit.svg';
 import {MicrobitConnection} from "./microbit_connexion";
 import {displayModuleDefinition} from "../../modules/microbit/display";
+import {thingzCompassModuleDefinition} from "../../modules/thingz/compass";
 
 interface MicrobitBoardInnerState {
   connected?: boolean,
@@ -136,11 +137,11 @@ export class MicrobitBoard extends AbstractBoard {
     if (!this.initialized) {
       return;
     }
-    console.log('set led matrix', state);
+
     for (var y = 0; y < 5; y++) {
       for (var x = 0; x < 5; x++) {
         var led = this.microbitSvg.find('#ledmatrix-' + x + '-' + y);
-        led.attr('opacity', state[y][x] / 10);
+        led.attr('opacity', (state && state[y] ? state[y][x] : 0) / 10);
       }
     }
   }
@@ -217,6 +218,7 @@ export class MicrobitBoard extends AbstractBoard {
 
   getCustomBlocks(context, strings): BoardCustomBlocks {
     const accelerometerModule = thingzAccelerometerModuleDefinition(context, strings);
+    const compassModule = thingzCompassModuleDefinition(context, strings);
     const buttonModule = thingzButtonsModuleDefinition(context, strings);
     const temperatureModule = thingzTemperatureModuleDefinition(context, strings);
     const timeModule = timeSleepModuleDefinition(context, strings);
@@ -226,6 +228,7 @@ export class MicrobitBoard extends AbstractBoard {
       customClasses: {
         microbit: deepMerge(
           accelerometerModule.classDefinitions,
+          compassModule.classDefinitions,
           buttonModule.classDefinitions,
           displayModule.classDefinitions,
         ),
@@ -233,6 +236,7 @@ export class MicrobitBoard extends AbstractBoard {
       customClassInstances: {
         microbit: deepMerge(
           accelerometerModule.classInstances,
+          compassModule.classInstances,
           buttonModule.classInstances,
           displayModule.classInstances,
         ),
@@ -240,6 +244,7 @@ export class MicrobitBoard extends AbstractBoard {
       customClassImplementations: {
         microbit: deepMerge(
           accelerometerModule.classImplementations,
+          compassModule.classImplementations,
           buttonModule.classImplementations,
           displayModule.classImplementations,
         ),
