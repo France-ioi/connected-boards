@@ -12,7 +12,6 @@ export class SensorScreen extends AbstractSensor<any> {
   private lastScreenState: any;
   private tooltip;
   private tooltipText;
-  private showingTooltip = false;
   public type = 'screen';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {

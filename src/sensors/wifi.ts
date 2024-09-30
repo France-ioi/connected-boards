@@ -3,6 +3,7 @@ import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {deepSubsetEqual, getImg, textEllipsis} from "../util";
 import {networkWlanModuleDefinition} from "../modules/network/wlan";
+import {drawBubbleTimeline} from "./util/bubble_timeline";
 
 interface SensorWifiState {
   active?: boolean,
@@ -25,7 +26,6 @@ interface SensorWifiState {
 export class SensorWifi extends AbstractSensor<SensorWifiState> {
   declare public state?: SensorWifiState;
   protected active: any;
-  private showingTooltip: boolean = false;
   private lastWifiState: SensorWifiState;
   public type = 'wifi';
 
@@ -476,80 +476,50 @@ export class SensorWifi extends AbstractSensor<SensorWifiState> {
   }
 
   drawTimelineState(sensorHandler: SensorHandler, state: SensorWifiState, expectedState: SensorWifiState, type: string, drawParameters: SensorDrawTimeLineParameters) {
-    const {startx, ypositionmiddle, color, strokewidth} = drawParameters;
-
     const sensorDef = sensorHandler.findSensorDefinition(this);
-    if (type != "actual" || !this.lastWifiState || !sensorDef.compareState(this.lastWifiState, state)) {
-      this.lastWifiState = state;
-      let stateBubble = this.context.paper.text(startx, ypositionmiddle + 10, '\uf27a');
-      stateBubble.attr({
-        "font": "Font Awesome 5 Free",
-        "stroke": color,
-        "fill": color,
-        "font-size": (strokewidth * 2) + "px"
-      });
 
-      stateBubble.node.style.fontFamily = '"Font Awesome 5 Free"';
-      stateBubble.node.style.fontWeight = "bold";
+    const drawBubble = () => {
+      let textToDisplay = [];
 
-      const showPopup = (event) => {
-        if (!this.showingTooltip) {
-          let textToDisplay = [];
+      const renderNewLine = (title: string, value: string, expectedValue: string) => {
+        if (null !== expectedValue && undefined !== expectedValue && value !== expectedValue) {
+          textToDisplay.push(`${title ? `${title} "${value}"` : value} (${this.strings.messages.insteadOf} "${expectedValue}")`);
+        } else {
+          textToDisplay.push(`${title ?`${title} "${value}"` : value}`);
+        }
+      };
 
-          const renderNewLine = (title: string, value: string, expectedValue: string) => {
-            if (null !== expectedValue && undefined !== expectedValue && value !== expectedValue) {
-              textToDisplay.push(`${title ? `${title} "${value}"` : value} (${this.strings.messages.insteadOf} "${expectedValue}")`);
-            } else {
-              textToDisplay.push(`${title ?`${title} "${value}"` : value}`);
-            }
-          };
+      let expectedStatus = expectedState ? sensorDef.getStateString(expectedState) : null;
+      let currentStatus = sensorDef.getStateString(state);
 
-          let expectedStatus = expectedState ? sensorDef.getStateString(expectedState) : null;
-          let currentStatus = sensorDef.getStateString(state);
+      let displayFieldsFrom = 'wrong' === type && expectedState ? expectedState : state;
 
-          let displayFieldsFrom = 'wrong' === type && expectedState ? expectedState : state;
-
-          if ('connected' in displayFieldsFrom || 'active' in displayFieldsFrom) {
-            renderNewLine(this.strings.messages.wifiStatus, currentStatus, expectedStatus);
-          }
-          if (displayFieldsFrom.ssid) {
-            renderNewLine(this.strings.messages.wifiSsid, state.ssid, expectedState?.ssid);
-          }
-          if (displayFieldsFrom.password) {
-            renderNewLine(this.strings.messages.wifiPassword, state.password, expectedState?.password);
-          }
-          if (displayFieldsFrom.lastRequest) {
-            renderNewLine(null, state?.lastRequest ? `${state.lastRequest.method} ${state.lastRequest.url}` : this.strings.messages.wifiNoRequestShort, expectedState?.lastRequest ? `${expectedState?.lastRequest?.method} ${expectedState?.lastRequest?.url}` : null);
-            if (state?.lastRequest && displayFieldsFrom.lastRequest.headers) {
-              renderNewLine(this.strings.messages.wifiHeaders, `${serializeFields(state.lastRequest.headers) ?? ''}`, expectedState?.lastRequest?.headers ? `${serializeFields(expectedState?.lastRequest?.headers)}` : null);
-            }
-            if (state?.lastRequest && displayFieldsFrom.lastRequest.body) {
-              renderNewLine(this.strings.messages.wifiBody, `${serializeFields(state.lastRequest.body) ?? ''}`, expectedState?.lastRequest?.body ? `${serializeFields(expectedState?.lastRequest?.body ?? {})}` : null);
-            }
-          }
-
-          const div = document.createElement("div");
-          $(div).html(textToDisplay.join('<br/>'));
-
-          displayTooltip(event, div);
-
-          this.showingTooltip = true;
+      if ('connected' in displayFieldsFrom || 'active' in displayFieldsFrom) {
+        renderNewLine(this.strings.messages.wifiStatus, currentStatus, expectedStatus);
+      }
+      if (displayFieldsFrom.ssid) {
+        renderNewLine(this.strings.messages.wifiSsid, state.ssid, expectedState?.ssid);
+      }
+      if (displayFieldsFrom.password) {
+        renderNewLine(this.strings.messages.wifiPassword, state.password, expectedState?.password);
+      }
+      if (displayFieldsFrom.lastRequest) {
+        renderNewLine(null, state?.lastRequest ? `${state.lastRequest.method} ${state.lastRequest.url}` : this.strings.messages.wifiNoRequestShort, expectedState?.lastRequest ? `${expectedState?.lastRequest?.method} ${expectedState?.lastRequest?.url}` : null);
+        if (state?.lastRequest && displayFieldsFrom.lastRequest.headers) {
+          renderNewLine(this.strings.messages.wifiHeaders, `${serializeFields(state.lastRequest.headers) ?? ''}`, expectedState?.lastRequest?.headers ? `${serializeFields(expectedState?.lastRequest?.headers)}` : null);
+        }
+        if (state?.lastRequest && displayFieldsFrom.lastRequest.body) {
+          renderNewLine(this.strings.messages.wifiBody, `${serializeFields(state.lastRequest.body) ?? ''}`, expectedState?.lastRequest?.body ? `${serializeFields(expectedState?.lastRequest?.body ?? {})}` : null);
         }
       }
 
-      $(stateBubble.node).mouseenter(showPopup);
-      $(stateBubble.node).click(showPopup);
+      const div = document.createElement("div");
+      $(div).html(textToDisplay.join('<br/>'));
 
-      $(stateBubble.node).mouseleave((event) => {
-        this.showingTooltip = false;
-        $('#screentooltip').remove();
-      });
-
-      drawParameters.drawnElements.push(stateBubble);
-      this.context.sensorStates.push(stateBubble);
-    } else {
-      drawParameters.deleteLastDrawnElements = false;
+      return div;
     }
+
+    drawBubbleTimeline<SensorWifiState>(this, sensorHandler, state, expectedState, type, drawParameters, drawBubble);
   }
 }
 
@@ -561,15 +531,3 @@ function serializeFields(fields: {[field: string]: string}) {
   return Object.entries(fields).map(([key, value]) => `${key} = ${value}`).join(', ');
 }
 
-function displayTooltip(event: MouseEvent, mainDiv: HTMLDivElement) {
-  $("body").append('<div id="screentooltip"></div>');
-
-  $('#screentooltip')
-    .css("position", "absolute")
-    .css("border", "1px solid gray")
-    .css("background-color", "#efefef")
-    .css("padding", "3px")
-    .css("z-index", "1000")
-    .css("left", event.clientX+2).css("top", event.clientY+2)
-    .append(mainDiv);
-}

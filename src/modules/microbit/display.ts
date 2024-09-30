@@ -1,7 +1,7 @@
 import {ModuleDefinition} from "../module_definition";
 
 function convertImageFromString(str: string) {
-  return str.split(':').map(e => e.split('').map(Number));
+  return str.split(':').map(e => e.split('').map(Number)).slice(0, 5);
 }
 
 export function displayModuleDefinition(context: any, strings): ModuleDefinition {
@@ -21,7 +21,9 @@ export function displayModuleDefinition(context: any, strings): ModuleDefinition
           init: {params: ["String"]},
           blocks: [],
           constants: [
-            {name: "HEART", value: "dddtodo"},
+            {name: "HEART", value: "09090:99999:99999:09990:00900:"},
+            {name: "SMILE", value: "00000:00000:00000:90009:09990:"},
+            {name: "SAD", value: "00000:09090:00000:09990:90009:"},
           ],
         },
       },
@@ -41,6 +43,9 @@ export function displayModuleDefinition(context: any, strings): ModuleDefinition
           if (image.image) {
             command = `ledMatrixShowImage("${sensor.name}", Image("${image.image}"))`;
             newState = convertImageFromString(image.image);
+          } else if (image.match(/[0-9:]/)) {
+            command = `ledMatrixShowImage("${sensor.name}", Image("${image}"))`;
+            newState = convertImageFromString(image);
           } else {
             command = `ledMatrixShowImage("${sensor.name}", "${image}")`;
             newState = convertImageFromString(image);

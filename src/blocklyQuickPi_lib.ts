@@ -2521,7 +2521,7 @@ var getContext = function (display, infos, curLevel) {
             sensorHandler.drawSensor(sensor);
         }
 
-        if (context.autoGrading && context.gradingStatesBySensor != undefined) {
+        if (context.autoGrading && context.gradingStatesBySensor != undefined && !allowFail) {
             var fail = false;
             var type = "actual";
 

@@ -7,7 +7,6 @@ import {LocalQuickStore} from "./util/local_quickpi_store";
 
 export class SensorCloudStore extends AbstractSensor<any> {
   private lastScreenState: any;
-  private showingTooltip: boolean;
   public type = 'cloudstore';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {

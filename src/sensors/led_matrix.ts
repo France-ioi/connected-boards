@@ -1,11 +1,13 @@
-import {AbstractSensor} from "./abstract_sensor";
+import {AbstractSensor, SensorDrawTimeLineParameters} from "./abstract_sensor";
 import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
+import {drawBubbleTimeline} from "./util/bubble_timeline";
 
-export class SensorLedMatrix extends AbstractSensor<any> {
+type SensorLedMatrixState = number[][];
+
+export class SensorLedMatrix extends AbstractSensor<SensorLedMatrixState> {
   private ledmatrixOff: any;
   private ledmatrixOn: any;
-  private paper: any;
   public type = 'ledmatrix';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
@@ -19,26 +21,25 @@ export class SensorLedMatrix extends AbstractSensor<any> {
       selectorImages: ["ledon-red.png"],
       valueType: "boolean",
       pluggable: true,
-      getPercentageFromState: function (state) {
-        if (state) {
-          var total = 0;
-          state.forEach(function(substate) {
-            substate.forEach(function(v) {
-              total += v;
-            });
-          });
-          return total / 25;
-        }
-        return 0;
-      },
-      getStateFromPercentage: function (percentage) {
-        if(percentage > 0) {
-          return [[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]];
-        }
-        return [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]];
-      },
       getStateString: function(state) {
         return '';
+      },
+      getWrongStateString: function(failInfo) {
+        if(!failInfo.expected ||
+          !failInfo.actual) {
+          return null; // Use default message
+        }
+
+        let nbDiff = 0;
+        for (let y = 0; y < 5; y++) {
+          for (let x = 0; x < 5; x++) {
+            if (failInfo.expected[y][x] !== failInfo.actual[y][x]) {
+              nbDiff++;
+            }
+          }
+        }
+
+        return strings.messages.wrongStateDrawing.format(failInfo.name, nbDiff, failInfo.time);
       },
     };
   }
@@ -119,5 +120,28 @@ export class SensorLedMatrix extends AbstractSensor<any> {
     if ((!this.context.runner || !this.context.runner.isRunning()) && !this.context.offLineMode) {
       this.setLiveState(this.state, function() {});
     }
+  }
+
+  drawTimelineState(sensorHandler: SensorHandler, state: SensorLedMatrixState, expectedState: SensorLedMatrixState, type: string, drawParameters: SensorDrawTimeLineParameters) {
+    const drawBubble = () => {
+      const table = `<table>
+        ${state.map((line, y) => 
+          `<tr>
+            ${line.map((cell, x) =>
+              `<td style="width: 20px; height: 20px; position: relative; background: lightgrey; border: solid 1px darkgrey">
+                <div style="top: 0; left: 0; right: 0; bottom: 0; position: absolute; background: red; opacity: ${state[y][x]/10}"></div>
+              </td>`
+            ).join('')}
+          </tr>`,
+        ).join('')}
+        </table>`;
+
+      const div = document.createElement("div");
+      $(div).html(table);
+
+      return div;
+    }
+
+    drawBubbleTimeline<SensorLedMatrixState>(this, sensorHandler, state, expectedState, type, drawParameters, drawBubble);
   }
 }

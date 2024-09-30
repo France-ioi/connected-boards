@@ -168,7 +168,7 @@ export class MicrobitBoard extends AbstractBoard {
       this.buttonStatesUpdators[sensor.name][sensor.state ? 'down' : 'up'](true);
     } else if(sensor.type === 'ledmatrix') {
       this.innerState.ledmatrix = sensor.state;
-      this.setLedMatrix(sensor.state);
+      this.setLedMatrix(sensor.state ?? [...new Array(5)].fill([...new Array(5)].fill(0)));
     }
   }
 

@@ -75,8 +75,10 @@ export abstract class AbstractSensor<T> {
   public stateText: any;
   public timelinelastxlabel?: number[];
   public lastAnalogState?: any;
+  public context: QuickalgoLibrary;
+  public lastState?: T;
+  public showingTooltip?: boolean;
 
-  protected context: QuickalgoLibrary;
   protected strings: any;
 
   constructor(sensorData: any, context: QuickalgoLibrary, strings: any) {
