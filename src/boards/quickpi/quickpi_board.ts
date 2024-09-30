@@ -2,6 +2,7 @@ import {AbstractBoard} from "../abstract_board";
 import {BoardCustomBlocks, ConnectionMethod} from "../../definitions";
 import {getQuickPiConnection} from "./quickpi_connection";
 import {quickpiModuleDefinition} from "../../modules/quickpi/quickpi";
+import {mergeModuleDefinitions} from "../board_util";
 
 export class QuickPiBoard extends AbstractBoard {
   getBoardDefinitions() {
@@ -84,14 +85,11 @@ export class QuickPiBoard extends AbstractBoard {
   getCustomBlocks(context, strings): BoardCustomBlocks {
     const quickpiModule = quickpiModuleDefinition(context, strings);
 
-    return {
-      customBlocks: {
-        quickpi: quickpiModule.blockDefinitions,
-      },
-      customBlockImplementations: {
-        quickpi: quickpiModule.blockImplementations,
-      },
-    };
+    return mergeModuleDefinitions({
+      quickpi: [
+        quickpiModule,
+      ]
+    });
   }
 }
 

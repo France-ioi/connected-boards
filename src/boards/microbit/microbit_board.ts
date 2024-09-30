@@ -2,7 +2,6 @@ import {AbstractBoard} from "../abstract_board";
 import {BoardCustomBlocks, BoardDefinition, ConnectionMethod} from "../../definitions";
 import {thingzAccelerometerModuleDefinition} from "../../modules/thingz/accelerometer";
 import {thingzButtonsModuleDefinition} from "../../modules/thingz/buttons";
-import {deepMerge} from "../../util";
 import {thingzTemperatureModuleDefinition} from "../../modules/thingz/temperature";
 import {timeSleepModuleDefinition} from "../../modules/time/sleep";
 // @ts-ignore
@@ -10,6 +9,8 @@ import microbitSvg from '../../../images/microbit.svg';
 import {MicrobitConnection} from "./microbit_connexion";
 import {displayModuleDefinition} from "../../modules/microbit/display";
 import {thingzCompassModuleDefinition} from "../../modules/thingz/compass";
+import {microphoneModuleDefinition} from "../../modules/microbit/microphone";
+import {mergeModuleDefinitions} from "../board_util";
 
 interface MicrobitBoardInnerState {
   connected?: boolean,
@@ -223,41 +224,21 @@ export class MicrobitBoard extends AbstractBoard {
     const temperatureModule = thingzTemperatureModuleDefinition(context, strings);
     const timeModule = timeSleepModuleDefinition(context, strings);
     const displayModule = displayModuleDefinition(context, strings);
+    const microphoneModule = microphoneModuleDefinition(context, strings);
 
-    return {
-      customClasses: {
-        microbit: deepMerge(
-          accelerometerModule.classDefinitions,
-          compassModule.classDefinitions,
-          buttonModule.classDefinitions,
-          displayModule.classDefinitions,
-        ),
-      },
-      customClassInstances: {
-        microbit: deepMerge(
-          accelerometerModule.classInstances,
-          compassModule.classInstances,
-          buttonModule.classInstances,
-          displayModule.classInstances,
-        ),
-      },
-      customClassImplementations: {
-        microbit: deepMerge(
-          accelerometerModule.classImplementations,
-          compassModule.classImplementations,
-          buttonModule.classImplementations,
-          displayModule.classImplementations,
-        ),
-      },
-      customBlockImplementations: {
-        microbit: temperatureModule.blockImplementations,
-        time: timeModule.blockImplementations,
-      },
-      customBlocks: {
-        microbit: temperatureModule.blockDefinitions,
-        time: timeModule.blockDefinitions,
-      },
-    };
+    return mergeModuleDefinitions({
+      microbit: [
+        accelerometerModule,
+        compassModule,
+        buttonModule,
+        temperatureModule,
+        displayModule,
+        microphoneModule,
+      ],
+      time: [
+        timeModule,
+      ],
+    });
   }
 }
 

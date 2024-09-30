@@ -5,6 +5,14 @@ import {getImg} from "../util";
 
 export class SensorSound extends AbstractSensor<any> {
   public type = 'sound';
+  public unit;
+
+  constructor(sensorData: any, context: QuickalgoLibrary, strings: any) {
+    super(sensorData, context, strings);
+    if (undefined === this.unit) {
+      this.unit = 'dB';
+    }
+  }
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {
@@ -36,11 +44,12 @@ export class SensorSound extends AbstractSensor<any> {
   }
 
   draw(sensorHandler: SensorHandler, {imgx, imgy, imgw, imgh, juststate, fadeopacity, state1x, state1y, sensorAttr}: SensorDrawParameters) {
+    console.log('unit', this.unit);
     if (this.stateText)
       this.stateText.remove();
 
     if (this.state == null)
-      this.state = 25; // FIXME
+      this.state = 0
 
     if (!this.img || sensorHandler.isElementRemoved(this.img))
       this.img = this.context.paper.image(getImg('sound.png'), imgx, imgy, imgw, imgh);
@@ -55,7 +64,7 @@ export class SensorSound extends AbstractSensor<any> {
 
     // if we just do sensor.state, if it is equal to 0 then the state is not displayed
     if (this.state != null) {
-      this.stateText = this.context.paper.text(state1x, state1y, this.state + " dB");
+      this.stateText = this.context.paper.text(state1x, state1y, this.state + (this.unit ? ' ' + this.unit : ''));
     }
 
     if (!this.context.autoGrading && this.context.offLineMode) {

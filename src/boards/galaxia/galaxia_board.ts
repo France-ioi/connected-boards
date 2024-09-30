@@ -2,7 +2,6 @@ import {AbstractBoard} from "../abstract_board";
 import {BoardCustomBlocks, BoardDefinition, ConnectionMethod} from "../../definitions";
 import {thingzAccelerometerModuleDefinition} from "../../modules/thingz/accelerometer";
 import {thingzButtonsModuleDefinition} from "../../modules/thingz/buttons";
-import {deepMerge} from "../../util";
 import {thingzTemperatureModuleDefinition} from "../../modules/thingz/temperature";
 import {thingzLedModuleDefinition} from "../../modules/thingz/led";
 import {machinePinModuleDefinition} from "../../modules/machine/pin";
@@ -16,6 +15,7 @@ import {jsonModuleDefinition} from "../../modules/json/json";
 import {machinePulseModuleDefinition} from "../../modules/machine/pulse";
 import {GalaxiaConnection} from "./galaxia_connexion";
 import {thingzCompassModuleDefinition} from "../../modules/thingz/compass";
+import {mergeModuleDefinitions} from "../board_util";
 
 interface GalaxiaBoardInnerState {
   connected?: boolean,
@@ -240,61 +240,32 @@ export class GalaxiaBoard extends AbstractBoard {
     const requestsModule = requestsModuleDefinition(context, strings);
     const jsonModule = jsonModuleDefinition(context, strings);
 
-    return {
-      customClasses: {
-        thingz: deepMerge(
-          accelerometerModule.classDefinitions,
-          compassModule.classDefinitions,
-          buttonModule.classDefinitions,
-          ledModule.classDefinitions,
-        ),
-        machine: deepMerge(
-          pinModule.classDefinitions,
-          pwmModule.classDefinitions,
-        ),
-        network: wlanModule.classDefinitions,
-        requests: requestsModule.classDefinitions,
-      },
-      customConstants: {
-        network: wlanModule.constants,
-      },
-      customClassInstances: {
-        thingz: deepMerge(
-          accelerometerModule.classInstances,
-          compassModule.classInstances,
-          buttonModule.classInstances,
-          ledModule.classInstances,
-        ),
-      },
-      customClassImplementations: {
-        thingz: deepMerge(
-          accelerometerModule.classImplementations,
-          compassModule.classImplementations,
-          buttonModule.classImplementations,
-          ledModule.classImplementations,
-        ),
-        machine: deepMerge(
-          pinModule.classImplementations,
-          pwmModule.classImplementations,
-        ),
-        network: wlanModule.classImplementations,
-        requests: requestsModule.classImplementations,
-      },
-      customBlockImplementations: {
-        thingz: temperatureModule.blockImplementations,
-        time: timeModule.blockImplementations,
-        requests: requestsModule.blockImplementations,
-        json: jsonModule.blockImplementations,
-        machine: pulseModule.blockImplementations,
-      },
-      customBlocks: {
-        thingz: temperatureModule.blockDefinitions,
-        time: timeModule.blockDefinitions,
-        requests: requestsModule.blockDefinitions,
-        json: jsonModule.blockDefinitions,
-        machine: pulseModule.blockDefinitions,
-      },
-    };
+    return mergeModuleDefinitions({
+      thingz: [
+        accelerometerModule,
+        compassModule,
+        buttonModule,
+        ledModule,
+        temperatureModule,
+      ],
+      machine: [
+        pinModule,
+        pwmModule,
+        pulseModule,
+      ],
+      network: [
+        wlanModule,
+      ],
+      requests: [
+        requestsModule,
+      ],
+      time: [
+        timeModule,
+      ],
+      json: [
+        jsonModule,
+      ],
+    });
   }
 }
 

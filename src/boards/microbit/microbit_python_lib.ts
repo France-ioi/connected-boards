@@ -135,4 +135,7 @@ def ledMatrixGetPixel(pin, x, y):
     
 def ledMatrixSetPixel(pin, x, y, intensity):
     return display.set_pixel(x, y, intensity)
+    
+def readSoundLevel(pin):
+    return microphone.sound_level()
 `;
