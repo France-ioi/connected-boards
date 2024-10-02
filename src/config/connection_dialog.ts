@@ -169,15 +169,14 @@ export function getConnectionDialogHTML(availableConnectionMethods: ConnectionMe
                    </div>
                    <div class="inlineButtons">
                       <button id="piconnectok" class="btn">
-                      <i id="piconnectprogressicon" class="fas fa-spinner fa-spin icon">
-                      </i>
-                      <i id="piconnectwifiicon" class="fa fa-wifi icon">
-                      </i>
-                      ${strings.messages.connectToDevice}               </button>
+                        <i id="piconnectprogressicon" class="fas fa-spinner fa-spin icon"></i>
+                        <i id="piconnectwifiicon" class="fa fa-link icon"></i>
+                        ${strings.messages.connectToDevice}
+                      </button>
                       <button id="pirelease" class="btn">
-                      <i class="fa fa-times icon">
-                      </i>
-                      ${strings.messages.disconnectFromDevice}</button>
+                        <i class="fa fa-times icon"></i>
+                        ${strings.messages.disconnectFromDevice}
+                      </button>
                    </div>
                 </div>
              </div>
