@@ -27,8 +27,8 @@ export class SensorLedDim extends AbstractSensor<any> {
       getStateFromPercentage: function (percentage) {
         return percentage;
       },
-      getStateFromPwm: function (duty) {
-        return duty / 1023;
+      getStateFromPwm: function (duty, pwmResolution) {
+        return duty / (pwmResolution - 1);
       },
       getStateString: function(state) {
         return Math.round(state * 100) + "%";

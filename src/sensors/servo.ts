@@ -31,8 +31,8 @@ export class SensorServo extends AbstractSensor<any> {
       getStateString: function(state) {
         return "" + state + "°";
       },
-      getStateFromPwm: function (pwmDuty) {
-        return 180*(pwmDuty - 0.025*1023) / (0.1 * 1023);
+      getStateFromPwm: function (pwmDuty, pwmResolution) {
+        return Math.round(180*(pwmDuty - 0.025*(pwmResolution-1)) / (0.1 * (pwmResolution-1)));
       },
     };
   }

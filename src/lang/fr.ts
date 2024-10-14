@@ -278,6 +278,7 @@ export default {
 
     "pwm.__constructor": "pwm = PWM(pin, freq, duty) description",
     "pwm.duty": "pwm.duty(duty) description",
+    "pwm.duty_u16": "pwm.duty_u16(duty) description",
 
     "wlan.__constructor": "wlan = WLAN(interface) description",
     "wlan.active": "wlan.active(active) description",

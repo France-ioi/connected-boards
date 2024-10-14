@@ -164,7 +164,7 @@ export interface SensorDefinition {
   pluggable?: boolean,
   getPercentageFromState?: (state: any, sensor?: AbstractSensor<any>) => number,
   getStateFromPercentage?: (percentage: number) => any,
-  getStateFromPwm?: (pwmDuty: number) => any,
+  getStateFromPwm?: (pwmDuty: number, pwmResolution: number) => any,
   getStateString?: (state: any) => string,
   subTypes?: SensorDefinition[],
   valueMin?: number,

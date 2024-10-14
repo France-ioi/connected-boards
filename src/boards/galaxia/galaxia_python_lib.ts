@@ -149,13 +149,16 @@ def getServoAngle(pin):
 
     return angle
 
-def pwmDuty(pin, duty):
+def pwmDuty(pin, duty, resolution = 1024):
     pin = normalizePin(pin)
     if pin != 0:
         print(pin)
         print(duty)
         pinElement = PWM(Pin(pin), freq=50, duty=0)
-        pinElement.duty(duty)
+        if resolution == 1024:
+            pinElement.duty(duty)
+        else:
+            pinElement.duty_u16(duty)
 
 def turnPortOn(pin):
     pin = normalizePin(pin)
