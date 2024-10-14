@@ -16,7 +16,7 @@ export default {
           "parser": {
             "syntax": "typescript"
           },
-          "target": "es5",
+          "target": "es2015",
         },
       },
       include: ['src/**/*.{ts,js}'],
