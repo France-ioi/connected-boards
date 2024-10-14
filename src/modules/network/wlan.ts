@@ -17,7 +17,7 @@ export function networkWlanModuleDefinition(context: any, strings): ModuleDefini
             {name: "connect", params: ["String", "String"]},
             {name: "disconnect"},
             {name: "isconnected", yieldsValue: "bool"},
-            {name: "ifconfig", yieldsValue: "String"},
+            {name: "ifconfig", yieldsValue: "string"},
           ],
         },
       },

@@ -39,7 +39,11 @@ export function mergeModuleDefinitions(moduleDefinitions: {[moduleName: string]:
   for (let [boardCustomBlockName, elements] of Object.entries(toBeMerged)) {
     boardCustomBlocks[boardCustomBlockName] = {};
     for (let [moduleName, moduleDefinitionsList] of Object.entries(elements)) {
-      boardCustomBlocks[boardCustomBlockName][moduleName] = deepMerge(...moduleDefinitionsList);
+      if (Array.isArray(moduleDefinitionsList[0])) {
+        boardCustomBlocks[boardCustomBlockName][moduleName] = moduleDefinitionsList.reduce((cur, next) => [...cur, ...next], []);
+      } else {
+        boardCustomBlocks[boardCustomBlockName][moduleName] = deepMerge(...moduleDefinitionsList);
+      }
     }
   }
 

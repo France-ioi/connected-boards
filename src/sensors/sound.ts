@@ -44,7 +44,6 @@ export class SensorSound extends AbstractSensor<any> {
   }
 
   draw(sensorHandler: SensorHandler, {imgx, imgy, imgw, imgh, juststate, fadeopacity, state1x, state1y, sensorAttr}: SensorDrawParameters) {
-    console.log('unit', this.unit);
     if (this.stateText)
       this.stateText.remove();
 
