@@ -34,16 +34,12 @@ export function networkWlanModuleDefinition(context: any, strings): ModuleDefini
           }
 
           if (!context.display || context.autoGrading || context.offLineMode) {
-            const cb = context.runner.waitCallback(callback);
+            context.registerQuickPiEvent(sensor.name, {
+              ...sensor.state,
+              active: !!active,
+            });
 
-            setTimeout(() => {
-              context.registerQuickPiEvent(sensor.name, {
-                ...sensor.state,
-                active: !!active,
-              });
-
-              cb();
-            }, 500);
+            context.waitDelay(callback);
           } else {
             const cb = context.runner.waitCallback(callback);
             const command = `wifiSetActive("${sensor.name}", ${active ? 1 : 0})`;
