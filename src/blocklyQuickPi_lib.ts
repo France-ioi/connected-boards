@@ -212,14 +212,14 @@ var getContext = function (display, infos, curLevel) {
         var expectedStateStr = "" + failInfo.expected;
         var sensorDef = sensorHandler.findSensorDefinition(failInfo.sensor);
         if(sensorDef) {
-            if(sensorDef.isSensor) {
-                return strings.messages.wrongStateSensor.format(failInfo.name, failInfo.time);
-            }
             if(sensorDef.getWrongStateString) {
                 var sensorWrongStr = sensorDef.getWrongStateString(failInfo);
                 if(sensorWrongStr) {
                     return sensorWrongStr;
                 }
+            }
+            if(sensorDef.isSensor) {
+                return strings.messages.wrongStateSensor.format(failInfo.name, failInfo.time);
             }
             if(sensorDef.getStateString) {
                 actualStateStr = sensorDef.getStateString(failInfo.actual);
