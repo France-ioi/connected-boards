@@ -6,7 +6,6 @@ export function drawBubbleTimeline<T>(sensor: AbstractSensor<T>, sensorHandler: 
 
   const sensorDef = sensorHandler.findSensorDefinition(this);
   if (type != "actual" || !sensor.lastState || !sensorDef.compareState(sensor.lastState, state)) {
-    console.trace('draw bubble', {state, expectedState, type, drawParameters})
     this.lastWifiState = state;
     let stateBubble = sensor.context.paper.text(startx, ypositionmiddle + 10, '\uf27a');
     stateBubble.attr({
