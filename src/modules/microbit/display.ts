@@ -1,10 +1,13 @@
 import {ModuleDefinition} from "../module_definition";
+import {quickpiModuleDefinition} from "../quickpi/quickpi";
 
 function convertImageFromString(str: string) {
   return str.split(':').map(e => e.split('').map(Number)).slice(0, 5);
 }
 
 export function displayModuleDefinition(context: any, strings): ModuleDefinition {
+  const quickPiModuleDefinition = quickpiModuleDefinition(context, strings);
+
   return {
     classDefinitions: {
       actuator: { // category name
@@ -24,6 +27,13 @@ export function displayModuleDefinition(context: any, strings): ModuleDefinition
             {name: "HEART", value: "09090:99999:99999:09990:00900:"},
             {name: "SMILE", value: "00000:00000:00000:90009:09990:"},
             {name: "SAD", value: "00000:09090:00000:09990:90009:"},
+          ],
+        },
+      },
+      sensors: { // category name
+        Display: {
+          blocks: [
+            {name: "read_light_level", yieldsValue: 'int'},
           ],
         },
       },
@@ -116,6 +126,10 @@ export function displayModuleDefinition(context: any, strings): ModuleDefinition
 
             context.quickPiConnection.sendCommand(command, cb);
           }
+        },
+        read_light_level: function (self, callback) {
+          const sensor = context.sensorHandler.findSensorByType('light');
+          quickPiModuleDefinition.blockImplementations.readLightIntensity(sensor.name, callback);
         },
       },
       Image: {

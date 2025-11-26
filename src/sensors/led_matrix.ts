@@ -92,6 +92,17 @@ export class SensorLedMatrix extends AbstractSensor<SensorLedMatrixState> {
       for (let x = 0; x < 5; x++) {
         this.ledmatrixOn[y][x].attr({
           opacity: this.state[y][x] / 10,
+          x: imgx + (imgw / 5) * x,
+          y: imgy + (imgh / 5) * y,
+          width: imgw / 5,
+          height: imgh / 5,
+        });
+
+        this.ledmatrixOff[y][x].attr({
+          x: imgx + (imgw / 5) * x,
+          y: imgy + (imgh / 5) * y,
+          width: imgw / 5,
+          height: imgh / 5,
         });
       }
     }

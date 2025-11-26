@@ -70,15 +70,7 @@ export class MicrobitBoard extends AbstractBoard {
       this.bindPushButton(buttonId, buttonName);
     }
 
-    let padIds = {
-      up: 'touch_n',
-      down: 'touch_s',
-      left: 'touch_w',
-      right: 'touch_e',
-    }
-    for (let [padId, padName] of Object.entries(padIds)) {
-      this.bindPadButton(padId, padName);
-    }
+    this.bindPinLogo('pin_logo');
   }
 
   bindPushButton(buttonId: string, buttonName: string) {
@@ -111,19 +103,24 @@ export class MicrobitBoard extends AbstractBoard {
     this.buttonStatesUpdators[buttonName] = {'down': buttonDown, 'up': buttonUp};
   }
 
-  bindPadButton(buttonId: string, buttonName: string) {
+  bindPinLogo(buttonName: string) {
     let that = this;
-    let button = this.microbitSvg.find('#pad-' + buttonId);
+    let button = this.microbitSvg.find('#pad-logo');
+    let buttonActive = this.microbitSvg.find('#pad-logo-active');
+    let buttonInactive = this.microbitSvg.find('#pad-logo-inactive');
+    buttonActive.css('display', 'none');
 
     let buttonDown = function (isSet) {
-      button.css('fill-opacity', '1');
+      buttonActive.css('display', 'block');
+      buttonInactive.css('display', 'none');
       if (isSet !== true && !that.innerState[buttonName]) {
         that.onUserEvent(buttonName, true);
       }
       that.innerState[buttonName] = true;
     };
     let buttonUp = function (isSet) {
-      button.css('fill-opacity', '0');
+      buttonActive.css('display', 'none');
+      buttonInactive.css('display', 'block');
       if (isSet !== true && that.innerState[buttonName]) {
         that.onUserEvent(buttonName, false);
       }
@@ -163,7 +160,7 @@ export class MicrobitBoard extends AbstractBoard {
     } else if (sensor === 'disconnected') {
       this.innerState.connected = false;
       this.setConnected(false);
-    } else if (sensor.name.substring(0, 7) == 'button_' || sensor.name.substring(0, 6) == 'touch_') {
+    } else if (sensor.name.substring(0, 7) == 'button_' || sensor.name.substring(0, 6) == 'touch_' || sensor.name.substring(0, 4) == 'pin_') {
       this.innerState[sensor.name] = sensor.state;
       if (!this.initialized) {
         return;
