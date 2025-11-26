@@ -281,7 +281,8 @@ export default {
     dumps: "dumps(content) sérialise un objet en une chaîne formatée en JSON",
     get: "get(url) envoie une requête HTTP GET",
     post: "post(url, data, headers) envoie une requête HTTP POST",
-    sleep_us: "sleep_us(microseconds) met en pause l'exécution pendant une durée en microsecondes"
+    sleep_us: "sleep_us(microseconds) met en pause l'exécution pendant une durée en microsecondes",
+    "image.__constructor": "Image(leds) crée une image qui peut être affichée sur la grille de leds",
   },
   constant: {},
 
