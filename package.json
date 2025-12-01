@@ -22,5 +22,8 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w"
+  },
+  "dependencies": {
+    "@microbit/microbit-fs": "^0.10.0"
   }
 }

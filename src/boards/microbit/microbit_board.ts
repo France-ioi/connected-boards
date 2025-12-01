@@ -12,6 +12,7 @@ import {thingzCompassModuleDefinition} from "../../modules/thingz/compass";
 import {microphoneModuleDefinition} from "../../modules/microbit/microphone";
 import {mergeModuleDefinitions} from "../board_util";
 import {musicModuleDefinition} from "../../modules/microbit/music";
+import {convertToHex} from "./microbit_hex";
 
 interface MicrobitBoardInnerState {
   connected?: boolean,
@@ -25,6 +26,7 @@ export class MicrobitBoard extends AbstractBoard {
   buttonStatesUpdators = {};
   public defaultSubBoard: string = 'microbit';
   microbitSvg = null;
+  microbitDownloadHex = null;
   initialized = false;
   innerState: MicrobitBoardInnerState = {};
   onUserEvent: (sensorName: string, state: unknown) => void;
@@ -48,8 +50,13 @@ export class MicrobitBoard extends AbstractBoard {
   async importMicrobit(selector) {
     const svgData = await this.fetchMicrobitCard();
 
-    $(selector).html(svgData).css('user-select', 'none');
+    $(selector)
+      .html(`${svgData}<div style="display: flex; align-items: center; margin-left: -30px; margin-right: 20px;"><button class="download_hex">.hex</button></div>`)
+      .css('user-select', 'none')
+      .css('display', 'flex')
+    ;
     this.microbitSvg = $(selector + ' svg');
+    this.microbitDownloadHex = $(selector + ' .download_hex');
 
     this.initInteraction();
     this.displayInnerState();
@@ -71,6 +78,22 @@ export class MicrobitBoard extends AbstractBoard {
     }
 
     this.bindPinLogo('pin_logo');
+
+    this.microbitDownloadHex.on('click', async (e) => {
+      window.task.getAnswer(async function (answer) {
+        const pythonCode = JSON.parse(answer).easy.document.lines.join("\n");
+
+        const hexFile = await convertToHex(pythonCode);
+
+        const a = window.document.createElement('a');
+        const blob = new Blob([hexFile], { type: 'application/octet-stream' });
+        a.href = window.URL.createObjectURL(blob);
+        a.download = 'microbit-' + Date.now() + '.hex';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      });
+    });
   }
 
   bindPushButton(buttonId: string, buttonName: string) {

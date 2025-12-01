@@ -25,6 +25,19 @@
     js-tokens "^4.0.0"
     picocolors "^1.0.0"
 
+"@microbit/microbit-fs@^0.10.0":
+  version "0.10.0"
+  resolved "https://registry.yarnpkg.com/@microbit/microbit-fs/-/microbit-fs-0.10.0.tgz#fef5afa56648c9aaa1ae6c89269251d50b4da6aa"
+  integrity sha512-n6DEVqqaQAL/EDLyXh+1nsdRV16ePFqROeFeNlOoTS23eB8zF8qhA+IaNHRT07sy0zgCGg3YCZgP+zcCIRzP6A==
+  dependencies:
+    "@microbit/microbit-universal-hex" "^0.2.2"
+    nrf-intel-hex "^1.4.0"
+
+"@microbit/microbit-universal-hex@^0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@microbit/microbit-universal-hex/-/microbit-universal-hex-0.2.2.tgz#623e814d771cbd9cd70ef6b7500f75f00b5a07ec"
+  integrity sha512-qyFt8ATgxAyPkNz9Yado4HXEeCctwP/8L1/v2hFLeVUqw/HFqVqV4piJbqRMmyOefMcQ9OyVPhLXjtbKn9063Q==
+
 "@rollup/plugin-image@^3.0.3":
   version "3.0.3"
   resolved "https://registry.yarnpkg.com/@rollup/plugin-image/-/plugin-image-3.0.3.tgz#025b557180bae20f2349ff5130ef2114169feaac"
@@ -900,6 +913,11 @@ normalize-url@^6.0.1:
   version "6.1.0"
   resolved "https://registry.yarnpkg.com/normalize-url/-/normalize-url-6.1.0.tgz#40d0885b535deffe3f3147bec877d05fe4c5668a"
   integrity sha512-DlL+XwOy3NxAQ8xuC0okPgK46iuVNAK01YN7RueYBqqFeGsBjV9XmCAzAdgt+667bCl5kPh9EqKKDwnaPG1I7A==
+
+nrf-intel-hex@^1.4.0:
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/nrf-intel-hex/-/nrf-intel-hex-1.4.0.tgz#f14d5d89a09437407536652ca3a377cef915be9e"
+  integrity sha512-q3+GGRIpe0VvCjUP1zaqW5rk6IpCZzhD0lu7Sguo1bgWwFcA9kZRjsaKUb0jBQMnefyOl5o0BBGAxvqMqYx8Sg==
 
 nth-check@^2.0.1:
   version "2.1.1"

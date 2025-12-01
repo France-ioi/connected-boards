@@ -5,7 +5,7 @@ import image from '@rollup/plugin-image';
 
 export default {
   input: 'src/index.ts',
-  external: id => !/^[./]/.test(id),
+  // external: id => !/^[./]/.test(id),
   plugins: [
     nodeResolve({
       extensions: ['.ts'],
