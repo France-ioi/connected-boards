@@ -1,8 +1,8 @@
 import { MicropythonFsHex, microbitBoardId } from "@microbit/microbit-fs";
 
 export async function convertToHex(userCode) {
-  const microPythonV1HexFile = await downloadFileContent( 'https://corsproxy.io/?url=' + encodeURIComponent('https://github.com/microbit-foundation/micropython-microbit-v2/releases/download/v2.1.1/micropython-microbit-v2.1.1.hex'));
-  const microPythonV2HexFile = await downloadFileContent('./micropython-microbit-v2.1.1.hex');
+  const microPythonV1HexFile = await downloadFileContent('https://static-items.algorea.org/files/checkouts/16ac8eb4d2b901e8abe47434462e9a21/microbit-firmware/micropython-microbit-v1.0.hex');
+  const microPythonV2HexFile = await downloadFileContent('https://static-items.algorea.org/files/checkouts/16ac8eb4d2b901e8abe47434462e9a21/microbit-firmware/micropython-microbit-v2.1.1.hex');
 
   const micropythonFs = new MicropythonFsHex([
     { hex: microPythonV1HexFile, boardId: microbitBoardId.V1 },
