@@ -1,7 +1,7 @@
 export default { // TODO
   label: {
     // Labels for the blocks
-    'quickpi.sleep': "attendi %1 millisecondei",
+    sleep: "attendi %1 millisecondei",
     currentTime: "tempo calcolato in millisecondi",
 
     turnLedOn: "accendi il LED",
@@ -101,7 +101,7 @@ export default { // TODO
     displayText: "displayText",
     displayText2Lines: "displayText",
     readTemperature: "readTemperature",
-    'quickpi.sleep': "sleep",
+    sleep: "sleep",
     setServoAngle: "setServoAngle",
     readRotaryAngle: "readRotaryAngle",
     readDistance: "readDistance",
@@ -186,7 +186,7 @@ export default { // TODO
     displayText: "displayText(line1, line2) mostra una o due righe di testo. La line2 è opzionale",
     displayText2Lines: "displayText(line1, line2) mostra una o due righe di testo. La line2 è opzionale",
     readTemperature: "readTemperature(thermometer) riporta la temperatura ambiente",
-    'quickpi.sleep': "sleep(milliseconds) mette in pausa l'esecuzione per una durata in ms",
+    sleep: "sleep(milliseconds) mette in pausa l'esecuzione per una durata in ms",
     setServoAngle: "setServoAngle(servo, angle) cambia l'angolo del servomotore",
     readRotaryAngle: "readRotaryAngle(potentiometer) riporta la posizione del potenziometro",
     readDistance: "readDistance(distanceSensor) riporta la distanza misurata",
