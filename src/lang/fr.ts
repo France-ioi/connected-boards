@@ -2,6 +2,8 @@ export default {
   label: {
     // Labels for the blocks
     sleep: "attendre %1 millisecondes",
+    'time.sleep': "attendre %1 secondes",
+    'time.sleep_us': "attendre %1 microsecondes",
     currentTime: "temps écoulé en millisecondes",
 
     turnLedOn: "allumer la LED",
@@ -26,6 +28,8 @@ export default {
 
     setBuzzerNote: "jouer la fréquence %2Hz sur %1",
     getBuzzerNote: "fréquence du buzzer %1",
+    'music.pitch': "jouer la fréquence %1Hz",
+    'music.stop': "arrêter les sons",
 
     isButtonPressed: "bouton enfoncé",
     isButtonPressedWithName: "bouton  %1 enfoncé",
@@ -39,6 +43,7 @@ export default {
     displayText2Lines: "afficher Ligne 1 : %1 Ligne 2 : %2",
 
     readTemperature: "température ambiante",
+    'thingz.temperature': "température ambiante",
     getTemperatureFromCloud: "temperature de la ville %1",
 
     readRotaryAngle: "état du potentiomètre %1",
@@ -107,7 +112,10 @@ export default {
     displayText: "displayText",
     displayText2Lines: "displayText",
     readTemperature: "readTemperature",
+    'thingz.temperature': "temperature",
     sleep: "sleep",
+    'time.sleep': "sleep",
+    'time.sleep_us': "sleep_us",
     setServoAngle: "setServoAngle",
     readRotaryAngle: "readRotaryAngle",
     readDistance: "readDistance",
@@ -121,6 +129,8 @@ export default {
 
     setBuzzerNote: "setBuzzerNote",
     getBuzzerNote: "getBuzzerNote",
+    'music.pitch': "pitch",
+    'music.stop': "stop",
     setLedBrightness: "setLedBrightness",
     getLedBrightness: "getLedBrightness",
     setLedColors: "setLedColors",
@@ -196,6 +206,8 @@ export default {
     displayText2Lines: "displayText(line1, line2) affiche une ou deux lignes de texte. line2 est optionnel",
     readTemperature: "readTemperature(thermometer) retourne la température ambiante",
     sleep: "sleep(milliseconds) met en pause l'exécution pendant une durée en ms",
+    'time.sleep': "sleep(seconds) met en pause l'exécution pendant une durée en secondes",
+    'time.sleep_us': "sleep_us(microseconds) met en pause l'exécution pendant une durée en microsecondes",
     setServoAngle: "setServoAngle(servo, angle) change l'angle du servomoteur",
     readRotaryAngle: "readRotaryAngle(potentiometer) retourne la position potentiomètre",
     readDistance: "readDistance(distanceSensor) retourne la distance mesurée",
@@ -280,7 +292,6 @@ export default {
     dumps: "dumps(content) sérialise un objet en une chaîne formatée en JSON",
     get: "get(url) envoie une requête HTTP GET",
     post: "post(url, data, headers) envoie une requête HTTP POST",
-    sleep_us: "sleep_us(microseconds) met en pause l'exécution pendant une durée en microsecondes",
     "image.__constructor": "Image(leds) crée une image qui peut être affichée sur la grille de leds",
   },
   constant: {},

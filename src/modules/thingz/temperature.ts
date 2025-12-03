@@ -8,12 +8,12 @@ export function thingzTemperatureModuleDefinition(context: any, strings): Module
     blockDefinitions: {
       sensors: [
         {
-          name: 'temperature', yieldsValue: 'int',
+          name: 'thingz.temperature', yieldsValue: 'int',
         },
       ]
     },
     blockImplementations: {
-      temperature: function (callback) {
+      'thingz.temperature': function (callback) {
         const sensor = context.sensorHandler.findSensorByType('temperature');
         quickPiModuleDefinition.blockImplementations.readTemperature(sensor.name, callback);
       }
