@@ -3,6 +3,10 @@ import {BoardCustomBlocks, ConnectionMethod} from "../../definitions";
 import {getQuickPiConnection} from "./quickpi_connection";
 import {quickpiModuleDefinition} from "../../modules/quickpi/quickpi";
 import {mergeModuleDefinitions} from "../board_util";
+import {ModuleDefinition} from "../../modules/module_definition";
+import {accelerometerModuleDefinition} from "../../modules/accelerometer";
+import {buttonsModuleDefinition} from "../../modules/buttons";
+import {useGeneratorName} from "../../modules/module_utils";
 
 export class QuickPiBoard extends AbstractBoard {
   getBoardDefinitions() {
@@ -53,7 +57,8 @@ export class QuickPiBoard extends AbstractBoard {
           { type: "range", subType: "vl53l0x", port: "i2c", suggestedName: this.strings.messages.sensorNameDistance + "1", },
           { type: "button", port: "D26", suggestedName: this.strings.messages.sensorNameButton + "1", },
           { type: "light", port: "A2", suggestedName: this.strings.messages.sensorNameLight + "1", },
-          { type: "stick", port: "D7", suggestedName: this.strings.messages.sensorNameStick + "1", }
+          { type: "stick", port: "D7", suggestedName: this.strings.messages.sensorNameStick + "1", },
+          { type: "cloud", port: "D5", suggestedName: this.strings.messages.sensorNameCloudStore + "1", },
         ],
       },
       {
@@ -90,6 +95,22 @@ export class QuickPiBoard extends AbstractBoard {
         quickpiModule,
       ]
     });
+  }
+
+  getCustomFeatures(context, strings): ModuleDefinition {
+    const accelerometerModule = accelerometerModuleDefinition(context, strings);
+    const buttonsModule = buttonsModuleDefinition(context, strings);
+
+    const modules: ModuleDefinition = {
+      ...accelerometerModule,
+      ...buttonsModule,
+    };
+
+    for (let feature in modules) {
+      delete modules[feature].classMethods;
+    }
+
+    return useGeneratorName(modules, 'quickpi');
   }
 }
 

@@ -1,11 +1,16 @@
-import {QuickAlgoConstant, QuickAlgoCustomClass, QuickalgoLibraryBlock} from "../definitions";
+import {QuickalgoLibraryBlock} from "../definitions";
 
-export interface ModuleDefinition {
-  blockDefinitions?: {[categoryName: string]: QuickalgoLibraryBlock[]},
-  classDefinitions?: {[categoryName: string]: {[className: string]: QuickAlgoCustomClass}},
-  classInstances?: {[className: string]: string},
-  constants?: QuickAlgoConstant[],
-
-  blockImplementations?: {[blockName: string]: Function},
-  classImplementations?: {[className: string]: {[methodName: string]: Function}},
+export interface ModuleClassDefinition {
+  instances: string[],
+  methods: {[methodName: string]: QuickalgoLibraryBlock},
 }
+
+export interface ModuleFeature {
+  generatorName?: string,
+  category: string,
+  blocks?: QuickalgoLibraryBlock[],
+  classMethods?: {[className: string]: ModuleClassDefinition},
+  // constants?: QuickAlgoConstant[],
+}
+
+export type ModuleDefinition = {[featureName: string]: ModuleFeature};

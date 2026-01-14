@@ -13,6 +13,10 @@ import {microphoneModuleDefinition} from "../../modules/microbit/microphone";
 import {mergeModuleDefinitions} from "../board_util";
 import {musicModuleDefinition} from "../../modules/microbit/music";
 import {convertToHex} from "./microbit_hex";
+import {accelerometerModuleDefinition} from "../../modules/accelerometer";
+import {ModuleDefinition} from "../../modules/module_definition";
+import {buttonsModuleDefinition} from "../../modules/buttons";
+import {useGeneratorName} from "../../modules/module_utils";
 
 interface MicrobitBoardInnerState {
   connected?: boolean,
@@ -217,6 +221,14 @@ export class MicrobitBoard extends AbstractBoard {
         builtinSensors: [
           {type: "button", suggestedName: 'button_a'},
           {type: "button", suggestedName: 'button_b'},
+          {type: "button", suggestedName: 'pin_logo'},
+          { type: "temperature", suggestedName: this.strings.messages.sensorNameTemperature },
+          { type: "light", suggestedName: this.strings.messages.sensorNameLight },
+          { type: "accelerometer", suggestedName: this.strings.messages.sensorNameAccelerometer },
+          { type: "magnetometer", suggestedName: this.strings.messages.sensorNameMagnetometer },
+          { type: "ledmatrix", suggestedName: this.strings.messages.sensorNameLedMatrix },
+          { type: "sound", suggestedName: 'sound', unit: ''},
+          { type: "buzzer", suggestedName: this.strings.messages.sensorNameBuzzer },
         ],
       },
     ];
@@ -264,6 +276,42 @@ export class MicrobitBoard extends AbstractBoard {
         timeModule,
       ],
     });
+  }
+
+  getCustomFeatures(context, strings): ModuleDefinition {
+    const accelerometerModule = accelerometerModuleDefinition(context, strings);
+    accelerometerModule.readAcceleration.blocks.forEach(block => {
+      block.hidden = true;
+      block.codeGenerators = {
+        Python: (block) => {
+          const axis = block.getFieldValue('PARAM_0');
+
+          return [`accelerometer.get_${axis}()`, window.Blockly.Python.ORDER_NONE];
+        },
+      };
+    });
+
+    const buttonsModule = buttonsModuleDefinition(context, strings);
+    buttonsModule.isButtonPressed.blocks.forEach(block => {
+      block.hidden = true;
+    });
+
+    buttonsModule.isButtonPressedWithName.blocks.forEach(block => {
+      block.hidden = true;
+      block.codeGenerators = {
+        Python: (block) => {
+          const button = block.getFieldValue('PARAM_0');
+          const method = 'pin_logo' === button ? 'is_touched' : 'is_pressed';
+
+          return [`${button}.${method}()`, window.Blockly.Python.ORDER_NONE];
+        },
+      };
+    });
+
+    return {
+      ...useGeneratorName(accelerometerModule, 'microbit'),
+      ...useGeneratorName(buttonsModule, 'microbit'),
+    };
   }
 }
 

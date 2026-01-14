@@ -1,4 +1,5 @@
 import {BoardCustomBlocks, BoardDefinition, ConnectionMethod} from "../definitions";
+import {ModuleDefinition} from "../modules/module_definition";
 
 export abstract class AbstractBoard {
   protected strings: any = {};
@@ -27,6 +28,11 @@ export abstract class AbstractBoard {
   getCustomBlocks(context, strings): BoardCustomBlocks {
     return {
       customBlocks: {},
+    };
+  }
+
+  getCustomFeatures(context, strings): ModuleDefinition {
+    return {
     };
   }
 }

@@ -16,6 +16,10 @@ import {machinePulseModuleDefinition} from "../../modules/machine/pulse";
 import {GalaxiaConnection} from "./galaxia_connexion";
 import {thingzCompassModuleDefinition} from "../../modules/thingz/compass";
 import {mergeModuleDefinitions} from "../board_util";
+import {ModuleDefinition} from "../../modules/module_definition";
+import {accelerometerModuleDefinition} from "../../modules/accelerometer";
+import {buttonsModuleDefinition} from "../../modules/buttons";
+import {useGeneratorName} from "../../modules/module_utils";
 
 interface GalaxiaBoardInnerState {
   connected?: boolean,
@@ -198,7 +202,16 @@ export class GalaxiaBoard extends AbstractBoard {
           "A": [0, 1, 2, 6, 7, 8, 12, 13, 14, 15, 16, 19, 20],
         },
         builtinSensors: [
-          {type: "ledrgb", suggestedName: 'led'},
+          { type: "accelerometer", suggestedName: this.strings.messages.sensorNameAccelerometer },
+          { type: "magnetometer", suggestedName: this.strings.messages.sensorNameMagnetometer },
+          { type: "buzzer", suggestedName: this.strings.messages.sensorNameBuzzer },
+          { type: "temperature", suggestedName: this.strings.messages.sensorNameTemperature },
+          { type: "light", suggestedName: this.strings.messages.sensorNameLight },
+          { type: "range", suggestedName: this.strings.messages.sensorNameDistance, port: 'D9' },
+          { type: "wifi", suggestedName: this.strings.messages.sensorNameWifi },
+            // { type: "led", name: 'led', port: 'D5'},
+            // { type: "leddim", name: 'leddim', port: 'D8'},
+          {type: "ledrgb", suggestedName: this.strings.messages.sensorNameLed },
           {type: "button", suggestedName: 'button_a'},
           {type: "button", suggestedName: 'button_b'},
           {type: "button", suggestedName: 'touch_n'},
@@ -266,6 +279,42 @@ export class GalaxiaBoard extends AbstractBoard {
         jsonModule,
       ],
     });
+  }
+
+  getCustomFeatures(context, strings): ModuleDefinition {
+    const accelerometerModule = accelerometerModuleDefinition(context, strings);
+    accelerometerModule.readAcceleration.blocks.forEach(block => {
+      block.hidden = true;
+      block.codeGenerators = {
+        Python: (block) => {
+          const axis = block.getFieldValue('PARAM_0');
+
+          return [`accelerometer.get_${axis}()`, window.Blockly.Python.ORDER_NONE];
+        },
+      };
+    });
+
+    const buttonsModule = buttonsModuleDefinition(context, strings);
+    buttonsModule.isButtonPressed.blocks.forEach(block => {
+      block.hidden = true;
+    });
+
+    buttonsModule.isButtonPressedWithName.blocks.forEach(block => {
+      block.hidden = true;
+      block.codeGenerators = {
+        Python: (block) => {
+          const button = block.getFieldValue('PARAM_0');
+          const method = 'touch' === button.substring(0, 5) ? 'is_touched' : 'is_pressed';
+
+          return [`${button}.${method}()`, window.Blockly.Python.ORDER_NONE];
+        },
+      };
+    });
+
+    return {
+      ...useGeneratorName(accelerometerModule, 'thingz'),
+      ...useGeneratorName(buttonsModule, 'thingz'),
+    };
   }
 }
 

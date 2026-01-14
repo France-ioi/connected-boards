@@ -12,6 +12,7 @@ import {SensorCollection} from "./sensors/sensor_collection";
 import {createSensor} from "./sensors/sensor_factory";
 import {SensorDrawTimeLineParameters} from "./sensors/abstract_sensor";
 import {microbitBoard} from "./boards/microbit/microbit_board";
+import {ModuleFeature} from "./modules/module_definition";
 
 const boards: {[board: string]: AbstractBoard} = {
     galaxia: galaxiaBoard,
@@ -177,9 +178,13 @@ var getContext = function (display, infos, curLevel) {
     }
 
     context.sensorsList = new SensorCollection();
-    for (let sensor of infos.quickPiSensors) {
-        const realSensor = createSensor(sensor, context, strings);
-        context.sensorsList.add(realSensor);
+    if (infos.quickPiSensors == "default") {
+        addDefaultBoardSensors();
+    } else {
+        for (let sensor of infos.quickPiSensors) {
+            const realSensor = createSensor(sensor, context, strings);
+            context.sensorsList.add(realSensor);
+        }
     }
 
     const boardDefinitions = mainBoard.getBoardDefinitions();
@@ -1687,14 +1692,6 @@ var getContext = function (display, infos, curLevel) {
 
                 context.sensorsList.add(newSensor);
             }
-
-            let newSensor = createSensor({
-                type: "cloudstore",
-                name: "cloud1",
-                port: "D5"
-            }, context, strings);
-
-            context.sensorsList.add(newSensor);
         }
         if(infos.customSensors){
             // infos.quickPiSensors.push({
@@ -2862,42 +2859,27 @@ var getContext = function (display, infos, curLevel) {
         return newName;
     }
 
-    const customBlocks = mainBoard.getCustomBlocks(context, strings);
-    if (customBlocks.customBlocks) {
-        context.customBlocks = customBlocks.customBlocks;
-    }
-    if (customBlocks.customClasses) {
-        context.customClasses = customBlocks.customClasses;
-    }
-    if (customBlocks.customClassInstances) {
-        context.customClassInstances = customBlocks.customClassInstances;
-    }
-    context.customConstants = {};
-    if (customBlocks.customConstants) {
-        context.customConstants = customBlocks.customConstants;
-    }
-    if (customBlocks.customBlockImplementations) {
-        for (let [moduleName, blocks] of Object.entries(customBlocks.customBlockImplementations)) {
-            if (!(moduleName in context)) {
-                context[moduleName] = {};
+    // TODO: add class constants
+    context.features = mainBoard.getCustomFeatures(context, strings);
+    for (let feature of (Object.values(context.features) as ModuleFeature[])) {
+        context[feature.generatorName] ??= {};
+        if (feature.blocks) {
+            for (let block of feature.blocks) {
+                context[feature.generatorName][block.name] = block.handler;
             }
-            context[moduleName] = {
-                ...context[moduleName],
-                ...blocks,
+        }
+        if (feature.classMethods) {
+            for (let [className, classData] of Object.entries(feature.classMethods)) {
+                context[feature.generatorName][className] ??= {};
+                for (let [method, block] of Object.entries(classData.methods)) {
+                    context[feature.generatorName][className][method] = block.handler;
+                }
             }
         }
     }
-    if (customBlocks.customClassImplementations) {
-        for (let [moduleName, classes] of Object.entries(customBlocks.customClassImplementations)) {
-            if (!(moduleName in context)) {
-                context[moduleName] = {};
-            }
-            context[moduleName] = {
-                ...context[moduleName],
-                ...classes,
-            }
-        }
-    }
+
+    console.log('context features', context.features);
+
 
     // Color indexes of block categories (as a hue in the range 0–420)
     context.provideBlocklyColours = function () {

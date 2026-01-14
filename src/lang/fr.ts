@@ -292,7 +292,11 @@ export default {
     dumps: "dumps(content) sérialise un objet en une chaîne formatée en JSON",
     get: "get(url) envoie une requête HTTP GET",
     post: "post(url, data, headers) envoie une requête HTTP POST",
+
+    // Microbit
     "image.__constructor": "Image(leds) crée une image qui peut être affichée sur la grille de leds",
+    "Accel.get_x": "retourne la valeur sur l'axe X de l'accélération en m/s²",
+    "Button.is_pressed": "retourne True si le bouton est enfoncé, False sinon",
   },
   constant: {},
 
@@ -479,8 +483,9 @@ export default {
     // sensorNameBuzzer: "buzzer",
     sensorNameBuzzer: "buzz",
     sensorNameLed: "led",
-    sensorNameLedRgb: "ledRgb",
-    sensorNameLedDim: "ledDim",
+    sensorNameLedRgb: "led_rgb",
+    sensorNameLedDim: "led_dim",
+    sensorNameLedMatrix: 'led_matrix',
     // sensorNameRedLed: "redled",
     sensorNameRedLed: "Rled",
     // sensorNameGreenLed: "greenled",

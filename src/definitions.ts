@@ -1,6 +1,7 @@
 import {SensorCollection} from "./sensors/sensor_collection";
 import {AbstractSensor} from "./sensors/abstract_sensor";
 import {AbstractBoard} from "./boards/abstract_board";
+import {SensorHandler} from "./sensors/util/sensor_handler";
 
 declare global {
   interface Window {
@@ -59,6 +60,7 @@ export interface Sensor {
   builtin?: boolean,
   showAsAnalog?: boolean,
   isDrawingScreen?: boolean,
+  unit?: string,
 }
 
 export interface BoardDefinition {
@@ -78,15 +80,22 @@ export enum ConnectionMethod {
   Bluetooth = 'bt',
 }
 
+export interface BlocklyBlock {
+  getFieldValue(field: string): string,
+}
+
 export interface QuickalgoLibraryBlock {
   name?: string,
   yieldsValue?: string|boolean,
   params?: string[],
+  blocklyInit?: Function,
   blocklyJson?: any,
   blocklyXml?: string,
   anyArgs?: boolean,
   variants?: any,
   hidden?: boolean,
+  handler: Function,
+  codeGenerators?: {[languageName: string]: (block: BlocklyBlock) => [string, string]}
 }
 
 export interface QuickalgoLibrary {
@@ -127,6 +136,12 @@ export interface QuickalgoLibrary {
   timeLineSlotHeight: number,
   timelineStartx: number,
   pixelsPerTime: number,
+  sensorHandler: SensorHandler,
+  getSensorState: (name: string) => any,
+  waitForEvent: (action: (callback: Function) => void, func: Function) => void,
+  waitDelay: (callback: Function, delay?: number) => void,
+  advanceToNextRelease: (sensorType: string, port: string) => void,
+  blocklyHelper: any,
 }
 
 export interface QuickAlgoConstant {

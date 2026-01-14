@@ -89,7 +89,7 @@ export class SensorHandler {
     return false;
   }
 
-  findSensorByName(name, error=false): AbstractSensor<any>|null {
+  findSensorByName<T extends AbstractSensor<any>>(name, error=false): T|null {
     if (isNaN(name.substring(0, 1)) && !isNaN(name.substring(1))) {
       for (let sensor of this.context.sensorsList.all()) {
         if (sensor.port.toUpperCase() == name.toUpperCase()) {
@@ -134,35 +134,41 @@ export class SensorHandler {
     return null;
   }
 
-  getSensorNames(sensorType) {
+  getSensorNames(sensorType: string) {
     return () => {
-      let ports = [];
-      for (let sensor of this.context.sensorsList.all()) {
-        if (sensor.type == sensorType) {
-          ports.push([sensor.name, sensor.name]);
-        }
+      const sensorNames = this.getSensorNamesForType(sensorType);
+
+      if (0 === sensorNames.length) {
+        sensorNames.push('none');
       }
 
-      if (sensorType == "button") {
-        for (let sensor of this.context.sensorsList.all()) {
-          if (sensor.type == "stick") {
-            let stickDefinition = this.findSensorDefinition(sensor);
+      return sensorNames.map(name => ([name, name]));
+    }
+  }
 
-            for (let iStick = 0; iStick < stickDefinition.gpiosNames.length; iStick++) {
-              let name = sensor.name + "." + stickDefinition.gpiosNames[iStick];
+  getSensorNamesForType(sensorType: string): string[] {
+    let names = [];
+    for (let sensor of this.context.sensorsList.all()) {
+      if (sensor.type == sensorType) {
+        names.push(sensor.name);
+      }
+    }
 
-              ports.push([name, name]);
-            }
+    if (sensorType == "button") {
+      for (let sensor of this.context.sensorsList.all()) {
+        if (sensor.type == "stick") {
+          let stickDefinition = this.findSensorDefinition(sensor);
+
+          for (let iStick = 0; iStick < stickDefinition.gpiosNames.length; iStick++) {
+            let name = sensor.name + "." + stickDefinition.gpiosNames[iStick];
+
+            names.push(name);
           }
         }
       }
-
-      if (ports.length == 0) {
-        ports.push(["none", "none"]);
-      }
-
-      return ports;
     }
+
+    return names;
   }
 
   drawSensor(sensor, juststate = false, donotmovefocusrect = false) {

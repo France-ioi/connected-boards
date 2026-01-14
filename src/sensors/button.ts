@@ -6,7 +6,7 @@ import {getImg} from "../util";
 export class SensorButton extends AbstractSensor<any> {
   private buttonon: any;
   private buttonoff: any;
-  private wasPressed: boolean;
+  public wasPressed: boolean;
   public onPressed: () => void;
   public type = 'button';
 
