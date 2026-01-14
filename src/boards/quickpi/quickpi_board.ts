@@ -7,6 +7,7 @@ import {ModuleDefinition} from "../../modules/module_definition";
 import {accelerometerModuleDefinition} from "../../modules/accelerometer";
 import {buttonsModuleDefinition} from "../../modules/buttons";
 import {useGeneratorName} from "../../modules/module_utils";
+import {magnetometerModuleDefinition} from "../../modules/magnetometer";
 
 export class QuickPiBoard extends AbstractBoard {
   getBoardDefinitions() {
@@ -100,17 +101,19 @@ export class QuickPiBoard extends AbstractBoard {
   getCustomFeatures(context, strings): ModuleDefinition {
     const accelerometerModule = accelerometerModuleDefinition(context, strings);
     const buttonsModule = buttonsModuleDefinition(context, strings);
+    const magnetometerModule = magnetometerModuleDefinition(context, strings);
 
-    const modules: ModuleDefinition = {
+    const features: ModuleDefinition = {
       ...accelerometerModule,
       ...buttonsModule,
+      ...magnetometerModule,
     };
 
-    for (let feature in modules) {
-      delete modules[feature].classMethods;
+    for (let feature in features) {
+      delete features[feature].classMethods;
     }
 
-    return useGeneratorName(modules, 'quickpi');
+    return useGeneratorName(features, 'quickpi');
   }
 }
 

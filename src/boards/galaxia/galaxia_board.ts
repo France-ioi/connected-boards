@@ -1,5 +1,5 @@
 import {AbstractBoard} from "../abstract_board";
-import {BoardCustomBlocks, BoardDefinition, ConnectionMethod} from "../../definitions";
+import {BoardCustomBlocks, BoardDefinition, ConnectionMethod, QuickalgoLibraryBlock} from "../../definitions";
 import {thingzAccelerometerModuleDefinition} from "../../modules/thingz/accelerometer";
 import {thingzButtonsModuleDefinition} from "../../modules/thingz/buttons";
 import {thingzTemperatureModuleDefinition} from "../../modules/thingz/temperature";
@@ -20,6 +20,7 @@ import {ModuleDefinition} from "../../modules/module_definition";
 import {accelerometerModuleDefinition} from "../../modules/accelerometer";
 import {buttonsModuleDefinition} from "../../modules/buttons";
 import {useGeneratorName} from "../../modules/module_utils";
+import {magnetometerModuleDefinition} from "../../modules/magnetometer";
 
 interface GalaxiaBoardInnerState {
   connected?: boolean,
@@ -283,8 +284,7 @@ export class GalaxiaBoard extends AbstractBoard {
 
   getCustomFeatures(context, strings): ModuleDefinition {
     const accelerometerModule = accelerometerModuleDefinition(context, strings);
-    accelerometerModule.readAcceleration.blocks.forEach(block => {
-      block.hidden = true;
+    accelerometerModule.readAcceleration.blocks.forEach((block: QuickalgoLibraryBlock) => {
       block.codeGenerators = {
         Python: (block) => {
           const axis = block.getFieldValue('PARAM_0');
@@ -295,12 +295,7 @@ export class GalaxiaBoard extends AbstractBoard {
     });
 
     const buttonsModule = buttonsModuleDefinition(context, strings);
-    buttonsModule.isButtonPressed.blocks.forEach(block => {
-      block.hidden = true;
-    });
-
-    buttonsModule.isButtonPressedWithName.blocks.forEach(block => {
-      block.hidden = true;
+    buttonsModule.isButtonPressedWithName.blocks.forEach((block: QuickalgoLibraryBlock) => {
       block.codeGenerators = {
         Python: (block) => {
           const button = block.getFieldValue('PARAM_0');
@@ -311,10 +306,32 @@ export class GalaxiaBoard extends AbstractBoard {
       };
     });
 
-    return {
+    const magnetometerModule = magnetometerModuleDefinition(context, strings);
+    magnetometerModule.readMagneticForce.blocks.forEach((block: QuickalgoLibraryBlock) => {
+      block.codeGenerators = {
+        Python: (block) => {
+          const axis = block.getFieldValue('PARAM_0');
+
+          return [`compass.get_${axis}()`, window.Blockly.Python.ORDER_NONE];
+        },
+      };
+    });
+
+    const features: ModuleDefinition = {
       ...useGeneratorName(accelerometerModule, 'thingz'),
       ...useGeneratorName(buttonsModule, 'thingz'),
+      ...useGeneratorName(magnetometerModule, 'thingz'),
     };
+
+    for (let feature of Object.values(features)) {
+      if (feature.classMethods) {
+        for (let block of feature.blocks) {
+          block.hidden = true;
+        }
+      }
+    }
+
+    return features;
   }
 }
 

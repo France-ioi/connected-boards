@@ -2,7 +2,7 @@ import {ModuleDefinition} from "./module_definition";
 import {QuickalgoLibrary} from "../definitions";
 import {SensorButton} from "../sensors/button";
 
-export function buttonsModuleDefinition(context: QuickalgoLibrary, strings): ModuleDefinition {
+export function buttonsModuleDefinition(context: QuickalgoLibrary, strings) {
   const sensorHandler = context.sensorHandler;
 
   const waitForButton = function (name, callback) {
@@ -231,5 +231,5 @@ export function buttonsModuleDefinition(context: QuickalgoLibrary, strings): Mod
         }
       },
     }
-  };
+  } satisfies ModuleDefinition;
 }

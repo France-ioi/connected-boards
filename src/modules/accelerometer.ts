@@ -1,7 +1,7 @@
 import {ModuleDefinition} from "./module_definition";
 import {QuickalgoLibrary} from "../definitions";
 
-export function accelerometerModuleDefinition(context: QuickalgoLibrary, strings): ModuleDefinition {
+export function accelerometerModuleDefinition(context: QuickalgoLibrary, strings) {
   const sensorHandler = context.sensorHandler;
 
   const readAcceleration = function (axis, callback) {
@@ -76,5 +76,5 @@ export function accelerometerModuleDefinition(context: QuickalgoLibrary, strings
         },
       },
     }
-  };
+  } satisfies ModuleDefinition;
 }
