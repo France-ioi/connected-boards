@@ -8,6 +8,7 @@ import {accelerometerModuleDefinition} from "../../modules/accelerometer";
 import {buttonsModuleDefinition} from "../../modules/buttons";
 import {useGeneratorName} from "../../modules/module_utils";
 import {magnetometerModuleDefinition} from "../../modules/magnetometer";
+import {temperatureModuleDefinition} from "../../modules/temperature";
 
 export class QuickPiBoard extends AbstractBoard {
   getBoardDefinitions() {
@@ -102,11 +103,13 @@ export class QuickPiBoard extends AbstractBoard {
     const accelerometerModule = accelerometerModuleDefinition(context, strings);
     const buttonsModule = buttonsModuleDefinition(context, strings);
     const magnetometerModule = magnetometerModuleDefinition(context, strings);
+    const temperatureModule = temperatureModuleDefinition(context);
 
     const features: ModuleDefinition = {
       ...accelerometerModule,
       ...buttonsModule,
       ...magnetometerModule,
+      ...temperatureModule,
     };
 
     for (let feature in features) {

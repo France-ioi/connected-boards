@@ -90,6 +90,7 @@ export abstract class AbstractSensor<T> {
   }
 
   public abstract draw(sensorHandler: SensorHandler, parameters: SensorDrawParameters): void;
+  public getLiveState?(callback: (returnVal: any) => void): void;
   public setLiveState?(state: T, callback): void;
   public getInitialState?(): T;
 

@@ -18,6 +18,7 @@ import {ModuleDefinition} from "../../modules/module_definition";
 import {buttonsModuleDefinition} from "../../modules/buttons";
 import {useGeneratorName} from "../../modules/module_utils";
 import {magnetometerModuleDefinition} from "../../modules/magnetometer";
+import {temperatureModuleDefinition} from "../../modules/temperature";
 
 interface MicrobitBoardInnerState {
   connected?: boolean,
@@ -315,10 +316,13 @@ export class MicrobitBoard extends AbstractBoard {
       };
     });
 
+    const temperatureModule = temperatureModuleDefinition(context);
+
     const features: ModuleDefinition = {
       ...useGeneratorName(accelerometerModule, 'microbit'),
       ...useGeneratorName(buttonsModule, 'microbit'),
       ...useGeneratorName(magnetometerModule, 'microbit'),
+      ...useGeneratorName(temperatureModule, 'microbit'),
     };
 
     for (let feature of Object.values(features)) {

@@ -43,7 +43,7 @@ export default {
     displayText2Lines: "afficher Ligne 1 : %1 Ligne 2 : %2",
 
     readTemperature: "température ambiante",
-    'thingz.temperature': "température ambiante",
+    temperature: "température ambiante",
     getTemperatureFromCloud: "temperature de la ville %1",
 
     readRotaryAngle: "état du potentiomètre %1",
@@ -112,7 +112,7 @@ export default {
     displayText: "displayText",
     displayText2Lines: "displayText",
     readTemperature: "readTemperature",
-    'thingz.temperature': "temperature",
+    temperature: "temperature",
     sleep: "sleep",
     'time.sleep': "sleep",
     'time.sleep_us': "sleep_us",
@@ -205,6 +205,7 @@ export default {
     displayText: "displayText(line1, line2) affiche une ou deux lignes de texte. line2 est optionnel",
     displayText2Lines: "displayText(line1, line2) affiche une ou deux lignes de texte. line2 est optionnel",
     readTemperature: "readTemperature(thermometer) retourne la température ambiante",
+    temperature: "temperature() retourne la température ambiante",
     sleep: "sleep(milliseconds) met en pause l'exécution pendant une durée en ms",
     'time.sleep': "sleep(seconds) met en pause l'exécution pendant une durée en secondes",
     'time.sleep_us': "sleep_us(microseconds) met en pause l'exécution pendant une durée en microsecondes",

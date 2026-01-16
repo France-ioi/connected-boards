@@ -21,6 +21,7 @@ import {accelerometerModuleDefinition} from "../../modules/accelerometer";
 import {buttonsModuleDefinition} from "../../modules/buttons";
 import {useGeneratorName} from "../../modules/module_utils";
 import {magnetometerModuleDefinition} from "../../modules/magnetometer";
+import {temperatureModuleDefinition} from "../../modules/temperature";
 
 interface GalaxiaBoardInnerState {
   connected?: boolean,
@@ -317,10 +318,13 @@ export class GalaxiaBoard extends AbstractBoard {
       };
     });
 
+    const temperatureModule = temperatureModuleDefinition(context);
+
     const features: ModuleDefinition = {
       ...useGeneratorName(accelerometerModule, 'thingz'),
       ...useGeneratorName(buttonsModule, 'thingz'),
       ...useGeneratorName(magnetometerModule, 'thingz'),
+      ...useGeneratorName(temperatureModule, 'thingz'),
     };
 
     for (let feature of Object.values(features)) {
