@@ -19,6 +19,7 @@ import {buttonsModuleDefinition} from "../../modules/buttons";
 import {useGeneratorName} from "../../modules/module_utils";
 import {magnetometerModuleDefinition} from "../../modules/magnetometer";
 import {temperatureModuleDefinition} from "../../modules/temperature";
+import {timeModuleDefinition} from "../../modules/time";
 
 interface MicrobitBoardInnerState {
   connected?: boolean,
@@ -318,11 +319,15 @@ export class MicrobitBoard extends AbstractBoard {
 
     const temperatureModule = temperatureModuleDefinition(context);
 
+    const timeModule = timeModuleDefinition(context);
+    timeModule.sleep = timeModule.sleep_sec;
+
     const features: ModuleDefinition = {
       ...useGeneratorName(accelerometerModule, 'microbit'),
       ...useGeneratorName(buttonsModule, 'microbit'),
       ...useGeneratorName(magnetometerModule, 'microbit'),
       ...useGeneratorName(temperatureModule, 'microbit'),
+      ...useGeneratorName(timeModule, 'time'),
     };
 
     for (let feature of Object.values(features)) {

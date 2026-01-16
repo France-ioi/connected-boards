@@ -2,8 +2,8 @@ export default {
   label: {
     // Labels for the blocks
     sleep: "attendre %1 millisecondes",
-    'time.sleep': "attendre %1 secondes",
-    'time.sleep_us': "attendre %1 microsecondes",
+    sleep_sec: "attendre %1 secondes",
+    sleep_us: "attendre %1 microsecondes",
     currentTime: "temps écoulé en millisecondes",
 
     turnLedOn: "allumer la LED",
@@ -114,8 +114,8 @@ export default {
     readTemperature: "readTemperature",
     temperature: "temperature",
     sleep: "sleep",
-    'time.sleep': "sleep",
-    'time.sleep_us': "sleep_us",
+    sleep_sec: "sleep",
+    sleep_us: "sleep_us",
     setServoAngle: "setServoAngle",
     readRotaryAngle: "readRotaryAngle",
     readDistance: "readDistance",
@@ -207,8 +207,8 @@ export default {
     readTemperature: "readTemperature(thermometer) retourne la température ambiante",
     temperature: "temperature() retourne la température ambiante",
     sleep: "sleep(milliseconds) met en pause l'exécution pendant une durée en ms",
-    'time.sleep': "sleep(seconds) met en pause l'exécution pendant une durée en secondes",
-    'time.sleep_us': "sleep_us(microseconds) met en pause l'exécution pendant une durée en microsecondes",
+    sleep_sec: "sleep(seconds) met en pause l'exécution pendant une durée en secondes",
+    sleep_us: "sleep_us(microseconds) met en pause l'exécution pendant une durée en microsecondes",
     setServoAngle: "setServoAngle(servo, angle) change l'angle du servomoteur",
     readRotaryAngle: "readRotaryAngle(potentiometer) retourne la position potentiomètre",
     readDistance: "readDistance(distanceSensor) retourne la distance mesurée",

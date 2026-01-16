@@ -142,6 +142,7 @@ export interface QuickalgoLibrary {
   waitDelay: (callback: Function, delay?: number) => void,
   advanceToNextRelease: (sensorType: string, port: string) => void,
   blocklyHelper: any,
+  increaseTimeBy: (time: number) => void,
 }
 
 export interface QuickAlgoConstant {
