@@ -1227,7 +1227,9 @@ var getContext = function (display, infos, curLevel) {
                                     break;
                                 }
                             }
-                            bump = true;
+                            if (!foundcols) {
+                                bump = true;
+                            }
                         }
                         else
                         {
