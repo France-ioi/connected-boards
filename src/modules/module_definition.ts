@@ -10,6 +10,7 @@ export interface ModuleFeature {
   category: string,
   blocks?: QuickalgoLibraryBlock[],
   classMethods?: {[className: string]: ModuleClassDefinition},
+  classConstants?: {[className: string]: {[name: string]: string}},
   // constants?: QuickAlgoConstant[],
 }
 

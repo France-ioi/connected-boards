@@ -114,7 +114,7 @@ export class SensorHandler {
     return null;
   }
 
-  findSensorByType(type: string): AbstractSensor<any>|null {
+  findSensorByType<T>(type: string): AbstractSensor<T>|null {
     for (let sensor of this.context.sensorsList.all()) {
       if (sensor.type == type) {
         return sensor;

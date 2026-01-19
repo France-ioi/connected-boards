@@ -22,6 +22,7 @@ import {temperatureModuleDefinition} from "../../modules/temperature";
 import {timeModuleDefinition} from "../../modules/time";
 import {buzzerModuleDefinition} from "../../modules/buzzer";
 import {soundModuleDefinition} from "../../modules/sound";
+import {ledMatrixModuleDefinition} from "../../modules/led_matrix";
 
 interface MicrobitBoardInnerState {
   connected?: boolean,
@@ -309,6 +310,43 @@ export class MicrobitBoard extends AbstractBoard {
 
     const buzzerModule = buzzerModuleDefinition(context, strings);
 
+    const ledMatrixModule = ledMatrixModuleDefinition(context, strings);
+    ledMatrixModule.ledMatrixShow.blocks.forEach((block: QuickalgoLibraryBlock) => {
+      block.codeGenerators = {
+        Python: () => {
+          return [`display.show(TODO)`, window.Blockly.Python.ORDER_NONE];
+        },
+      };
+    });
+    ledMatrixModule.ledMatrixClear.blocks.forEach((block: QuickalgoLibraryBlock) => {
+      block.codeGenerators = {
+        Python: () => {
+          return [`display.clear()`, window.Blockly.Python.ORDER_NONE];
+        },
+      };
+    });
+    ledMatrixModule.ledMatrixGetPixel.blocks.forEach((block: QuickalgoLibraryBlock) => {
+      block.codeGenerators = {
+        Python: (block) => {
+          const x = block.getFieldValue('PARAM_0');
+          const y = block.getFieldValue('PARAM_1');
+
+          return [`display.get_pixel(${x}, ${y})`, window.Blockly.Python.ORDER_NONE];
+        },
+      };
+    });
+   ledMatrixModule.ledMatrixSetPixel.blocks.forEach((block: QuickalgoLibraryBlock) => {
+      block.codeGenerators = {
+        Python: (block) => {
+          const x = block.getFieldValue('PARAM_0');
+          const y = block.getFieldValue('PARAM_1');
+          const intensity = block.getFieldValue('PARAM_2');
+
+          return [`display.set_pixel(${x}, ${y}, ${intensity})`, window.Blockly.Python.ORDER_NONE];
+        },
+      };
+    });
+
     const magnetometerModule = magnetometerModuleDefinition(context, strings);
     magnetometerModule.readMagneticForce.blocks.forEach((block: QuickalgoLibraryBlock) => {
       block.codeGenerators = {
@@ -321,7 +359,7 @@ export class MicrobitBoard extends AbstractBoard {
     });
 
     const soundModule = soundModuleDefinition(context);
-    soundModule.sound_level.blocks.forEach((block: QuickalgoLibraryBlock) => {
+    soundModule.soundLevel.blocks.forEach((block: QuickalgoLibraryBlock) => {
       block.codeGenerators = {
         Python: () => {
           return [`microphone.sound_level()`, window.Blockly.Python.ORDER_NONE];
@@ -338,6 +376,7 @@ export class MicrobitBoard extends AbstractBoard {
       ...useGeneratorName(accelerometerModule, 'microbit'),
       ...useGeneratorName(buttonsModule, 'microbit'),
       ...useGeneratorName(buzzerModule, 'music'),
+      ...useGeneratorName(ledMatrixModule, 'microbit'),
       ...useGeneratorName(magnetometerModule, 'microbit'),
       ...useGeneratorName(soundModule, 'microbit'),
       ...useGeneratorName(temperatureModule, 'microbit'),

@@ -65,6 +65,12 @@ export default {
     updateScreen: "mettre à jour l'écran",
     autoUpdate: "mode de mise à jour automatique de l'écran",
 
+    ledMatrixShowText: "afficher du texte sur l'écran LED",
+    ledMatrixShowImage: "afficher une image sur l'écran LED",
+    ledMatrixClear: "éteint toutes les LEDs",
+    ledMatrixGetPixel: "intensité du pixel en x: %1 y: %2",
+    ledMatrixSetPixel: "régler à %3 l'intensité du pixel en x: %1 y: %2",
+
     fill: "mettre la couleur de remplissage à %1",
     noFill: "ne pas remplir les formes",
     stroke: "mettre la couleur de tracé à %1",
@@ -73,7 +79,7 @@ export default {
     readAcceleration: "accélération en (m/s²) dans l'axe %1",
     computeRotation: "calcul de l'angle de rotation (°) sur l'accéléromètre %1",
     readSoundLevel: "volume sonore",
-    sound_level: "volume sonore",
+    soundLevel: "volume sonore",
 
     readMagneticForce: "champ magnétique (µT) sur %1",
     computeCompassHeading: "direction de la boussole en (°)",
@@ -164,8 +170,6 @@ export default {
     computeRotation: "computeRotation",
 
     readSoundLevel: "readSoundLevel",
-    sound_level: "sound_level",
-
 
     readMagneticForce: "readMagneticForce",
     computeCompassHeading: "computeCompassHeading",
@@ -246,6 +250,10 @@ export default {
     clearScreen: "clearScreen() efface le contenu de l'écran",
     updateScreen: "updateScreen() mettre à jour l'écran",
     autoUpdate: "autoUpdate(auto) change le mode d'actualisation de l'écran",
+    'Display.show': "display.show(text or image) affiche un texte ou une image sur l'écran de LEDs",
+    'Display.clear': "display.clear() éteint toutes les LEDs",
+    'Display.get_pixel': "display.get_pixel(x, y) retourne l'intensité lumineuse du pixel aux coordonnées x, y",
+    'Display.set_pixel': "display.set_pixel(x, y, intensity) définit l'intensité lumineuse du pixel aux coordonnées x, y",
 
     fill: "fill(color) Remplir les formes avec la couleur donnée",
     noFill: "noFill() Ne pas remplir les formes",

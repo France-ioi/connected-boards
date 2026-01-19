@@ -41,11 +41,11 @@ export function soundModuleDefinition(context: QuickalgoLibrary) {
         },
       ],
     },
-    sound_level: {
+    soundLevel: {
       category: 'sensors',
       blocks: [
         {
-          name: "sound_level",
+          name: "soundLevel",
           yieldsValue: 'int',
           handler: function (callback) {
             const sensor = context.sensorHandler.findSensorByType('sound');
