@@ -73,6 +73,7 @@ export default {
     readAcceleration: "accélération en (m/s²) dans l'axe %1",
     computeRotation: "calcul de l'angle de rotation (°) sur l'accéléromètre %1",
     readSoundLevel: "volume sonore",
+    sound_level: "volume sonore",
 
     readMagneticForce: "champ magnétique (µT) sur %1",
     computeCompassHeading: "direction de la boussole en (°)",
@@ -163,6 +164,7 @@ export default {
     computeRotation: "computeRotation",
 
     readSoundLevel: "readSoundLevel",
+    sound_level: "sound_level",
 
 
     readMagneticForce: "readMagneticForce",
@@ -290,6 +292,8 @@ export default {
     "wlan.__constructor": "wlan = WLAN(interface) initialise l'interface WiFi",
     "wlan.active": "wlan.active(active) active ou désactive l'interface WiFi",
     "wlan.connect": "wlan.connect(ssid, password) connecte au réseau WiFi en utilisant le nom et le mot de passe fournis",
+    "music.pitch": "pitch(frequency) fait sonner à la fréquence indiquée",
+    "music.stop": "stop() arrête de jouer la fréquence",
     dumps: "dumps(content) sérialise un objet en une chaîne formatée en JSON",
     get: "get(url) envoie une requête HTTP GET",
     post: "post(url, data, headers) envoie une requête HTTP POST",
@@ -481,8 +485,7 @@ export default {
     yes: "Oui",
     no: "Non",
 
-    // sensorNameBuzzer: "buzzer",
-    sensorNameBuzzer: "buzz",
+    sensorNameBuzzer: "buzzer",
     sensorNameLed: "led",
     sensorNameLedRgb: "led_rgb",
     sensorNameLedDim: "led_dim",

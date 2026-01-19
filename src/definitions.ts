@@ -143,6 +143,7 @@ export interface QuickalgoLibrary {
   advanceToNextRelease: (sensorType: string, port: string) => void,
   blocklyHelper: any,
   increaseTimeBy: (time: number) => void,
+  registerQuickPiEvent:  (name: string, newState: unknown, setInSensor?: boolean, allowFail?: boolean) => void,
 }
 
 export interface QuickAlgoConstant {

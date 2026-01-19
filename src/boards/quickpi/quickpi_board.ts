@@ -10,6 +10,8 @@ import {useGeneratorName} from "../../modules/module_utils";
 import {magnetometerModuleDefinition} from "../../modules/magnetometer";
 import {temperatureModuleDefinition} from "../../modules/temperature";
 import {timeModuleDefinition} from "../../modules/time";
+import {buzzerModuleDefinition} from "../../modules/buzzer";
+import {soundModuleDefinition} from "../../modules/sound";
 
 export class QuickPiBoard extends AbstractBoard {
   getBoardDefinitions() {
@@ -61,7 +63,7 @@ export class QuickPiBoard extends AbstractBoard {
           { type: "button", port: "D26", suggestedName: this.strings.messages.sensorNameButton + "1", },
           { type: "light", port: "A2", suggestedName: this.strings.messages.sensorNameLight + "1", },
           { type: "stick", port: "D7", suggestedName: this.strings.messages.sensorNameStick + "1", },
-          { type: "cloud", port: "D5", suggestedName: this.strings.messages.sensorNameCloudStore + "1", },
+          { type: "cloudstore", port: "D5", suggestedName: this.strings.messages.sensorNameCloudStore + "1", },
         ],
       },
       {
@@ -103,14 +105,25 @@ export class QuickPiBoard extends AbstractBoard {
   getCustomFeatures(context, strings): ModuleDefinition {
     const accelerometerModule = accelerometerModuleDefinition(context, strings);
     const buttonsModule = buttonsModuleDefinition(context, strings);
+
+    const buzzerModule = buzzerModuleDefinition(context, strings);
+    delete buzzerModule.pitch;
+    delete buzzerModule.stop;
+
     const magnetometerModule = magnetometerModuleDefinition(context, strings);
+    const soundModule = soundModuleDefinition(context);
     const temperatureModule = temperatureModuleDefinition(context);
+
     const timeModule = timeModuleDefinition(context);
+    delete timeModule.sleep_sec;
+    delete timeModule.sleep_us;
 
     const features: ModuleDefinition = {
       ...accelerometerModule,
       ...buttonsModule,
+      ...buzzerModule,
       ...magnetometerModule,
+      ...soundModule,
       ...temperatureModule,
       ...timeModule,
     };

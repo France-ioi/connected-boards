@@ -20,6 +20,8 @@ import {useGeneratorName} from "../../modules/module_utils";
 import {magnetometerModuleDefinition} from "../../modules/magnetometer";
 import {temperatureModuleDefinition} from "../../modules/temperature";
 import {timeModuleDefinition} from "../../modules/time";
+import {buzzerModuleDefinition} from "../../modules/buzzer";
+import {soundModuleDefinition} from "../../modules/sound";
 
 interface MicrobitBoardInnerState {
   connected?: boolean,
@@ -294,7 +296,6 @@ export class MicrobitBoard extends AbstractBoard {
     });
 
     const buttonsModule = buttonsModuleDefinition(context, strings);
-
     buttonsModule.isButtonPressedWithName.blocks.forEach((block: QuickalgoLibraryBlock) => {
       block.codeGenerators = {
         Python: (block) => {
@@ -305,6 +306,8 @@ export class MicrobitBoard extends AbstractBoard {
         },
       };
     });
+
+    const buzzerModule = buzzerModuleDefinition(context, strings);
 
     const magnetometerModule = magnetometerModuleDefinition(context, strings);
     magnetometerModule.readMagneticForce.blocks.forEach((block: QuickalgoLibraryBlock) => {
@@ -317,6 +320,15 @@ export class MicrobitBoard extends AbstractBoard {
       };
     });
 
+    const soundModule = soundModuleDefinition(context);
+    soundModule.sound_level.blocks.forEach((block: QuickalgoLibraryBlock) => {
+      block.codeGenerators = {
+        Python: () => {
+          return [`microphone.sound_level()`, window.Blockly.Python.ORDER_NONE];
+        },
+      };
+    });
+
     const temperatureModule = temperatureModuleDefinition(context);
 
     const timeModule = timeModuleDefinition(context);
@@ -325,7 +337,9 @@ export class MicrobitBoard extends AbstractBoard {
     const features: ModuleDefinition = {
       ...useGeneratorName(accelerometerModule, 'microbit'),
       ...useGeneratorName(buttonsModule, 'microbit'),
+      ...useGeneratorName(buzzerModule, 'music'),
       ...useGeneratorName(magnetometerModule, 'microbit'),
+      ...useGeneratorName(soundModule, 'microbit'),
       ...useGeneratorName(temperatureModule, 'microbit'),
       ...useGeneratorName(timeModule, 'time'),
     };
