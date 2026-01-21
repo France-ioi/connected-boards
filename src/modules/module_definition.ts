@@ -1,8 +1,9 @@
 import {QuickalgoLibraryBlock} from "../definitions";
 
 export interface ModuleClassDefinition {
-  instances: string[],
-  methods: {[methodName: string]: QuickalgoLibraryBlock},
+  instances?: string[],
+  init?: QuickalgoLibraryBlock,
+  methods?: {[methodName: string]: QuickalgoLibraryBlock},
 }
 
 export interface ModuleFeature {

@@ -2861,7 +2861,6 @@ var getContext = function (display, infos, curLevel) {
         return newName;
     }
 
-    // TODO: add class constants
     context.features = mainBoard.getCustomFeatures(context, strings);
     for (let feature of (Object.values(context.features) as ModuleFeature[])) {
         context[feature.generatorName] ??= {};
@@ -2873,8 +2872,11 @@ var getContext = function (display, infos, curLevel) {
         if (feature.classMethods) {
             for (let [className, classData] of Object.entries(feature.classMethods)) {
                 context[feature.generatorName][className] ??= {};
-                for (let [method, block] of Object.entries(classData.methods)) {
+                for (let [method, block] of Object.entries(classData.methods ?? {})) {
                     context[feature.generatorName][className][method] = block.handler;
+                }
+                if (classData.init) {
+                    context[feature.generatorName][className]['__constructor'] = classData.init.handler;
                 }
             }
         }

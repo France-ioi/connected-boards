@@ -251,7 +251,7 @@ export default {
     clearScreen: "clearScreen() efface le contenu de l'écran",
     updateScreen: "updateScreen() mettre à jour l'écran",
     autoUpdate: "autoUpdate(auto) change le mode d'actualisation de l'écran",
-    'Display.show': "display.show(text or image) affiche un texte ou une image sur l'écran de LEDs",
+    'Display.show': "display.show(content) affiche un texte ou une image sur l'écran de LEDs",
     'Display.clear': "display.clear() éteint toutes les LEDs",
     'Display.get_pixel': "display.get_pixel(x, y) retourne l'intensité lumineuse du pixel aux coordonnées x, y",
     'Display.set_pixel': "display.set_pixel(x, y, intensity) définit l'intensité lumineuse du pixel aux coordonnées x, y",
@@ -308,7 +308,7 @@ export default {
     post: "post(url, data, headers) envoie une requête HTTP POST",
 
     // Microbit
-    "image.__constructor": "Image(leds) crée une image qui peut être affichée sur la grille de leds",
+    "Image.__constructor": "Image(leds) crée une image qui peut être affichée sur la grille de leds",
     "Accel.get_x": "retourne la valeur sur l'axe X de l'accélération en m/s²",
     "Button.is_pressed": "retourne True si le bouton est enfoncé, False sinon",
   },

@@ -229,12 +229,15 @@ export function ledMatrixModuleDefinition(context: QuickalgoLibrary, strings) {
             },
           },
         },
-         // TODO: constructor
-        // Image: {
-        //   methods: {
-        //
-        //   },
-        // },
+        Image: {
+          init: {
+            params: ['String'],
+            handler: function (self, image, callback) {
+              self.image = image;
+              callback();
+            },
+          },
+        },
       },
       classConstants: {
         Image: availableImages.reduce((cur, next) => {
