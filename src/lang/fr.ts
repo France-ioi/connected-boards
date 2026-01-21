@@ -49,6 +49,7 @@ export default {
     readRotaryAngle: "état du potentiomètre %1",
     readDistance: "distance mesurée par %1",
     readLightIntensity: "intensité lumineuse",
+    lightIntensity: "intensité lumineuse",
     readHumidity: "humidité ambiante",
 
     setServoAngle: "mettre le servo %1 à l'angle %2",

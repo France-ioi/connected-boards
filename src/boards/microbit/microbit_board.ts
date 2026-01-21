@@ -23,6 +23,7 @@ import {timeModuleDefinition} from "../../modules/time";
 import {buzzerModuleDefinition} from "../../modules/buzzer";
 import {soundModuleDefinition} from "../../modules/sound";
 import {ledMatrixModuleDefinition} from "../../modules/led_matrix";
+import {lightModuleDefinition} from "../../modules/light";
 
 interface MicrobitBoardInnerState {
   connected?: boolean,
@@ -335,7 +336,7 @@ export class MicrobitBoard extends AbstractBoard {
         },
       };
     });
-   ledMatrixModule.ledMatrixSetPixel.blocks.forEach((block: QuickalgoLibraryBlock) => {
+    ledMatrixModule.ledMatrixSetPixel.blocks.forEach((block: QuickalgoLibraryBlock) => {
       block.codeGenerators = {
         Python: (block) => {
           const x = block.getFieldValue('PARAM_0');
@@ -343,6 +344,15 @@ export class MicrobitBoard extends AbstractBoard {
           const intensity = block.getFieldValue('PARAM_2');
 
           return [`display.set_pixel(${x}, ${y}, ${intensity})`, window.Blockly.Python.ORDER_NONE];
+        },
+      };
+    });
+
+    const lightMatrixModule = lightModuleDefinition(context);
+    lightMatrixModule.lightIntensity.blocks.forEach((block: QuickalgoLibraryBlock) => {
+      block.codeGenerators = {
+        Python: () => {
+          return [`display.read_light_level()`, window.Blockly.Python.ORDER_NONE];
         },
       };
     });
@@ -377,6 +387,7 @@ export class MicrobitBoard extends AbstractBoard {
       ...useGeneratorName(buttonsModule, 'microbit'),
       ...useGeneratorName(buzzerModule, 'music'),
       ...useGeneratorName(ledMatrixModule, 'microbit'),
+      ...useGeneratorName(lightMatrixModule, 'microbit'),
       ...useGeneratorName(magnetometerModule, 'microbit'),
       ...useGeneratorName(soundModule, 'microbit'),
       ...useGeneratorName(temperatureModule, 'microbit'),

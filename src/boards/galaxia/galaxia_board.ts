@@ -23,6 +23,7 @@ import {useGeneratorName} from "../../modules/module_utils";
 import {magnetometerModuleDefinition} from "../../modules/magnetometer";
 import {temperatureModuleDefinition} from "../../modules/temperature";
 import {timeModuleDefinition} from "../../modules/time";
+import {lightModuleDefinition} from "../../modules/light";
 
 interface GalaxiaBoardInnerState {
   connected?: boolean,
@@ -308,6 +309,18 @@ export class GalaxiaBoard extends AbstractBoard {
       };
     });
 
+    const lightModule: any = lightModuleDefinition(context);
+    lightModule.lightIntensity.blocks.forEach((block: QuickalgoLibraryBlock) => {
+      block.codeGenerators = {
+        Python: () => {
+          return [`display.read_light_level()`, window.Blockly.Python.ORDER_NONE];
+        },
+      };
+    });
+    lightModule.lightIntensity.classMethods.Led = lightModule.lightIntensity.classMethods.Display;
+    lightModule.lightIntensity.classMethods.Led.instances = ['led'];
+    delete lightModule.lightIntensity.classMethods.Display;
+
     const magnetometerModule = magnetometerModuleDefinition(context, strings);
     magnetometerModule.readMagneticForce.blocks.forEach((block: QuickalgoLibraryBlock) => {
       block.codeGenerators = {
@@ -327,6 +340,7 @@ export class GalaxiaBoard extends AbstractBoard {
     const features: ModuleDefinition = {
       ...useGeneratorName(accelerometerModule, 'thingz'),
       ...useGeneratorName(buttonsModule, 'thingz'),
+      ...useGeneratorName(lightModule, 'thingz'),
       ...useGeneratorName(magnetometerModule, 'thingz'),
       ...useGeneratorName(temperatureModule, 'thingz'),
       ...useGeneratorName(timeModule, 'time'),
