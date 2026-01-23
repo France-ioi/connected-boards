@@ -1,6 +1,18 @@
 import {ModuleDefinition} from "./module_definition";
 import {QuickalgoLibrary} from "../definitions";
 
+const gesturesList = {
+  shake: 'shake',
+  up: 'logo up',
+  down: 'logo down',
+  'face up': 'face up',
+  'face down': 'face down',
+  left: 'left',
+  right: 'right',
+  freefall: 'freefall',
+  '3g': '3g',
+};
+
 export function accelerometerModuleDefinition(context: QuickalgoLibrary, strings) {
   const sensorHandler = context.sensorHandler;
 
@@ -26,6 +38,23 @@ export function accelerometerModuleDefinition(context: QuickalgoLibrary, strings
       let cb = context.runner.waitCallback(callback);
 
       let command = "readAcceleration(\"" + axis + "\")";
+      context.quickPiConnection.sendCommand(command, function (returnVal) {
+        cb(Number(returnVal));
+      });
+    }
+  };
+
+  const wasGesture = function (axis, callback) {
+    if (!context.display || context.autoGrading || context.offLineMode) {
+      let sensor = sensorHandler.findSensorByType("accelerometer");
+
+      let state = context.getSensorState(sensor.name);
+
+      context.waitDelay(callback, state);
+    } else {
+      let cb = context.runner.waitCallback(callback);
+
+      let command = "wasGesture(\"" + axis + "\")";
       context.quickPiConnection.sendCommand(command, function (returnVal) {
         cb(Number(returnVal));
       });
@@ -70,6 +99,38 @@ export function accelerometerModuleDefinition(context: QuickalgoLibrary, strings
               yieldsValue: 'int',
               handler: function (self, callback) {
                 readAcceleration('z', callback);
+              },
+            },
+          },
+        },
+      },
+    },
+    wasGesture: {
+      category: 'sensors',
+      blocks: [
+        {
+          name: "wasGesture",
+          yieldsValue: 'bool',
+          params: ["String"],
+          blocklyJson: {
+            "args0": [
+              {
+                "type": "field_dropdown", "name": "PARAM_0", "options": Object.entries(gesturesList),
+              }
+            ]
+          },
+          handler: wasGesture,
+        },
+      ],
+      classMethods: {
+        Accel: {
+          instances: ['accelerometer'],
+          methods: {
+            wasGesture: {
+              params: ["String"],
+              yieldsValue: 'bool',
+              handler: function (self, gesture, callback) {
+                wasGesture(gesture, callback);
               },
             },
           },

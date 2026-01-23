@@ -144,6 +144,7 @@ export interface QuickalgoLibrary {
   blocklyHelper: any,
   increaseTimeBy: (time: number) => void,
   registerQuickPiEvent:  (name: string, newState: unknown, setInSensor?: boolean, allowFail?: boolean) => void,
+  getPythonCode: () => Promise<string>,
 }
 
 export interface QuickAlgoConstant {

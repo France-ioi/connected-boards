@@ -41,7 +41,7 @@ export class GalaxiaBoard extends AbstractBoard {
   innerState: GalaxiaBoardInnerState = {};
   onUserEvent: (sensorName: string, state: unknown) => void;
 
-  init(selector, onUserEvent) {
+  init(selector, context, onUserEvent) {
     this.onUserEvent = onUserEvent;
     this.importGalaxia(selector);
 

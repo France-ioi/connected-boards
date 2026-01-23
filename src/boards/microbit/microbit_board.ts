@@ -1,5 +1,11 @@
 import {AbstractBoard} from "../abstract_board";
-import {BoardCustomBlocks, BoardDefinition, ConnectionMethod, QuickalgoLibraryBlock} from "../../definitions";
+import {
+  BoardCustomBlocks,
+  BoardDefinition,
+  ConnectionMethod,
+  QuickalgoLibrary,
+  QuickalgoLibraryBlock
+} from "../../definitions";
 import {thingzAccelerometerModuleDefinition} from "../../modules/thingz/accelerometer";
 import {thingzButtonsModuleDefinition} from "../../modules/thingz/buttons";
 import {thingzTemperatureModuleDefinition} from "../../modules/thingz/temperature";
@@ -41,8 +47,10 @@ export class MicrobitBoard extends AbstractBoard {
   initialized = false;
   innerState: MicrobitBoardInnerState = {};
   onUserEvent: (sensorName: string, state: unknown) => void;
+  context: QuickalgoLibrary;
 
-  init(selector, onUserEvent) {
+  init(selector, context, onUserEvent) {
+    this.context = context;
     this.onUserEvent = onUserEvent;
     this.importMicrobit(selector);
 
@@ -91,19 +99,16 @@ export class MicrobitBoard extends AbstractBoard {
     this.bindPinLogo('pin_logo');
 
     this.microbitDownloadHex.on('click', async (e) => {
-      window.task.getAnswer(async function (answer) {
-        const pythonCode = JSON.parse(answer).easy.document.lines.join("\n");
+      const pythonCode = await this.context.getPythonCode();
+      const hexFile = await convertToHex(pythonCode);
 
-        const hexFile = await convertToHex(pythonCode);
-
-        const a = window.document.createElement('a');
-        const blob = new Blob([hexFile], { type: 'application/octet-stream' });
-        a.href = window.URL.createObjectURL(blob);
-        a.download = 'microbit-' + Date.now() + '.hex';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      });
+      const a = window.document.createElement('a');
+      const blob = new Blob([hexFile], { type: 'application/octet-stream' });
+      a.href = window.URL.createObjectURL(blob);
+      a.download = 'microbit-' + Date.now() + '.hex';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     });
   }
 

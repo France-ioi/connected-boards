@@ -11,7 +11,7 @@ export abstract class AbstractBoard {
 
   abstract getConnection(): (userName: string, _onConnect: () => void, _onDisconnect: (wasConnected: boolean, wrongversion: boolean) => void, _onChangeBoard: (board: string) => void) => void
 
-  init(selector, onUserEvent) {
+  init(selector, context, onUserEvent) {
   }
 
   setStrings(strings) {

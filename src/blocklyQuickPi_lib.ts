@@ -1394,7 +1394,7 @@ var getContext = function (display, infos, curLevel) {
                 sensorHandler.drawSensor(sensor);
             }
 
-            context.sensorStateListener = mainBoard.init('#virtualBoard', onUserEvent);
+            context.sensorStateListener = mainBoard.init('#virtualBoard', context, onUserEvent);
         }
 
         this.raphaelFactory.destroyAll();
