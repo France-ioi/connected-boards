@@ -95,7 +95,7 @@ export interface QuickalgoLibraryBlock {
   variants?: any,
   hidden?: boolean,
   handler: Function,
-  codeGenerators?: {[languageName: string]: (block: BlocklyBlock) => [string, string]}
+  codeGenerators?: {[languageName: string]: (block: BlocklyBlock) => [string, string]|string}
 }
 
 export interface QuickalgoLibrary {

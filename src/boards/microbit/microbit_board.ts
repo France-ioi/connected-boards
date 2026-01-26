@@ -22,7 +22,7 @@ import {convertToHex} from "./microbit_hex";
 import {accelerometerModuleDefinition} from "../../modules/accelerometer";
 import {ModuleDefinition} from "../../modules/module_definition";
 import {buttonsModuleDefinition} from "../../modules/buttons";
-import {useGeneratorName} from "../../modules/module_utils";
+import {getBlockGeneratorParams, useGeneratorName} from "../../modules/module_utils";
 import {magnetometerModuleDefinition} from "../../modules/magnetometer";
 import {temperatureModuleDefinition} from "../../modules/temperature";
 import {timeModuleDefinition} from "../../modules/time";
@@ -100,6 +100,7 @@ export class MicrobitBoard extends AbstractBoard {
 
     this.microbitDownloadHex.on('click', async (e) => {
       const pythonCode = await this.context.getPythonCode();
+      console.log({pythonCode})
       const hexFile = await convertToHex(pythonCode);
 
       const a = window.document.createElement('a');
@@ -294,8 +295,8 @@ export class MicrobitBoard extends AbstractBoard {
     const accelerometerModule = accelerometerModuleDefinition(context, strings);
     accelerometerModule.readAcceleration.blocks.forEach((block: QuickalgoLibraryBlock) => {
       block.codeGenerators = {
-        Python: (block) => {
-          const axis = block.getFieldValue('PARAM_0');
+        Python: (blocklyBlock) => {
+          const axis = blocklyBlock.getFieldValue('PARAM_0');
 
           return [`accelerometer.get_${axis}()`, window.Blockly.Python.ORDER_NONE];
         },
@@ -319,36 +320,38 @@ export class MicrobitBoard extends AbstractBoard {
     const ledMatrixModule = ledMatrixModuleDefinition(context, strings);
     ledMatrixModule.ledMatrixShow.blocks.forEach((block: QuickalgoLibraryBlock) => {
       block.codeGenerators = {
-        Python: () => {
-          return [`display.show(TODO)`, window.Blockly.Python.ORDER_NONE];
+        Python: (blocklyBlock) => {
+          let blockParams = getBlockGeneratorParams(block, blocklyBlock, 'Python');
+          if ('ledMatrixShowImage' === block.name) {
+            blockParams = `Image(${blockParams})`;
+          }
+
+          return `display.show(${blockParams});\n`;
         },
       };
     });
     ledMatrixModule.ledMatrixClear.blocks.forEach((block: QuickalgoLibraryBlock) => {
       block.codeGenerators = {
         Python: () => {
-          return [`display.clear()`, window.Blockly.Python.ORDER_NONE];
+          return `display.clear();\n`;
         },
       };
     });
     ledMatrixModule.ledMatrixGetPixel.blocks.forEach((block: QuickalgoLibraryBlock) => {
       block.codeGenerators = {
-        Python: (block) => {
-          const x = block.getFieldValue('PARAM_0');
-          const y = block.getFieldValue('PARAM_1');
+        Python: (blocklyBlock) => {
+          const blockParams = getBlockGeneratorParams(block, blocklyBlock, 'Python');
 
-          return [`display.get_pixel(${x}, ${y})`, window.Blockly.Python.ORDER_NONE];
+          return [`display.get_pixel(${blockParams})`, window.Blockly.Python.ORDER_NONE];
         },
       };
     });
     ledMatrixModule.ledMatrixSetPixel.blocks.forEach((block: QuickalgoLibraryBlock) => {
       block.codeGenerators = {
-        Python: (block) => {
-          const x = block.getFieldValue('PARAM_0');
-          const y = block.getFieldValue('PARAM_1');
-          const intensity = block.getFieldValue('PARAM_2');
+        Python: (blocklyBlock) => {
+          const blockParams = getBlockGeneratorParams(block, blocklyBlock, 'Python');
 
-          return [`display.set_pixel(${x}, ${y}, ${intensity})`, window.Blockly.Python.ORDER_NONE];
+          return `display.set_pixel(${blockParams});\n`;
         },
       };
     });
@@ -369,6 +372,13 @@ export class MicrobitBoard extends AbstractBoard {
           const axis = block.getFieldValue('PARAM_0');
 
           return [`compass.get_${axis}()`, window.Blockly.Python.ORDER_NONE];
+        },
+      };
+    });
+    magnetometerModule.computeCompassHeading.blocks.forEach((block: QuickalgoLibraryBlock) => {
+      block.codeGenerators = {
+        Python: () => {
+          return [`compass.heading()`, window.Blockly.Python.ORDER_NONE];
         },
       };
     });

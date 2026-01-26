@@ -74,6 +74,9 @@ def readMagneticForce(axis):
         throw("Unknown axis")
     return round(val/100, 1)
 
+def computeCompassHeading():
+    return compass.heading()
+
 def readMagnetometerLSM303C(allowcalibration=True):
     return [readMagneticForce("x"), readMagneticForce("y"), readMagneticForce("z")]
 
