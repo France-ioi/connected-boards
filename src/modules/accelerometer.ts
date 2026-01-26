@@ -48,15 +48,15 @@ export function accelerometerModuleDefinition(context: QuickalgoLibrary, strings
     if (!context.display || context.autoGrading || context.offLineMode) {
       let sensor = sensorHandler.findSensorByType("accelerometer");
 
-      let state = context.getSensorState(sensor.name);
+      // let state = context.getSensorState(sensor.name);
 
-      context.waitDelay(callback, state);
+      context.waitDelay(callback, false);
     } else {
       let cb = context.runner.waitCallback(callback);
 
       let command = "wasGesture(\"" + axis + "\")";
       context.quickPiConnection.sendCommand(command, function (returnVal) {
-        cb(Number(returnVal));
+        cb(!!returnVal);
       });
     }
   };
@@ -126,7 +126,7 @@ export function accelerometerModuleDefinition(context: QuickalgoLibrary, strings
         Accel: {
           instances: ['accelerometer'],
           methods: {
-            wasGesture: {
+            was_gesture: {
               params: ["String"],
               yieldsValue: 'bool',
               handler: function (self, gesture, callback) {

@@ -139,7 +139,7 @@ export interface QuickalgoLibrary {
   sensorHandler: SensorHandler,
   getSensorState: (name: string) => any,
   waitForEvent: (action: (callback: Function) => void, func: Function) => void,
-  waitDelay: (callback: Function, delay?: number) => void,
+  waitDelay: (callback: Function, result?: unknown, delay?: number) => void,
   advanceToNextRelease: (sensorType: string, port: string) => void,
   blocklyHelper: any,
   increaseTimeBy: (time: number) => void,

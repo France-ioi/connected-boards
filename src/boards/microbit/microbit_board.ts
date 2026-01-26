@@ -302,6 +302,15 @@ export class MicrobitBoard extends AbstractBoard {
         },
       };
     });
+    accelerometerModule.wasGesture.blocks.forEach((block: QuickalgoLibraryBlock) => {
+      block.codeGenerators = {
+        Python: (blocklyBlock) => {
+          let blockParams = getBlockGeneratorParams(block, blocklyBlock, 'Python');
+
+          return [`accelerometer.was_gesture(${blockParams})`, window.Blockly.Python.ORDER_NONE];
+        },
+      };
+    });
 
     const buttonsModule = buttonsModuleDefinition(context, strings);
     buttonsModule.isButtonPressedWithName.blocks.forEach((block: QuickalgoLibraryBlock) => {

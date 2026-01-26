@@ -78,6 +78,7 @@ export default {
     noStroke: "ne pas dessiner les contours",
 
     readAcceleration: "accélération en (m/s²) dans l'axe %1",
+    wasGesture: "geste effectué",
     computeRotation: "calcul de l'angle de rotation (°) sur l'accéléromètre %1",
     readSoundLevel: "volume sonore",
     soundLevel: "volume sonore",
@@ -263,6 +264,7 @@ export default {
 
 
     readAcceleration: "readAcceleration(axis) lit l'accélération en m/s² sur l'axe (X, Y ou Z)",
+    wasGesture: "wasGesture(gesture) retourne True si le geste indiqué a été effectué",
     computeRotation: "computeRotation(axis) calcule l'angle de rotation en degrés sur l'accéléromètre",
 
     readSoundLevel: "readSoundLevel(port) retourne le volume ambiant",
@@ -310,6 +312,7 @@ export default {
     // Microbit
     "Image.__constructor": "Image(leds) crée une image qui peut être affichée sur la grille de leds",
     "Accel.get_x": "retourne la valeur sur l'axe X de l'accélération en m/s²",
+    "Accel.was_gesture": "retourne True si le geste indiqué a été effectué",
     "Button.is_pressed": "retourne True si le bouton est enfoncé, False sinon",
   },
   constant: {},

@@ -155,4 +155,8 @@ def turnBuzzerOn(pin=12):
 
 def turnBuzzerOff(pin=12):
     setBuzzerState("buzzer1", 0)
+    
+def wasGesture(gesture):
+    return accelerometer.was_gesture(gesture)
+
 `;
