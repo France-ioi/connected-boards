@@ -51,7 +51,7 @@ export class SensorDrawer {
     return undefined;
   }
 
-  drawSensor(sensor, juststate = false, donotmovefocusrect = false) {
+  drawSensor(sensor: AbstractSensor<any>, juststate = false, donotmovefocusrect = false) {
     // console.log('draw sensor', sensor, this.context, this.context.paper);
     // console.log(sensor.type)
     this.saveSensorStateIfNotRunning(sensor);
@@ -110,7 +110,6 @@ export class SensorDrawer {
 
       imgy += h * 0.05;
       state1y += h * 0.05;
-
     }
     if (sensor.type == "buzzer") {
       let sizeRatio = imgw / w;
@@ -120,6 +119,17 @@ export class SensorDrawer {
       }
     }
 
+    let focusRect = {
+      x: imgx,
+      y: imgy,
+      h: imgh,
+      w: imgw,
+    };
+    if (sensor.type == "accelerometer" ||
+      sensor.type == "gyroscope" ||
+      sensor.type == "magnetometer") {
+      focusRect.w = w*0.75;
+    }
 
     let portx = state1x;
     let porty = imgy;
@@ -145,17 +155,17 @@ export class SensorDrawer {
     let drawName = true;
 
     if (!sensor.focusrect || this.sensorHandler.isElementRemoved(sensor.focusrect)) {
-      sensor.focusrect = this.context.paper.rect(imgx, imgy, imgw, imgh);
+      sensor.focusrect = this.context.paper.rect(focusRect.x, focusRect.y, focusRect.w, focusRect.h);
     }
 
     sensor.focusrect.attr({
       "fill": "468DDF",
       "fill-opacity": 0,
       "opacity": 0,
-      "x": imgx,
-      "y": imgy,
-      "width": imgw,
-      "height": imgh,
+      "x": focusRect.x,
+      "y": focusRect.y,
+      "width": focusRect.w,
+      "height": focusRect.h,
     });
 
     if (this.context.autoGrading) {
