@@ -78,6 +78,8 @@ export abstract class AbstractSensor<T> {
   public context: QuickalgoLibrary;
   public lastState?: T;
   public showingTooltip?: boolean;
+  public portText?: any;
+  public muteBtn?: any;
 
   protected strings: any;
 

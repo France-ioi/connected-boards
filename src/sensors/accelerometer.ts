@@ -24,11 +24,9 @@ export class SensorAccelerometer extends AbstractSensor<any> {
         if (state == null)
           return "0m/s²";
 
-        if (Array.isArray(state))
-        {
-          return "X: " + state[0] + "m/s² Y: " + state[1] + "m/s² Z: " + state[2] + "m/s²";
-        }
-        else {
+        if (Array.isArray(state)) {
+          return ['X', 'Y', 'Z'].map((dir, index) => `${dir}: ${parseFloat(this.state[index].toFixed(1))} m/s²`).join(" ");
+        } else {
           return state.toString() + "m/s²";
         }
       },
@@ -81,7 +79,7 @@ export class SensorAccelerometer extends AbstractSensor<any> {
 
     if (this.state) {
       try {
-        let str = "X: " + this.state[0] + " m/s²\nY: " + this.state[1] + " m/s²\nZ: " + this.state[2] + " m/s²";
+        const str = ['X', 'Y', 'Z'].map((dir, index) => `${dir}: ${parseFloat(this.state[index].toFixed(1))} m/s²`).join("\n");
         this.stateText = this.context.paper.text(cx, state1y, str);
       } catch (e) {
         let a = 1;
