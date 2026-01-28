@@ -12,29 +12,31 @@ const availableImages = [
   {name: "HEART", value: "09090:99999:99999:09990:00900:"},
   {name: "HEART_SMALL", value: "00000:09090:09990:00900:00000:"},
   {name: "HAPPY", value: "00000:09090:00000:90009:09990:"},
-  {name: "SMILE", value: "00000:00000:00000:90009:09990:"},
+  // {name: "SMILE", value: "00000:00000:00000:90009:09990:"},
   {name: "SAD", value: "00000:09090:00000:09990:90009:"},
-  {name: "CONFUSED", value: "00000:09090:00000:09090:90909:"},
-  {name: "ANGRY", value: "90009:09090:00000:99999:90909:"},
-  {name: "ASLEEP", value: "00000:99099:00000:09990:00000:"},
-  {name: "SURPRISED", value: "09090:00000:00900:09090:00900:"},
-  {name: "SILLY", value: "90009:00000:99999:00909:00999:"},
-  {name: "FABULOUS", value: "99999:99099:00000:09090:09990:"},
-  {name: "MEH", value: "09090:00000:00090:00900:09000:"},
+  // {name: "CONFUSED", value: "00000:09090:00000:09090:90909:"},
+  // {name: "ANGRY", value: "90009:09090:00000:99999:90909:"},
+  // {name: "ASLEEP", value: "00000:99099:00000:09990:00000:"},
+  // {name: "SURPRISED", value: "09090:00000:00900:09090:00900:"},
+  // {name: "SILLY", value: "90009:00000:99999:00909:00999:"},
+  // {name: "FABULOUS", value: "99999:99099:00000:09090:09990:"},
+  // {name: "MEH", value: "09090:00000:00090:00900:09000:"},
   {name: "YES", value: "00000:00009:00090:90900:09000:"},
   {name: "NO", value: "90009:09090:00900:09090:90009:"},
+
   {name: "CLOCK12", value: "00900:00900:00900:00000:00000:"},
-  {name: "CLOCK1", value: "00090:00090:00900:00000:00000:"},
-  {name: "CLOCK2", value: "00000:00099:00900:00000:00000:"},
+  // {name: "CLOCK1", value: "00090:00090:00900:00000:00000:"},
+  // {name: "CLOCK2", value: "00000:00099:00900:00000:00000:"},
   {name: "CLOCK3", value: "00000:00000:00999:00000:00000:"},
-  {name: "CLOCK4", value: "00000:00000:00900:00099:00000:"},
-  {name: "CLOCK5", value: "00000:00000:00900:00090:00090:"},
+  // {name: "CLOCK4", value: "00000:00000:00900:00099:00000:"},
+  // {name: "CLOCK5", value: "00000:00000:00900:00090:00090:"},
   {name: "CLOCK6", value: "00000:00000:00900:00900:00900:"},
-  {name: "CLOCK7", value: "00000:00000:00900:09000:09000:"},
-  {name: "CLOCK8", value: "00000:00000:00900:99000:00000:"},
+  // {name: "CLOCK7", value: "00000:00000:00900:09000:09000:"},
+  // {name: "CLOCK8", value: "00000:00000:00900:99000:00000:"},
   {name: "CLOCK9", value: "00000:00000:99900:00000:00000:"},
-  {name: "CLOCK10", value: "00000:99000:00900:00000:00000:"},
-  {name: "CLOCK11", value: "09000:09000:00900:00000:00000:"},
+  // {name: "CLOCK10", value: "00000:99000:00900:00000:00000:"},
+  // {name: "CLOCK11", value: "09000:09000:00900:00000:00000:"},
+
   {name: "ARROW_N", value: "00900:09990:90909:00900:00900:"},
   {name: "ARROW_NE", value: "00999:00099:00909:09000:90000:"},
   {name: "ARROW_E", value: "00900:00090:99999:00090:00900:"},
@@ -43,36 +45,49 @@ const availableImages = [
   {name: "ARROW_SW", value: "00009:00090:90900:99000:99900:"},
   {name: "ARROW_W", value: "00900:09000:99999:09000:00900:"},
   {name: "ARROW_NW", value: "99900:99000:90900:00090:00009:"},
+
   {name: "TRIANGLE", value: "00000:00900:09090:99999:00000:"},
   {name: "TRIANGLE_LEFT", value: "90000:99000:90900:90090:99999:"},
-  {name: "CHESSBOARD", value: "09090:90909:09090:90909:09090:"},
+
+  // {name: "CHESSBOARD", value: "09090:90909:09090:90909:09090:"},
   {name: "DIAMOND", value: "00900:09090:90009:09090:00900:"},
   {name: "DIAMOND_SMALL", value: "00000:00900:09090:00900:00000:"},
+
   {name: "SQUARE", value: "99999:90009:90009:90009:99999:"},
   {name: "SQUARE_SMALL", value: "00000:09990:09090:09990:00000:"},
-  {name: "RABBIT", value: "90900:90900:99990:99090:99990:"},
-  {name: "COW", value: "90009:90009:99999:09990:00900:"},
+
+  // {name: "RABBIT", value: "90900:90900:99990:99090:99990:"},
+  // {name: "COW", value: "90009:90009:99999:09990:00900:"},
+
   {name: "MUSIC_CROTCHET", value: "00900:00900:00900:99900:99900:"},
   {name: "MUSIC_QUAVER", value: "00900:00990:00909:99900:99900:"},
   {name: "MUSIC_QUAVERS", value: "09999:09009:09009:99099:99099:"},
-  {name: "PITCHFORK", value: "90909:90909:99999:00900:00900:"},
-  {name: "XMAS", value: "00900:09990:00900:09990:99999:"},
-  {name: "PACMAN", value: "09999:99090:99900:99990:09999:"},
+
+  // {name: "PITCHFORK", value: "90909:90909:99999:00900:00900:"},
+  // {name: "XMAS", value: "00900:09990:00900:09990:99999:"},
+  // {name: "PACMAN", value: "09999:99090:99900:99990:09999:"},
+
   {name: "TARGET", value: "00900:09990:99099:09990:00900:"},
-  {name: "TSHIRT", value: "99099:99999:09990:09990:09990:"},
-  {name: "ROLLERSKATE", value: "00099:00099:99999:99999:09090:"},
-  {name: "DUCK", value: "09900:99900:09999:09990:00000:"},
+
+  // {name: "TSHIRT", value: "99099:99999:09990:09990:09990:"},
+  // {name: "ROLLERSKATE", value: "00099:00099:99999:99999:09090:"},
+  // {name: "DUCK", value: "09900:99900:09999:09990:00000:"},
+
   {name: "HOUSE", value: "00900:09990:99999:09990:09090:"},
-  {name: "TORTOISE", value: "00000:09990:99999:09090:00000:"},
-  {name: "BUTTERFLY", value: "99099:99999:00900:99999:99099:"},
-  {name: "STICKFIGURE", value: "00900:99999:00900:09090:90009:"},
-  {name: "GHOST", value: "99999:90909:99999:99999:90909:"},
-  {name: "SWORD", value: "00900:00900:00900:09990:00900:"},
-  {name: "GIRAFFE", value: "99000:09000:09000:09990:09090:"},
-  {name: "SKULL", value: "09990:90909:99999:09990:09990:"},
-  {name: "UMBRELLA", value: "09990:99999:00900:90900:09900:"},
-  {name: "SNAKE", value: "99000:99099:09090:09990:00000:"},
+
+  // {name: "TORTOISE", value: "00000:09990:99999:09090:00000:"},
+  // {name: "BUTTERFLY", value: "99099:99999:00900:99999:99099:"},
+  // {name: "STICKFIGURE", value: "00900:99999:00900:09090:90009:"},
+  // {name: "GHOST", value: "99999:90909:99999:99999:90909:"},
+  // {name: "SWORD", value: "00900:00900:00900:09990:00900:"},
+  // {name: "GIRAFFE", value: "99000:09000:09000:09990:09090:"},
+  // {name: "SKULL", value: "09990:90909:99999:09990:09990:"},
+  // {name: "UMBRELLA", value: "09990:99999:00900:90900:09900:"},
+  // {name: "SNAKE", value: "99000:99099:09090:09990:00000:"},
+
+  {name: "SCISSORS", value: "99009:99090:00900:99090:99009:"},
 ];
+
 
 const DISPLAY_INTERVAL = 625;
 
@@ -185,6 +200,24 @@ export function ledMatrixModuleDefinition(context: QuickalgoLibrary, strings) {
     }
   };
 
+  const filteredAvailableImages = context.infos.customLedMatrixImages ?
+    context.infos.customLedMatrixImages.map(image => {
+      if ('object' === typeof image) {
+        if (!image.name || !image.value) {
+          throw new Error(`Missing name or value for custom LED matrix image: ${JSON.stringify(image)}`);
+        }
+
+        return image;
+      }
+
+      const realImage = availableImages.find(otherImage => image === otherImage.name);
+      if (!realImage) {
+        throw new Error(`No LED matrix image exists for this name: ${image}`);
+      }
+
+      return realImage;
+    }) : availableImages;
+
   return {
     ledMatrixShow: {
       category: 'actuator',
@@ -210,7 +243,7 @@ export function ledMatrixModuleDefinition(context: QuickalgoLibrary, strings) {
               {
                 "type": "field_dropdown",
                 "name": "PARAM_0",
-                "options": availableImages.map(({name, value}) => [name, value]),
+                "options": filteredAvailableImages.map(({name, value}) => [name, value]),
               },
             ],
           },
@@ -240,7 +273,7 @@ export function ledMatrixModuleDefinition(context: QuickalgoLibrary, strings) {
         },
       },
       classConstants: {
-        Image: availableImages.reduce((cur, next) => {
+        Image: filteredAvailableImages.reduce((cur, next) => {
           cur[next.name] = next.value;
 
           return cur;

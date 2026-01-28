@@ -145,6 +145,9 @@ export interface QuickalgoLibrary {
   increaseTimeBy: (time: number) => void,
   registerQuickPiEvent:  (name: string, newState: unknown, setInSensor?: boolean, allowFail?: boolean) => void,
   getPythonCode: () => Promise<string>,
+  infos: {
+    customLedMatrixImages: {name: string, value: string}[],
+  },
 }
 
 export interface QuickAlgoConstant {
