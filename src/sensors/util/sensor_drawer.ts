@@ -416,13 +416,15 @@ export class SensorDrawer {
           offset = sensor.drawInfo.width * .70;
         }
 
+        console.log({offset, sign});
+
         // if offset is equal to 0, we need to reverse
         if (offset == 0) {
           for (let i = 0; i < sensor.state.length; i++) {
             let sliderobj = this.createSlider(sensor,
               max,
               min,
-              sensor.drawInfo.x + offset + (sign * Math.abs(i + 1 - sensor.state.length) * h / 5),
+              sensor.focusrect.attr('x') - 25 + offset + (sign * Math.abs(i + 1 - sensor.state.length) * h / 5),
               sensor.drawInfo.y,
               h,
               h,
