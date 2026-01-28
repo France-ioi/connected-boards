@@ -72,8 +72,10 @@ export class MicrobitBoard extends AbstractBoard {
     $(selector)
       .html(`${svgData}<div style="display: flex; align-items: center; margin-left: -30px; margin-right: 20px;"><button class="download_hex">.hex</button></div>`)
       .css('user-select', 'none')
-      .css('display', 'flex')
     ;
+    if ('none' !== $(selector).css('display')) {
+      $(selector).css('display', 'flex');
+    }
     this.microbitSvg = $(selector + ' svg');
     this.microbitDownloadHex = $(selector + ' .download_hex');
 

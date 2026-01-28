@@ -1367,9 +1367,9 @@ var getContext = function (display, infos, curLevel) {
         if (!context.quickPiZoom || !context.autoGrading)
             context.quickPiZoom = 1;
 
-        if(["galaxia", "microbit"].includes(context.infos.quickPiBoard)) {
+        if (["galaxia", "microbit"].includes(context.infos.quickPiBoard)) {
             if (context.autoGrading) {
-                $('#virtualBoard').hide();
+                $('#virtualBoard').css('display', 'none');
             } else {
                 $('#grid').css('display', 'flex');
                 if(context.infos.quickPiBoard == "microbit") {
