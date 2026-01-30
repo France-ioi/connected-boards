@@ -301,6 +301,10 @@ export class MicrobitConnection {
       } else if ('True' === data) {
         convertedData = true;
       }
+      if ('string' === typeof convertedData) {
+        convertedData = convertedData
+          .replace(/'/g, '"');
+      }
 
       callback(convertedData);
     });

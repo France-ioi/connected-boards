@@ -147,6 +147,7 @@ export interface QuickalgoLibrary {
   getPythonCode: () => Promise<string>,
   infos: {
     customLedMatrixImages: {name: string, value: string}[],
+    enabledGestures?: string[],
   },
 }
 

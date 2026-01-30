@@ -61,7 +61,7 @@ def readAcceleration(axis):
     return round(val/100, 1)
 
 def readAccelBMI160():
-    return [readAcceleration("x"), readAcceleration("y"), readAcceleration("z")]
+    return [readAcceleration("x"), readAcceleration("y"), readAcceleration("z"), accelerometer.current_gesture()]
 
 def readMagneticForce(axis):
     if axis == "x":

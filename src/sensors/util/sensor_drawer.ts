@@ -128,7 +128,7 @@ export class SensorDrawer {
     if (sensor.type == "accelerometer" ||
       sensor.type == "gyroscope" ||
       sensor.type == "magnetometer") {
-      focusRect.w = w*0.75;
+      focusRect.w = w*0.6;
     }
 
     let portx = state1x;
@@ -318,12 +318,16 @@ export class SensorDrawer {
     this.saveSensorStateIfNotRunning(sensor);
   }
 
-  setSlider(sensor, juststate, imgx, imgy, imgw, imgh, min, max) {
+  setSlider(sensor, juststate, imgx, imgy, imgw, imgh, min, max, slidersCount = undefined) {
+    if (!slidersCount) {
+      slidersCount = Array.isArray(sensor.state) ? sensor.state.length : 1;
+    }
+
     // console.log("setSlider",juststate)
     if (juststate) {
 
       if (Array.isArray(sensor.state)) {
-        for (let i = 0; i < sensor.state.length; i++) {
+        for (let i = 0; i < slidersCount; i++) {
           if (sensor.sliders[i] == undefined)
             continue;
 
@@ -410,7 +414,7 @@ export class SensorDrawer {
         let offset = 0;
         let sign = -1;
         if (sensor.drawInfo.x -
-          ((sensor.state.length - 1) * sensor.drawInfo.width / 5) < 0)
+          ((slidersCount - 1) * sensor.drawInfo.width / 5) < 0)
         {
           sign = 1;
           offset = sensor.drawInfo.width * .70;
@@ -420,11 +424,11 @@ export class SensorDrawer {
 
         // if offset is equal to 0, we need to reverse
         if (offset == 0) {
-          for (let i = 0; i < sensor.state.length; i++) {
+          for (let i = 0; i < slidersCount; i++) {
             let sliderobj = this.createSlider(sensor,
               max,
               min,
-              sensor.focusrect.attr('x') - 25 + offset + (sign * Math.abs(i + 1 - sensor.state.length) * h / 5),
+              sensor.focusrect.attr('x') - 25 + offset + (sign * Math.abs(i + 1 - slidersCount) * h / 5),
               sensor.drawInfo.y,
               h,
               h,
@@ -434,7 +438,7 @@ export class SensorDrawer {
           }
         }
         else {
-          for (let i = 0; i < sensor.state.length; i++) {
+          for (let i = 0; i < slidersCount; i++) {
             let sliderobj = this.createSlider(sensor,
               max,
               min,

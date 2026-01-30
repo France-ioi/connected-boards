@@ -44,17 +44,20 @@ export function accelerometerModuleDefinition(context: QuickalgoLibrary, strings
     }
   };
 
-  const wasGesture = function (axis, callback) {
+  const wasGesture = function (gesture, callback) {
     if (!context.display || context.autoGrading || context.offLineMode) {
       let sensor = sensorHandler.findSensorByType("accelerometer");
+      let state = context.getSensorState(sensor.name);
+      const wasGesture = state[3];
+      state[3] = null;
+      sensor.state = state;
+      context.registerQuickPiEvent(sensor.name, state);
 
-      // let state = context.getSensorState(sensor.name);
-
-      context.waitDelay(callback, false);
+      context.waitDelay(callback, wasGesture === gesture);
     } else {
       let cb = context.runner.waitCallback(callback);
 
-      let command = "wasGesture(\"" + axis + "\")";
+      let command = "wasGesture(\"" + gesture + "\")";
       context.quickPiConnection.sendCommand(command, function (returnVal) {
         cb(!!returnVal);
       });
