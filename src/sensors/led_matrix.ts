@@ -54,7 +54,7 @@ export class SensorLedMatrix extends AbstractSensor<SensorLedMatrixState> {
     return [[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]];
   }
 
-  draw(sensorHandler: SensorHandler, {imgx, imgy, imgw, imgh}) {
+  draw(sensorHandler: SensorHandler, {imgx, imgy, imgw, imgh, h}) {
     if (this.stateText)
       this.stateText.remove();
 
@@ -88,19 +88,22 @@ export class SensorLedMatrix extends AbstractSensor<SensorLedMatrixState> {
       }
     }
 
+    const offsetY = h * 0.08;
+    const squareSize = (imgh - offsetY) / 5;
+
     for (let y = 0; y < 5; y++) {
       for (let x = 0; x < 5; x++) {
         this.ledmatrixOn[y][x].attr({
           opacity: this.state[y][x] / 10,
-          x: imgx + (imgw / 5) * x,
-          y: imgy + (imgh / 5) * y,
+          x: imgx + squareSize * x,
+          y: imgy + offsetY + squareSize * y,
           width: imgw / 5,
           height: imgh / 5,
         });
 
         this.ledmatrixOff[y][x].attr({
-          x: imgx + (imgw / 5) * x,
-          y: imgy + (imgh / 5) * y,
+          x: imgx + squareSize * x,
+          y: imgy + offsetY + squareSize * y,
           width: imgw / 5,
           height: imgh / 5,
         });

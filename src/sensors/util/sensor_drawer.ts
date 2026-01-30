@@ -175,16 +175,16 @@ export class SensorDrawer {
       if (scrolloffset > 0)
         fadeopacity = 0.3;
 
-      imgw = w * .80;
-      imgh = sensor.drawInfo.height * .80;
-
-      imgx = sensor.drawInfo.x + (imgw * 0.75) + scrolloffset;
-      imgy = sensor.drawInfo.y + (sensor.drawInfo.height / 2) - (imgh / 2);
+      // imgw = w * .80;
+      // imgh = sensor.drawInfo.height * .80;
+      // imgw = imgh;
+      //
+      // imgy = sensor.drawInfo.y + (sensor.drawInfo.height / 2);
 
       state1x = imgx + imgw * 1.2;
       state1y = imgy + (imgh / 2);
 
-      portx = x;
+      portx = x + 5;
       porty = imgy + (imgh / 2);
 
       portsize = imgh / 3;

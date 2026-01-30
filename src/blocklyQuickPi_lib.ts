@@ -1067,11 +1067,17 @@ var getContext = function (display, infos, curLevel) {
             var color = true;
 
             for (let [iSensor, sensor] of context.sensorsList.all().entries()) {
+                let cellsAmount = sensorHandler.findSensorDefinition(sensor).cellsAmount;
+                const sensorWidth = cellsAmount ? cellsAmount(context.paper) : 1;
+
+                const ratio = sensorWidth === 1 ? 0.6 : 1;
+                const maxSize = context.sensorSize * 2.8;
+
                 sensor.drawInfo = {
                     x: 0,
                     y: 10 + (context.timeLineSlotHeight * iSensor),
-                    width: sensorSize * .90,
-                    height: sensorSize * .90
+                    width: maxSize * ratio,
+                    height: maxSize * ratio / sensorWidth,
                 };
 
                 var rect = context.paper.rect(0, sensor.drawInfo.y, context.paper.width, context.timeLineSlotHeight);
