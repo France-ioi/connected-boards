@@ -149,6 +149,13 @@ export interface QuickalgoLibrary {
     customLedMatrixImages: {name: string, value: string}[],
     enabledGestures?: string[],
   },
+  success: boolean,
+  failImmediately: string,
+  forceGradingWithoutDisplay: boolean,
+  maxTime: number,
+  loopsForever: boolean,
+  gradingStatesBySensor: {[sensorName: string]: {hit: boolean, time: number, state: unknown, input: boolean}[]},
+  actualStatesBySensor: {[sensorName: string]: {hit: boolean, time: number, state: unknown, input: boolean}[]},
 }
 
 export interface QuickAlgoConstant {

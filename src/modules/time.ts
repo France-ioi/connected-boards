@@ -2,6 +2,16 @@ import {ModuleDefinition} from "./module_definition";
 import {QuickalgoLibrary} from "../definitions";
 
 export function timeModuleDefinition(context: QuickalgoLibrary) {
+  const currentTime = (callback) => {
+    let millis = new Date().getTime();
+
+    if (context.autoGrading) {
+      millis = context.currentTime;
+    }
+
+    context.runner.waitDelay(callback, millis);
+  };
+
   const sleep = function (time, callback) {
     context.increaseTimeBy(time);
     if (!context.display || context.autoGrading) {
@@ -13,6 +23,16 @@ export function timeModuleDefinition(context: QuickalgoLibrary) {
   };
 
   return {
+    currentTime: {
+      category: 'sensors',
+      blocks: [
+        {
+          name: "currentTime",
+          yieldsValue: 'int',
+          handler: currentTime,
+        },
+      ],
+    },
     sleep: {
       category: 'actuator',
       blocks: [

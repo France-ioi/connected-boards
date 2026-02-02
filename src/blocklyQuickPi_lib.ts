@@ -7,7 +7,7 @@ import {showConfig} from "./config/config";
 import {getSessionStorage, setSessionStorage} from "./helpers/session_storage";
 import {SensorHandler} from "./sensors/util/sensor_handler";
 import {showasConnecting} from "./display";
-import {Sensor} from "./definitions";
+import {QuickalgoLibrary, Sensor} from "./definitions";
 import {SensorCollection} from "./sensors/sensor_collection";
 import {createSensor} from "./sensors/sensor_factory";
 import {SensorDrawTimeLineParameters} from "./sensors/abstract_sensor";
@@ -344,7 +344,7 @@ var getContext = function (display, infos, curLevel) {
     };
 
     infos.checkEndEveryTurn = true;
-    infos.checkEndCondition = function (context, lastTurn) {
+    infos.checkEndCondition = function (context: QuickalgoLibrary, lastTurn) {
 
         if (!context.display && !context.autoGrading && !context.forceGradingWithoutDisplay) {
             context.success = true;

@@ -21,6 +21,8 @@ import {rangeModuleDefinition} from "../../modules/range";
 import {gyroscopeModuleDefinition} from "../../modules/gyroscope";
 import {irtransModuleDefinition} from "../../modules/irtrans";
 import {irrecvModuleDefinition} from "../../modules/irrecv";
+import {humidityModuleDefinition} from "../../modules/humidity";
+import {cloudStoreModuleDefinition} from "../../modules/cloud_store";
 
 export class QuickPiBoard extends AbstractBoard {
   getBoardDefinitions() {
@@ -119,7 +121,10 @@ export class QuickPiBoard extends AbstractBoard {
     delete buzzerModule.pitch;
     delete buzzerModule.stop;
 
+    const cloudStoreModule = cloudStoreModuleDefinition(context, strings);
+
     const gyroscopeModule = gyroscopeModuleDefinition(context);
+    const humidityModule = humidityModuleDefinition(context);
 
     const irtransModule = irtransModuleDefinition(context, strings);
     const irrecvModule = irrecvModuleDefinition(context);
@@ -146,7 +151,9 @@ export class QuickPiBoard extends AbstractBoard {
       ...accelerometerModule,
       ...buttonsModule,
       ...buzzerModule,
+      ...cloudStoreModule,
       ...gyroscopeModule,
+      ...humidityModule,
       ...irrecvModule,
       ...irtransModule,
       ...ledModule,
