@@ -11,7 +11,6 @@ export default {
 
     setLedState: "passer la LED %1 à %2 ",
     toggleLedState: "inverser la LED %1",
-    setLedMatrixOne: "passer la LED %1 en position %2, %3 à %4",
 
     isLedOn: "LED allumée",
     isLedOnWithName: "LED %1 allumée",
@@ -109,7 +108,6 @@ export default {
     turnLedOn: "turnLedOn",
     turnLedOff: "turnLedOff",
     setLedState: "setLedState",
-    setLedMatrixOne: "setLedMatrixOne",
 
     isButtonPressed: "isButtonPressed",
     isButtonPressedWithName: "isButtonPressed",
@@ -208,7 +206,6 @@ export default {
     buttonWasPressed: "buttonWasPressed(button) indique si le bouton a été appuyé depuis le dernier appel à cette fonction",
     onButtonPressed: "onButtonPressed(button, fonction) appelle la fonction indiquée lorsque le bouton est appuyé",
     setLedState: "setLedState(led, state) modifie l'état de la LED : True pour l'allumer, False pour l'éteindre",
-    setLedMatrixOne: "setLedMatrixOne(x, y, state) modifie l'état d'une LED de la matrice",
     toggleLedState: "toggleLedState(led) inverse l'état de la LED",
     displayText: "displayText(line1, line2) affiche une ou deux lignes de texte. line2 est optionnel",
     displayText2Lines: "displayText(line1, line2) affiche une ou deux lignes de texte. line2 est optionnel",

@@ -101,9 +101,6 @@ def turnLedOn():
 def turnLedOff():
     setLedState("led", 0)
 
-def setLedRgbState(pin, rgb):
-    led.set_colors(rgb[0], rgb[1], rgb[2])
- 
 def isButtonPressed(name):
     if name == "button_a":
         return button_a.is_pressed()

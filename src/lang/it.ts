@@ -90,7 +90,6 @@ export default { // TODO
     turnLedOn: "turnLedOn",
     turnLedOff: "turnLedOff",
     setLedState: "setLedState",
-    setLedMatrixOne: "setLedMatrixOne",
 
     isButtonPressed: "isButtonPressed",
     isButtonPressedWithName: "isButtonPressed",

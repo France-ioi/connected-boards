@@ -15,6 +15,7 @@ import {soundModuleDefinition} from "../../modules/sound";
 import {lightModuleDefinition} from "../../modules/light";
 import {screenModuleDefinition} from "../../modules/screen";
 import {servoModuleDefinition} from "../../modules/servo";
+import {ledModuleDefinition} from "../../modules/led";
 
 export class QuickPiBoard extends AbstractBoard {
   getBoardDefinitions() {
@@ -113,6 +114,7 @@ export class QuickPiBoard extends AbstractBoard {
     delete buzzerModule.pitch;
     delete buzzerModule.stop;
 
+    const ledModule = ledModuleDefinition(context, strings);
     const lightModule = lightModuleDefinition(context);
 
     const magnetometerModule = magnetometerModuleDefinition(context, strings);
@@ -129,6 +131,7 @@ export class QuickPiBoard extends AbstractBoard {
       ...accelerometerModule,
       ...buttonsModule,
       ...buzzerModule,
+      ...ledModule,
       ...lightModule,
       ...magnetometerModule,
       ...screenModule,
