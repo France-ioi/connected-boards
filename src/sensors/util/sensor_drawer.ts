@@ -282,7 +282,7 @@ export class SensorDrawer {
 
     if (drawParameters.drawName) {
       if (sensor.name) {
-        let sensorId = sensor.name;
+        let sensorId = sensor.label ?? sensor.name;
         if (this.context.useportforname)
           sensorId = sensor.port;
 

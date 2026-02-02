@@ -61,6 +61,7 @@ export abstract class AbstractSensor<T> {
   public lastTimeIncrease?: number;
   public maxAnalog?: number;
   public minAnalog?: number;
+  public label?: string;
   public name?: string;
   public nameText?: any;
   public type: string;

@@ -136,21 +136,25 @@ export class SensorHandler {
 
   getSensorNames(sensorType: string) {
     return () => {
-      const sensorNames = this.getSensorNamesForType(sensorType);
+      const sensorNames = this.getSensorsForType(sensorType);
 
       if (0 === sensorNames.length) {
-        sensorNames.push('none');
+        sensorNames.push({name: 'none', label: 'none'});
       }
 
-      return sensorNames.map(name => ([name, name]));
+      return sensorNames.map(sensor => ([sensor.label, sensor.name]));
     }
   }
 
   getSensorNamesForType(sensorType: string): string[] {
-    let names = [];
+    return this.getSensorsForType(sensorType).map(el => el.name);
+  }
+
+  private getSensorsForType(sensorType: string): {name: string, label: string}[] {
+    let sensors = [];
     for (let sensor of this.context.sensorsList.all()) {
       if (sensor.type == sensorType) {
-        names.push(sensor.name);
+        sensors.push({name: sensor.name, label: sensor.label ?? sensor.name});
       }
     }
 
@@ -162,13 +166,13 @@ export class SensorHandler {
           for (let iStick = 0; iStick < stickDefinition.gpiosNames.length; iStick++) {
             let name = sensor.name + "." + stickDefinition.gpiosNames[iStick];
 
-            names.push(name);
+            sensors.push({name, label: name});
           }
         }
       }
     }
 
-    return names;
+    return sensors;
   }
 
   drawSensor(sensor, juststate = false, donotmovefocusrect = false) {
