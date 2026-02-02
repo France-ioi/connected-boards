@@ -95,8 +95,5 @@ export abstract class AbstractSensor<T> {
   public getLiveState?(callback: (returnVal: any) => void): void;
   public setLiveState?(state: T, callback): void;
   public getInitialState?(): T;
-
-  // public drawTimelineState(sensorHandler: SensorHandler, state: any, expectedState: any, type: string, drawParameters: SensorDrawTimeLineParameters): void {
-  //
-  // };
+  public drawTimelineState?(sensorHandler: SensorHandler, state: any, expectedState: any, type: string, drawParameters: SensorDrawTimeLineParameters): void;
 }

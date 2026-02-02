@@ -800,7 +800,7 @@ var getContext = function (display, infos, curLevel) {
             if(sensorDef && !sensorDef.isSensor && sensor.getInitialState) {
                 var initialState = sensor.getInitialState();
                 if (initialState != null)
-                    context.registerQuickPiEvent(sensor.name, initialState, true, true);
+                    context.registerQuickPiEvent(sensor.name, initialState, true, false);
             }
         }
 
@@ -1118,6 +1118,7 @@ var getContext = function (display, infos, curLevel) {
                     if (!context.loopsForever)
                         drawSensorTimeLineState(sensor, lastState, startTime, maxTime, "finnish", false);
 
+                    sensor.lastDrawnState = lastState;
                     sensor.lastAnalogState = null;
                 }
             }
@@ -1132,6 +1133,8 @@ var getContext = function (display, infos, curLevel) {
                     timelinestate.endTime,
                     timelinestate.type,
                     true);
+
+                timelinestate.sensor.lastDrawnState = timelinestate.state;
             }
         } else {
             var nSensors = context.sensorsList.size();
@@ -1171,11 +1174,11 @@ var getContext = function (display, infos, curLevel) {
             for (var row = 0; row < nbRows; row++) {
                 var y = geometry.size * row;
                 
-                if(row > 0){
+                // if(row > 0){
                     var line = context.paper.path(["M", x1,y,"L", x2,y]);
                     context.sensorDivisions.push(line);
                     line.attr(lineAttr);
-                }
+                // }
 
                 for (var col = 0; col < nbCol; col++) {
                     var x = cellW * col;
@@ -1952,30 +1955,31 @@ var getContext = function (display, infos, curLevel) {
         var color = false;
 
         var textStart = 0;
+        let bbox = null;
 
-        var timelabel = context.paper.text(textStart, context.timeLineY, strings.messages.timeLabel);
-        timelabel.attr({ "font-size": "10px", 'text-anchor': 'start', 'font-weight': 'bold', fill: "gray" });
-        context.timelineText.push(timelabel);
-        timelabel.node.style.MozUserSelect = "none";
-        timelabel.node.style.WebkitUserSelect = "none";
+        const timelabelText = context.paper.text(textStart, context.timeLineY, strings.messages.timeLabel);
+        timelabelText.attr({ "font-size": "10px", 'text-anchor': 'start', 'font-weight': 'bold', fill: "gray" });
+        context.timelineText.push(timelabelText);
+        timelabelText.node.style.MozUserSelect = "none";
+        timelabelText.node.style.WebkitUserSelect = "none";
 
-        var bbox = timelabel.getBBox();
+        bbox = timelabelText.getBBox();
         textStart = bbox.x + bbox.width + 3;
 
-        var timelabel = context.paper.text(textStart, context.timeLineY, '\uf00e');
-        timelabel.node.style.fontFamily = '"Font Awesome 5 Free"';
-        timelabel.node.style.fontWeight = "bold";
-        timelabel.node.style.MozUserSelect = "none";
-        timelabel.node.style.WebkitUserSelect = "none";
+        const timeLabelZoomPlus = context.paper.text(textStart, context.timeLineY, '\uf00e');
+        timeLabelZoomPlus.node.style.fontFamily = '"Font Awesome 5 Free"';
+        timeLabelZoomPlus.node.style.fontWeight = "bold";
+        timeLabelZoomPlus.node.style.MozUserSelect = "none";
+        timeLabelZoomPlus.node.style.WebkitUserSelect = "none";
 
-        timelabel.attr({ "font-size": "20" + "px",
+        timeLabelZoomPlus.attr({ "font-size": "20" + "px",
         'text-anchor': 'start',
          'font-weight': 'bold',
          'fill': "#4A90E2",
          });
-        context.timelineText.push(timelabel);
+        context.timelineText.push(timeLabelZoomPlus);
 
-        timelabel.click(function()
+        timeLabelZoomPlus.click(function()
         {
             var originalzoom = context.quickPiZoom;
             context.quickPiZoom += 0.3;
@@ -1987,24 +1991,23 @@ var getContext = function (display, infos, curLevel) {
                 context.resetDisplay();
         });
 
-
-        var bbox = timelabel.getBBox();
+        bbox = timeLabelZoomPlus.getBBox();
         textStart = bbox.x + bbox.width + 3;
 
-        var timelabel = context.paper.text(textStart, context.timeLineY, '\uf010');
-        timelabel.node.style.fontFamily = '"Font Awesome 5 Free"';
-        timelabel.node.style.fontWeight = "bold";
-        timelabel.node.style.MozUserSelect = "none";
-        timelabel.node.style.WebkitUserSelect = "none";
+        const timeLabelZoomMinus = context.paper.text(textStart, context.timeLineY, '\uf010');
+        timeLabelZoomMinus.node.style.fontFamily = '"Font Awesome 5 Free"';
+        timeLabelZoomMinus.node.style.fontWeight = "bold";
+        timeLabelZoomMinus.node.style.MozUserSelect = "none";
+        timeLabelZoomMinus.node.style.WebkitUserSelect = "none";
 
-        timelabel.attr({ "font-size": "20" + "px",
+        timeLabelZoomMinus.attr({ "font-size": "20" + "px",
          'text-anchor': 'start',
           'font-weight': 'bold',
            'fill': "#4A90E2",
          });
-        context.timelineText.push(timelabel);
+        context.timelineText.push(timeLabelZoomMinus);
 
-        timelabel.click(function()
+        timeLabelZoomMinus.click(function()
         {
             var originalzoom = context.quickPiZoom;
             context.quickPiZoom -= 0.3;
@@ -2026,7 +2029,7 @@ var getContext = function (display, infos, curLevel) {
                 labelText = (i / 1000).toFixed(0);
 
 
-            var timelabel = context.paper.text(x, context.timeLineY, labelText);
+            const timelabel = context.paper.text(x, context.timeLineY, labelText);
 
             timelabel.attr({ "font-size": "15px", 'text-anchor': 'center', 'font-weight': 'bold', fill: "gray" });
             timelabel.node.style = "-moz-user-select: none; -webkit-user-select: none;";
@@ -2168,7 +2171,7 @@ var getContext = function (display, infos, curLevel) {
         if (!context.loopsForever) {
             var endx = context.timelineStartx + (context.maxTime * context.pixelsPerTime);
             var x = context.timelineStartx + (i * context.pixelsPerTime);
-            var timelabel = context.paper.text(x, context.timeLineY, '\uf11e');
+            const timelabel = context.paper.text(x, context.timeLineY, '\uf11e');
             timelabel.node.style.fontFamily = '"Font Awesome 5 Free"';
             timelabel.node.style.fontWeight = "bold";
             timelabel.node.style.MozUserSelect = "none";
@@ -2527,9 +2530,6 @@ var getContext = function (display, infos, curLevel) {
         }
 
         if (context.autoGrading && context.gradingStatesBySensor != undefined && !allowFail) {
-            var fail = false;
-            var type = "actual";
-
             if(!context.actualStatesBySensor[name]) {
                 context.actualStatesBySensor[name] = [];
             }
@@ -2581,9 +2581,9 @@ var getContext = function (display, infos, curLevel) {
 
         if(newState !== null && sensor.lastDrawnState != newState) {
             // Draw the new state change
-            if(sensor.lastDrawnState === null) {
-                sensor.lastDrawnState = newState;
-            }
+            // if(sensor.lastDrawnState === null) {
+            //     sensor.lastDrawnState = newState;
+            // }
 
             var type = "actual";
             // Check the new state
@@ -2777,7 +2777,7 @@ var getContext = function (display, infos, curLevel) {
 
         context.increaseTime(sensor);
 
-        return state;
+        return JSON.parse(JSON.stringify(state));
     }
 
     // This will advance grading time to the next button release for waitForButton

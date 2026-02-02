@@ -9,7 +9,6 @@ export class SensorScreen extends AbstractSensor<any> {
   private screenrect: any;
   private canvasNode: any;
   public canvas: any;
-  private lastScreenState: any;
   private tooltip;
   private tooltipText;
   public isDrawingScreen?: boolean;
@@ -243,12 +242,15 @@ export class SensorScreen extends AbstractSensor<any> {
   }
 
   drawTimelineState(sensorHandler: SensorHandler, state: any, expectedState: any, type: string, drawParameters: SensorDrawTimeLineParameters) {
+    if (!state) {
+      return;
+    }
+
     const {startx, ypositionmiddle, color, strokewidth, ypositiontop} = drawParameters;
 
-    var sensorDef = sensorHandler.findSensorDefinition(this);
-    if (type != "actual" || !this.lastScreenState || !sensorDef.compareState(this.lastScreenState, state))
+    let sensorDef = sensorHandler.findSensorDefinition(this);
+    if (type != "actual" || !this.lastDrawnState || !sensorDef.compareState(this.lastDrawnState, state))
     {
-      this.lastScreenState = state;
       let stateBubble;
       if (state.isDrawingData) {
         stateBubble = this.context.paper.text(startx, ypositiontop + 10, '\uf303');

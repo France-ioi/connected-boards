@@ -312,7 +312,7 @@ export default {
     // Microbit
     "Image.__constructor": "Image(leds) crée une image qui peut être affichée sur la grille de leds",
     "Accel.get_x": "retourne la valeur sur l'axe X de l'accélération en m/s²",
-    "Accel.was_gesture": "retourne True si le geste indiqué a été effectué",
+    "Accel.was_gesture": "accelerometer.was_gesture(gesture) retourne True si le geste indiqué a été effectué",
     "Button.is_pressed": "retourne True si le bouton est enfoncé, False sinon",
   },
   constant: {},

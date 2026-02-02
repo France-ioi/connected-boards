@@ -137,25 +137,35 @@ export class SensorLedMatrix extends AbstractSensor<SensorLedMatrixState> {
   }
 
   drawTimelineState(sensorHandler: SensorHandler, state: SensorLedMatrixState, expectedState: SensorLedMatrixState, type: string, drawParameters: SensorDrawTimeLineParameters) {
-    const drawBubble = () => {
-      const table = `<table>
-        ${state.map((line, y) => 
-          `<tr>
-            ${line.map((cell, x) =>
-              `<td style="width: 20px; height: 20px; position: relative; background: lightgrey; border: solid 1px darkgrey">
-                <div style="top: 0; left: 0; right: 0; bottom: 0; position: absolute; background: red; opacity: ${state[y][x]/10}"></div>
-              </td>`
-            ).join('')}
-          </tr>`,
-        ).join('')}
-        </table>`;
-
-      const div = document.createElement("div");
-      $(div).html(table);
-
-      return div;
+    if (!state) {
+      return;
     }
 
-    drawBubbleTimeline<SensorLedMatrixState>(this, sensorHandler, state, expectedState, type, drawParameters, drawBubble);
+    const sensorDef = sensorHandler.findSensorDefinition(this);
+
+    if (type != "actual" || !this.lastDrawnState || !sensorDef.compareState(this.lastDrawnState, state)) {
+      const drawBubble = () => {
+        const table = `<table>
+          ${state.map((line, y) => 
+            `<tr>
+              ${line.map((cell, x) =>
+                `<td style="width: 20px; height: 20px; position: relative; background: lightgrey; border: solid 1px darkgrey">
+                  <div style="top: 0; left: 0; right: 0; bottom: 0; position: absolute; background: red; opacity: ${state[y][x]/10}"></div>
+                </td>`
+              ).join('')}
+            </tr>`,
+          ).join('')}
+          </table>`;
+
+        const div = document.createElement("div");
+        $(div).html(table);
+
+        return div;
+      }
+
+      drawBubbleTimeline<SensorLedMatrixState>(this, sensorHandler, state, expectedState, type, drawParameters, drawBubble);
+    } else {
+      drawParameters.deleteLastDrawnElements = false;
+    }
   }
 }

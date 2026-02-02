@@ -6,7 +6,6 @@ import {quickPiLocalLanguageStrings} from "../lang/language_strings";
 import {LocalQuickStore} from "./util/local_quickpi_store";
 
 export class SensorCloudStore extends AbstractSensor<any> {
-  private lastScreenState: any;
   public type = 'cloudstore';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
@@ -209,8 +208,8 @@ export class SensorCloudStore extends AbstractSensor<any> {
     const {startx, ypositionmiddle, color} = drawParameters;
 
     const sensorDef = sensorHandler.findSensorDefinition(this);
-    if (type != "actual" || !this.lastScreenState || !sensorDef.compareState(this.lastScreenState, state)) {
-      this.lastScreenState = state;
+    if (type != "actual" || !this.lastDrawnState || !sensorDef.compareState(this.lastDrawnState, state)) {
+      this.lastDrawnState = state;
       var stateBubble = this.context.paper.text(startx, ypositionmiddle + 10, '\uf044');
 
       stateBubble.attr({

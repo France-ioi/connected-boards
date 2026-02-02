@@ -92,8 +92,6 @@ const availableImages = [
 const DISPLAY_INTERVAL = 625;
 
 export function ledMatrixModuleDefinition(context: QuickalgoLibrary, strings) {
-  const sensorHandler = context.sensorHandler;
-
   const displayLedStates = async (sensor: SensorLedMatrix, states: string[], command: string, callback) => {
     const live = !(!context.display || context.autoGrading || context.offLineMode);
 

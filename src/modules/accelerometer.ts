@@ -49,10 +49,6 @@ export function accelerometerModuleDefinition(context: QuickalgoLibrary, strings
       let sensor = sensorHandler.findSensorByType("accelerometer");
       let state = context.getSensorState(sensor.name);
       const wasGesture = state[3];
-      state[3] = null;
-      sensor.state = state;
-      context.registerQuickPiEvent(sensor.name, state);
-
       context.waitDelay(callback, wasGesture === gesture);
     } else {
       let cb = context.runner.waitCallback(callback);
