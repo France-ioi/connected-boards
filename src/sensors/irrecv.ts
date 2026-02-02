@@ -7,7 +7,8 @@ import {generateIrRemoteDialog} from "./irtrans";
 export class SensorIrRecv extends AbstractSensor<any> {
   private buttonon: any;
   private buttonoff: any;
-  private waitingForIrMessage: (code: string) => void;
+  public waitingForIrMessage: (code: string) => void;
+  public waitingForIrMessageTimeout: ReturnType<typeof setTimeout>;
   public type = 'irrecv';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {

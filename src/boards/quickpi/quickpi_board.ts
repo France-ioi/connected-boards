@@ -16,6 +16,11 @@ import {lightModuleDefinition} from "../../modules/light";
 import {screenModuleDefinition} from "../../modules/screen";
 import {servoModuleDefinition} from "../../modules/servo";
 import {ledModuleDefinition} from "../../modules/led";
+import {potentiometerModuleDefinition} from "../../modules/potentiometer";
+import {rangeModuleDefinition} from "../../modules/range";
+import {gyroscopeModuleDefinition} from "../../modules/gyroscope";
+import {irtransModuleDefinition} from "../../modules/irtrans";
+import {irrecvModuleDefinition} from "../../modules/irrecv";
 
 export class QuickPiBoard extends AbstractBoard {
   getBoardDefinitions() {
@@ -114,10 +119,19 @@ export class QuickPiBoard extends AbstractBoard {
     delete buzzerModule.pitch;
     delete buzzerModule.stop;
 
+    const gyroscopeModule = gyroscopeModuleDefinition(context);
+
+    const irtransModule = irtransModuleDefinition(context, strings);
+    const irrecvModule = irrecvModuleDefinition(context);
+
     const ledModule = ledModuleDefinition(context, strings);
     const lightModule = lightModuleDefinition(context);
 
     const magnetometerModule = magnetometerModuleDefinition(context, strings);
+
+    const potentiometerModule = potentiometerModuleDefinition(context);
+    const rangeModule = rangeModuleDefinition(context);
+
     const screenModule = screenModuleDefinition(context, strings);
     const servoModule = servoModuleDefinition(context);
     const soundModule = soundModuleDefinition(context);
@@ -127,13 +141,19 @@ export class QuickPiBoard extends AbstractBoard {
     delete timeModule.sleep_sec;
     delete timeModule.sleep_us;
 
+
     const features: ModuleDefinition = {
       ...accelerometerModule,
       ...buttonsModule,
       ...buzzerModule,
+      ...gyroscopeModule,
+      ...irrecvModule,
+      ...irtransModule,
       ...ledModule,
       ...lightModule,
       ...magnetometerModule,
+      ...potentiometerModule,
+      ...rangeModule,
       ...screenModule,
       ...servoModule,
       ...soundModule,

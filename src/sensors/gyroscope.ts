@@ -8,10 +8,10 @@ export class SensorGyroscope extends AbstractSensor<any> {
   private canvas: any;
   private canvasNode: any;
   private screenrect: any;
-  private rotationAngles: number[];
-  private previousState: number[];
+  public rotationAngles: number[];
+  public previousState: number[];
   private old_state: number[];
-  private lastSpeedChange: Date;
+  public lastSpeedChange: Date;
   public type = 'gyroscope';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {

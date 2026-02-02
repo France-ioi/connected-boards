@@ -124,7 +124,7 @@ export interface QuickalgoLibrary {
   resetDisplay: () => void,
   remoteIRcodes: {[preset: string]: any},
   board: string,
-  findSensor: (type: string, port: string, error: boolean) => AbstractSensor<any>,
+  findSensor: <T extends AbstractSensor<any>>(type: string, port: string, error?: boolean) => T|null,
   useportforname: boolean,
   compactLayout: boolean,
   sensorsSaved: {[name: string]: any},
