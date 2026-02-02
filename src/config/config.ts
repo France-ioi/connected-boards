@@ -49,7 +49,7 @@ export function showConfig({context, strings, mainBoard}) {
     for (let sensor of context.sensorsList.all()) {
       let sensorDefinition = sensorHandler.findSensorDefinition(sensor);
 
-      addGridElement("sensorGrid", 0, sensor.name, sensor.name, sensorDefinition.selectorImages[0], sensor.port);
+      addGridElement("sensorGrid", 0, sensor.name, sensor.label ?? sensor.name, sensorDefinition.selectorImages[0], sensor.port);
     }
 
     updateAddGrid();
