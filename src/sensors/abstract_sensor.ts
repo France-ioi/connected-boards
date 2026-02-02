@@ -71,7 +71,6 @@ export abstract class AbstractSensor<T> {
   public state?: T;
   public builtin?: boolean;
   public showAsAnalog?: boolean;
-  public isDrawingScreen?: boolean;
   public removed?: boolean;
   public stateText: any;
   public timelinelastxlabel?: number[];

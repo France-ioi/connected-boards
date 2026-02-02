@@ -65,6 +65,9 @@ export class SensorHandler {
 
     if (sensorDef && !sensorDef.compareState) {
       sensorDef.compareState = function (state1, state2) {
+        // if ((state1 === undefined || state1 === null) && (state2 === undefined || state2 === null)) {
+        //   return true;
+        // }
         if (Array.isArray(state1) && Array.isArray(state2)) {
           return JSON.stringify(state1) === JSON.stringify(state2)
         }
@@ -114,7 +117,7 @@ export class SensorHandler {
     return null;
   }
 
-  findSensorByType<T>(type: string): AbstractSensor<T>|null {
+  findSensorByType<T extends AbstractSensor<any>>(type: string): T|null {
     for (let sensor of this.context.sensorsList.all()) {
       if (sensor.type == type) {
         return sensor;

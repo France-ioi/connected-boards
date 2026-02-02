@@ -3,15 +3,17 @@ import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
 import {screenDrawing} from "./util/screen";
-import {quickpiModuleDefinition} from "../modules/quickpi/quickpi";
+import {initScreenDrawing} from "../modules/screen";
 
 export class SensorScreen extends AbstractSensor<any> {
   private screenrect: any;
   private canvasNode: any;
-  private canvas: any;
+  public canvas: any;
   private lastScreenState: any;
   private tooltip;
   private tooltipText;
+  public isDrawingScreen?: boolean;
+  public screenDrawing: screenDrawing;
   public type = 'screen';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
@@ -213,15 +215,14 @@ export class SensorScreen extends AbstractSensor<any> {
 
         this.screenrect.attr({"opacity": 0});
 
-        const quickPiModuleDefinition = quickpiModuleDefinition(this.context, this.strings);
-        quickPiModuleDefinition.blockImplementations.initScreenDrawing(this);
+        initScreenDrawing(this);
 
         //sensor.screenDrawing.copyToCanvas(sensor.canvas, screenScale);
         screenDrawing.renderToCanvas(this.state, this.canvas, screenScale);
       } else {
         let statex = drawParameters.imgx + (drawParameters.imgw * .05);
 
-        let statey = drawParameters.imgy + (drawParameters.imgh * .2);
+        let statey = drawParameters.imgy + (drawParameters.imgh * .2) + 5 + (this.state.line2 ? drawParameters.statesize : 0);
 
         if (this.state.line1.length > 16)
           this.state.line1 = this.state.line1.substring(0, 16);
