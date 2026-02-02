@@ -1,5 +1,6 @@
 import {ModuleDefinition} from "./module_definition";
 import {QuickalgoLibrary} from "../definitions";
+import {SensorAccelerometer} from "../sensors/accelerometer";
 
 const gesturesList = {
   shake: 'shake',
@@ -18,7 +19,7 @@ export function accelerometerModuleDefinition(context: QuickalgoLibrary, strings
 
   const readAcceleration = function (axis, callback) {
     if (!context.display || context.autoGrading || context.offLineMode) {
-      let sensor = sensorHandler.findSensorByType("accelerometer");
+      let sensor = sensorHandler.findSensorByType<SensorAccelerometer>("accelerometer");
 
       let index = 0;
       if (axis == "x")
@@ -44,9 +45,41 @@ export function accelerometerModuleDefinition(context: QuickalgoLibrary, strings
     }
   };
 
+  const computeRotation = (rotationType, callback) => {
+    if (!context.display || context.autoGrading || context.offLineMode) {
+      let sensor = sensorHandler.findSensorByType<SensorAccelerometer>("accelerometer");
+
+      let zsign = 1;
+      let result = 0;
+
+      if (sensor.state[2] < 0)
+        zsign = -1;
+
+      if (rotationType == "pitch")
+      {
+        result = 180 * Math.atan2 (sensor.state[0], zsign * Math.sqrt(sensor.state[1]*sensor.state[1] + sensor.state[2]*sensor.state[2]))/Math.PI;
+      }
+      else if (rotationType == "roll")
+      {
+        result = 180 * Math.atan2 (sensor.state[1], zsign * Math.sqrt(sensor.state[0]*sensor.state[0] + sensor.state[2]*sensor.state[2]))/Math.PI;
+      }
+
+      result = Math.round(result);
+
+      context.waitDelay(callback, result);
+    } else {
+      let cb = context.runner.waitCallback(callback);
+      let command = "computeRotation(\"" + rotationType + "\")";
+
+      context.quickPiConnection.sendCommand(command, function (returnVal) {
+        cb(returnVal);
+      });
+    }
+  };
+
   const wasGesture = function (gesture, callback) {
     if (!context.display || context.autoGrading || context.offLineMode) {
-      let sensor = sensorHandler.findSensorByType("accelerometer");
+      let sensor = sensorHandler.findSensorByType<SensorAccelerometer>("accelerometer");
       let state = context.getSensorState(sensor.name);
       const wasGesture = state[3];
       context.waitDelay(callback, wasGesture === gesture);
@@ -103,6 +136,24 @@ export function accelerometerModuleDefinition(context: QuickalgoLibrary, strings
           },
         },
       },
+    },
+     computeRotation: {
+      category: 'sensors',
+      blocks: [
+        {
+          name: "computeRotation",
+          yieldsValue: 'int',
+          params: ["String"],
+          blocklyJson: {
+            "args0": [
+              {
+                "type": "field_dropdown", "name": "PARAM_0", "options": [["pitch", "pitch"], ["roll", "roll"]]
+              }
+            ]
+          },
+          handler: computeRotation,
+        },
+      ],
     },
     wasGesture: {
       category: 'sensors',
