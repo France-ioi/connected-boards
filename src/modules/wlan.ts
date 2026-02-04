@@ -172,25 +172,22 @@ export function wlanModuleDefinition(context: QuickalgoLibrary, strings) {
       classMethods: {
         WLAN: {
           defaultInstanceName: 'wlan',
-          instances: ['wlan'],
           init: {
             params: ["Number"],
             handler: wlanConstructor,
           },
         },
       },
-      classConstants: {
-        WLAN: {
-          STA_IF: '0',
-          AP_IF: '1',
-        },
+      constants: {
+        STA_IF: '0',
+        AP_IF: '1',
       },
     },
     wlanActive: {
       category: 'actuator',
       classMethods: {
         WLAN: {
-          instances: ['wlan'],
+          defaultInstanceName: 'wlan',
           methods: {
             active: {
               params: ["Boolean"],
@@ -204,7 +201,7 @@ export function wlanModuleDefinition(context: QuickalgoLibrary, strings) {
       category: 'actuator',
       classMethods: {
         WLAN: {
-          instances: ['wlan'],
+          defaultInstanceName: 'wlan',
           methods: {
             scan: {
               handler: wlanScan,
@@ -217,7 +214,7 @@ export function wlanModuleDefinition(context: QuickalgoLibrary, strings) {
       category: 'actuator',
       classMethods: {
         WLAN: {
-          instances: ['wlan'],
+          defaultInstanceName: 'wlan',
           methods: {
             connect: {
               params: ["String", "String"],
@@ -231,7 +228,7 @@ export function wlanModuleDefinition(context: QuickalgoLibrary, strings) {
       category: 'actuator',
       classMethods: {
         WLAN: {
-          instances: ['wlan'],
+          defaultInstanceName: 'wlan',
           methods: {
             disconnect: {
               handler: wlanDisconnect,
@@ -244,7 +241,7 @@ export function wlanModuleDefinition(context: QuickalgoLibrary, strings) {
       category: 'actuator',
       classMethods: {
         WLAN: {
-          instances: ['wlan'],
+          defaultInstanceName: 'wlan',
           methods: {
             isconnected: {
               yieldsValue: "bool",
@@ -258,7 +255,7 @@ export function wlanModuleDefinition(context: QuickalgoLibrary, strings) {
       category: 'actuator',
       classMethods: {
         WLAN: {
-          instances: ['wlan'],
+          defaultInstanceName: 'wlan',
           methods: {
             ifconfig: {
               yieldsValue: "string",

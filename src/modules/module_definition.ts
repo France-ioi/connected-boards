@@ -13,7 +13,7 @@ export interface ModuleFeature {
   blocks?: QuickalgoLibraryBlock[],
   classMethods?: {[className: string]: ModuleClassDefinition},
   classConstants?: {[className: string]: {[name: string]: string}},
-  // constants?: QuickAlgoConstant[],
+  constants?: {[name: string]: string},
 }
 
 export type ModuleDefinition = {[featureName: string]: ModuleFeature};

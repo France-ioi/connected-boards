@@ -157,18 +157,6 @@ export interface QuickalgoLibrary {
   actualStatesBySensor: {[sensorName: string]: {hit: boolean, time: number, state: unknown, input: boolean}[]},
 }
 
-export interface QuickAlgoConstant {
-  name: string,
-  value: any,
-}
-
-export interface QuickAlgoCustomClass {
-  defaultInstanceName?: string,
-  init?: QuickalgoLibraryBlock,
-  blocks: QuickalgoLibraryBlock[],
-  constants?: QuickAlgoConstant[],
-}
-
 export interface SensorDefinition {
   name?: string,
   suggestedName?: string,
