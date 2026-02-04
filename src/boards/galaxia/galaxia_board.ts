@@ -1,21 +1,23 @@
 import {AbstractBoard} from "../abstract_board";
-import {BoardCustomBlocks, BoardDefinition, ConnectionMethod} from "../../definitions";
-import {thingzAccelerometerModuleDefinition} from "../../modules/thingz/accelerometer";
-import {thingzButtonsModuleDefinition} from "../../modules/thingz/buttons";
-import {thingzTemperatureModuleDefinition} from "../../modules/thingz/temperature";
-import {thingzLedModuleDefinition} from "../../modules/thingz/led";
-import {machinePinModuleDefinition} from "../../modules/machine/pin";
-import {machinePwmModuleDefinition} from "../../modules/machine/pwm";
-import {timeSleepModuleDefinition} from "../../modules/time/sleep";
+import {BoardDefinition, ConnectionMethod, QuickalgoLibraryBlock} from "../../definitions";
 // @ts-ignore
 import galaxiaSvg from '../../../images/galaxia.svg';
-import {networkWlanModuleDefinition} from "../../modules/network/wlan";
-import {requestsModuleDefinition} from "../../modules/requests/requests";
-import {jsonModuleDefinition} from "../../modules/json/json";
-import {machinePulseModuleDefinition} from "../../modules/machine/pulse";
 import {GalaxiaConnection} from "./galaxia_connexion";
-import {thingzCompassModuleDefinition} from "../../modules/thingz/compass";
-import {mergeModuleDefinitions} from "../board_util";
+import {ModuleDefinition} from "../../modules/module_definition";
+import {accelerometerModuleDefinition} from "../../modules/accelerometer";
+import {buttonsModuleDefinition} from "../../modules/buttons";
+import {useGeneratorName} from "../../modules/module_utils";
+import {magnetometerModuleDefinition} from "../../modules/magnetometer";
+import {temperatureModuleDefinition} from "../../modules/temperature";
+import {timeModuleDefinition} from "../../modules/time";
+import {lightModuleDefinition} from "../../modules/light";
+import {jsonModuleDefinition} from "../../modules/json";
+import {pinModuleDefinition} from "../../modules/pin";
+import {pulseModuleDefinition} from "../../modules/pulse";
+import {pwmModuleDefinition} from "../../modules/pwm";
+import {requestsModuleDefinition} from "../../modules/requests";
+import {wlanModuleDefinition} from "../../modules/wlan";
+import {ledRgbModuleDefinition} from "../../modules/led_rgb";
 
 interface GalaxiaBoardInnerState {
   connected?: boolean,
@@ -33,7 +35,7 @@ export class GalaxiaBoard extends AbstractBoard {
   innerState: GalaxiaBoardInnerState = {};
   onUserEvent: (sensorName: string, state: unknown) => void;
 
-  init(selector, onUserEvent) {
+  init(selector, context, onUserEvent) {
     this.onUserEvent = onUserEvent;
     this.importGalaxia(selector);
 
@@ -198,7 +200,16 @@ export class GalaxiaBoard extends AbstractBoard {
           "A": [0, 1, 2, 6, 7, 8, 12, 13, 14, 15, 16, 19, 20],
         },
         builtinSensors: [
-          {type: "ledrgb", suggestedName: 'led'},
+          { type: "accelerometer", suggestedName: this.strings.messages.sensorNameAccelerometer },
+          { type: "magnetometer", suggestedName: this.strings.messages.sensorNameMagnetometer },
+          { type: "buzzer", suggestedName: this.strings.messages.sensorNameBuzzer },
+          { type: "temperature", suggestedName: this.strings.messages.sensorNameTemperature },
+          { type: "light", suggestedName: this.strings.messages.sensorNameLight },
+          { type: "range", suggestedName: this.strings.messages.sensorNameDistance, port: 'D9' },
+          { type: "wifi", suggestedName: this.strings.messages.sensorNameWifi },
+            // { type: "led", name: 'led', port: 'D5'},
+            // { type: "leddim", name: 'leddim', port: 'D8'},
+          {type: "ledrgb", suggestedName: this.strings.messages.sensorNameLed },
           {type: "button", suggestedName: 'button_a'},
           {type: "button", suggestedName: 'button_b'},
           {type: "button", suggestedName: 'touch_n'},
@@ -226,46 +237,95 @@ export class GalaxiaBoard extends AbstractBoard {
     return galaxiaConnection;
   }
 
-  getCustomBlocks(context, strings): BoardCustomBlocks {
-    const accelerometerModule = thingzAccelerometerModuleDefinition(context, strings);
-    const compassModule = thingzCompassModuleDefinition(context, strings);
-    const buttonModule = thingzButtonsModuleDefinition(context, strings);
-    const temperatureModule = thingzTemperatureModuleDefinition(context, strings);
-    const ledModule = thingzLedModuleDefinition(context, strings);
-    const pinModule = machinePinModuleDefinition(context, strings);
-    const pwmModule = machinePwmModuleDefinition(context, strings);
-    const pulseModule = machinePulseModuleDefinition(context, strings);
-    const timeModule = timeSleepModuleDefinition(context, strings);
-    const wlanModule = networkWlanModuleDefinition(context, strings);
-    const requestsModule = requestsModuleDefinition(context, strings);
-    const jsonModule = jsonModuleDefinition(context, strings);
+  getCustomFeatures(context, strings): ModuleDefinition {
+    const accelerometerModule = accelerometerModuleDefinition(context, strings);
+    accelerometerModule.readAcceleration.blocks.forEach((block: QuickalgoLibraryBlock) => {
+      block.codeGenerators = {
+        Python: (block) => {
+          const axis = block.getFieldValue('PARAM_0');
 
-    return mergeModuleDefinitions({
-      thingz: [
-        accelerometerModule,
-        compassModule,
-        buttonModule,
-        ledModule,
-        temperatureModule,
-      ],
-      machine: [
-        pinModule,
-        pwmModule,
-        pulseModule,
-      ],
-      network: [
-        wlanModule,
-      ],
-      requests: [
-        requestsModule,
-      ],
-      time: [
-        timeModule,
-      ],
-      json: [
-        jsonModule,
-      ],
+          return [`accelerometer.get_${axis}()`, window.Blockly.Python.ORDER_NONE];
+        },
+      };
     });
+
+    const buttonsModule = buttonsModuleDefinition(context, strings);
+    buttonsModule.isButtonPressedWithName.blocks.forEach((block: QuickalgoLibraryBlock) => {
+      block.codeGenerators = {
+        Python: (block) => {
+          const button = block.getFieldValue('PARAM_0');
+          const method = 'touch' === button.substring(0, 5) ? 'is_touched' : 'is_pressed';
+
+          return [`${button}.${method}()`, window.Blockly.Python.ORDER_NONE];
+        },
+      };
+    });
+
+    const jsonModule = jsonModuleDefinition(context);
+
+    const ledRgbModule = ledRgbModuleDefinition(context);
+
+    const lightModule: any = lightModuleDefinition(context);
+    lightModule.lightIntensity.blocks.forEach((block: QuickalgoLibraryBlock) => {
+      block.codeGenerators = {
+        Python: () => {
+          return [`display.read_light_level()`, window.Blockly.Python.ORDER_NONE];
+        },
+      };
+    });
+    lightModule.lightIntensity.classMethods.Led = lightModule.lightIntensity.classMethods.Display;
+    lightModule.lightIntensity.classMethods.Led.instances = ['led'];
+    delete lightModule.lightIntensity.classMethods.Display;
+
+    const magnetometerModule = magnetometerModuleDefinition(context, strings);
+    magnetometerModule.readMagneticForce.blocks.forEach((block: QuickalgoLibraryBlock) => {
+      block.codeGenerators = {
+        Python: (block) => {
+          const axis = block.getFieldValue('PARAM_0');
+
+          return [`compass.get_${axis}()`, window.Blockly.Python.ORDER_NONE];
+        },
+      };
+    });
+
+    const pinModule = pinModuleDefinition(context);
+    const pulseModule = pulseModuleDefinition(context);
+    const pwmModule = pwmModuleDefinition(context);
+
+    const requestsModule = requestsModuleDefinition(context, strings);
+
+    const temperatureModule = temperatureModuleDefinition(context);
+
+    const timeModule = timeModuleDefinition(context);
+    timeModule.sleep = timeModule.sleep_sec;
+
+    const wlanModule = wlanModuleDefinition(context, strings);
+
+    const features: ModuleDefinition = {
+      ...useGeneratorName(accelerometerModule, 'thingz'),
+      ...useGeneratorName(buttonsModule, 'thingz'),
+      ...useGeneratorName(jsonModule, 'json'),
+      ...useGeneratorName(ledRgbModule, 'thingz'),
+      ...useGeneratorName(lightModule, 'thingz'),
+      ...useGeneratorName(magnetometerModule, 'thingz'),
+      ...useGeneratorName(pinModule, 'machine'),
+      ...useGeneratorName(pulseModule, 'machine'),
+      ...useGeneratorName(pwmModule, 'machine'),
+      ...useGeneratorName(requestsModule, 'requests'),
+      ...useGeneratorName(temperatureModule, 'thingz'),
+      ...useGeneratorName(timeModule, 'time'),
+      ...useGeneratorName(wlanModule, 'network'),
+    };
+
+    for (let feature of Object.values(features)) {
+      if (feature.classMethods) {
+        for (let block of feature.blocks ?? []) {
+          block.hidden = true;
+        }
+      }
+    }
+
+    return features;
   }
 }
 

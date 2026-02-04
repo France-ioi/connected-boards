@@ -61,6 +61,7 @@ export abstract class AbstractSensor<T> {
   public lastTimeIncrease?: number;
   public maxAnalog?: number;
   public minAnalog?: number;
+  public label?: string;
   public name?: string;
   public nameText?: any;
   public type: string;
@@ -70,7 +71,6 @@ export abstract class AbstractSensor<T> {
   public state?: T;
   public builtin?: boolean;
   public showAsAnalog?: boolean;
-  public isDrawingScreen?: boolean;
   public removed?: boolean;
   public stateText: any;
   public timelinelastxlabel?: number[];
@@ -78,6 +78,8 @@ export abstract class AbstractSensor<T> {
   public context: QuickalgoLibrary;
   public lastState?: T;
   public showingTooltip?: boolean;
+  public portText?: any;
+  public muteBtn?: any;
 
   protected strings: any;
 
@@ -90,10 +92,8 @@ export abstract class AbstractSensor<T> {
   }
 
   public abstract draw(sensorHandler: SensorHandler, parameters: SensorDrawParameters): void;
+  public getLiveState?(callback: (returnVal: any) => void): void;
   public setLiveState?(state: T, callback): void;
   public getInitialState?(): T;
-
-  // public drawTimelineState(sensorHandler: SensorHandler, state: any, expectedState: any, type: string, drawParameters: SensorDrawTimeLineParameters): void {
-  //
-  // };
+  public drawTimelineState?(sensorHandler: SensorHandler, state: any, expectedState: any, type: string, drawParameters: SensorDrawTimeLineParameters): void;
 }

@@ -90,7 +90,6 @@ export default { // TODO
     turnLedOn: "turnLedOn",
     turnLedOff: "turnLedOff",
     setLedState: "setLedState",
-    setLedMatrixOne: "setLedMatrixOne",
 
     isButtonPressed: "isButtonPressed",
     isButtonPressedWithName: "isButtonPressed",
@@ -424,8 +423,9 @@ export default { // TODO
 
     sensorNameBuzzer: "buzzer",
     sensorNameLed: "led",
-    sensorNameLedRgb: "ledRgb",
-    sensorNameLedDim: "ledDim",
+    sensorNameLedRgb: "led_rgb",
+    sensorNameLedDim: "led_dim",
+    sensorNameLedMatrix: 'led_matrix',
     sensorNameRedLed: "redled",
     sensorNameGreenLed: "greenled",
     sensorNameBlueLed: "blueled",

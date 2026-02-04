@@ -1,4 +1,5 @@
-import {BoardCustomBlocks, BoardDefinition, ConnectionMethod} from "../definitions";
+import {BoardDefinition, ConnectionMethod} from "../definitions";
+import {ModuleDefinition} from "../modules/module_definition";
 
 export abstract class AbstractBoard {
   protected strings: any = {};
@@ -10,7 +11,7 @@ export abstract class AbstractBoard {
 
   abstract getConnection(): (userName: string, _onConnect: () => void, _onDisconnect: (wasConnected: boolean, wrongversion: boolean) => void, _onChangeBoard: (board: string) => void) => void
 
-  init(selector, onUserEvent) {
+  init(selector, context, onUserEvent) {
   }
 
   setStrings(strings) {
@@ -24,9 +25,8 @@ export abstract class AbstractBoard {
     });
   }
 
-  getCustomBlocks(context, strings): BoardCustomBlocks {
+  getCustomFeatures(context, strings): ModuleDefinition {
     return {
-      customBlocks: {},
     };
   }
 }

@@ -112,7 +112,7 @@ export class screenDrawing {
     }
   }
 
-  noFill(color) {
+  noFill() {
     this.noFillStatus = true;
   }
 
@@ -130,7 +130,7 @@ export class screenDrawing {
     }
   }
 
-  noStroke(color) {
+  noStroke() {
     this.noStrokeStatus = true;
   }
 

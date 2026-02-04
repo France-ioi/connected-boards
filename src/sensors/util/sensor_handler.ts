@@ -65,6 +65,9 @@ export class SensorHandler {
 
     if (sensorDef && !sensorDef.compareState) {
       sensorDef.compareState = function (state1, state2) {
+        // if ((state1 === undefined || state1 === null) && (state2 === undefined || state2 === null)) {
+        //   return true;
+        // }
         if (Array.isArray(state1) && Array.isArray(state2)) {
           return JSON.stringify(state1) === JSON.stringify(state2)
         }
@@ -89,7 +92,7 @@ export class SensorHandler {
     return false;
   }
 
-  findSensorByName(name, error=false): AbstractSensor<any>|null {
+  findSensorByName<T extends AbstractSensor<any>>(name, error=false): T|null {
     if (isNaN(name.substring(0, 1)) && !isNaN(name.substring(1))) {
       for (let sensor of this.context.sensorsList.all()) {
         if (sensor.port.toUpperCase() == name.toUpperCase()) {
@@ -114,7 +117,7 @@ export class SensorHandler {
     return null;
   }
 
-  findSensorByType(type: string): AbstractSensor<any>|null {
+  findSensorByType<T extends AbstractSensor<any>>(type: string): T|null {
     for (let sensor of this.context.sensorsList.all()) {
       if (sensor.type == type) {
         return sensor;
@@ -134,35 +137,45 @@ export class SensorHandler {
     return null;
   }
 
-  getSensorNames(sensorType) {
+  getSensorNames(sensorType: string) {
     return () => {
-      let ports = [];
-      for (let sensor of this.context.sensorsList.all()) {
-        if (sensor.type == sensorType) {
-          ports.push([sensor.name, sensor.name]);
-        }
+      const sensorNames = this.getSensorsForType(sensorType);
+
+      if (0 === sensorNames.length) {
+        sensorNames.push({name: 'none', label: 'none'});
       }
 
-      if (sensorType == "button") {
-        for (let sensor of this.context.sensorsList.all()) {
-          if (sensor.type == "stick") {
-            let stickDefinition = this.findSensorDefinition(sensor);
+      return sensorNames.map(sensor => ([sensor.label, sensor.name]));
+    }
+  }
 
-            for (let iStick = 0; iStick < stickDefinition.gpiosNames.length; iStick++) {
-              let name = sensor.name + "." + stickDefinition.gpiosNames[iStick];
+  getSensorNamesForType(sensorType: string): string[] {
+    return this.getSensorsForType(sensorType).map(el => el.name);
+  }
 
-              ports.push([name, name]);
-            }
+  private getSensorsForType(sensorType: string): {name: string, label: string}[] {
+    let sensors = [];
+    for (let sensor of this.context.sensorsList.all()) {
+      if (sensor.type == sensorType) {
+        sensors.push({name: sensor.name, label: sensor.label ?? sensor.name});
+      }
+    }
+
+    if (sensorType == "button") {
+      for (let sensor of this.context.sensorsList.all()) {
+        if (sensor.type == "stick") {
+          let stickDefinition = this.findSensorDefinition(sensor);
+
+          for (let iStick = 0; iStick < stickDefinition.gpiosNames.length; iStick++) {
+            let name = sensor.name + "." + stickDefinition.gpiosNames[iStick];
+
+            sensors.push({name, label: name});
           }
         }
       }
-
-      if (ports.length == 0) {
-        ports.push(["none", "none"]);
-      }
-
-      return ports;
     }
+
+    return sensors;
   }
 
   drawSensor(sensor, juststate = false, donotmovefocusrect = false) {

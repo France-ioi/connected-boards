@@ -16,7 +16,6 @@ export const quickPiLocalLanguageStrings = {
       waitForButton: "Stops program execution until a button is pressed",
       buttonWasPressed: "Returns true if the button has been pressed and will clear the value",
       setLedState: "Change led state in the given port",
-      setLedMatrixOne: "Change led state in the given port",
       toggleLedState: "If led is on, turns it off, if it's off turns it on",
       isButtonPressedWithName: "Returns the state of a button, Pressed means True and not pressed means False",
       displayText: "Display text in LCD screen",

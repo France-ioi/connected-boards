@@ -13,7 +13,7 @@ export class SensorStick extends AbstractSensor<any> {
   private imgright: any;
   private imgcenter: any;
   private stateArrow: any;
-  protected portText;
+  declare public portText?: any;
   public type = 'stick';
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {

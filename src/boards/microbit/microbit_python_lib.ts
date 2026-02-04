@@ -61,7 +61,7 @@ def readAcceleration(axis):
     return round(val/100, 1)
 
 def readAccelBMI160():
-    return [readAcceleration("x"), readAcceleration("y"), readAcceleration("z")]
+    return [readAcceleration("x"), readAcceleration("y"), readAcceleration("z"), accelerometer.current_gesture()]
 
 def readMagneticForce(axis):
     if axis == "x":
@@ -73,6 +73,9 @@ def readMagneticForce(axis):
     else:
         throw("Unknown axis")
     return round(val/100, 1)
+
+def computeCompassHeading():
+    return compass.heading()
 
 def readMagnetometerLSM303C(allowcalibration=True):
     return [readMagneticForce("x"), readMagneticForce("y"), readMagneticForce("z")]
@@ -98,9 +101,6 @@ def turnLedOn():
 def turnLedOff():
     setLedState("led", 0)
 
-def setLedRgbState(pin, rgb):
-    led.set_colors(rgb[0], rgb[1], rgb[2])
- 
 def isButtonPressed(name):
     if name == "button_a":
         return button_a.is_pressed()
@@ -152,4 +152,8 @@ def turnBuzzerOn(pin=12):
 
 def turnBuzzerOff(pin=12):
     setBuzzerState("buzzer1", 0)
+    
+def wasGesture(gesture):
+    return accelerometer.was_gesture(gesture)
+
 `;

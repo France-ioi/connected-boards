@@ -1,18 +1,25 @@
 import {AbstractBoard} from "../abstract_board";
-import {BoardCustomBlocks, BoardDefinition, ConnectionMethod} from "../../definitions";
-import {thingzAccelerometerModuleDefinition} from "../../modules/thingz/accelerometer";
-import {thingzButtonsModuleDefinition} from "../../modules/thingz/buttons";
-import {thingzTemperatureModuleDefinition} from "../../modules/thingz/temperature";
-import {timeSleepModuleDefinition} from "../../modules/time/sleep";
+import {
+  BoardDefinition,
+  ConnectionMethod,
+  QuickalgoLibrary,
+  QuickalgoLibraryBlock
+} from "../../definitions";
 // @ts-ignore
 import microbitSvg from '../../../images/microbit.svg';
 import {MicrobitConnection} from "./microbit_connexion";
-import {displayModuleDefinition} from "../../modules/microbit/display";
-import {thingzCompassModuleDefinition} from "../../modules/thingz/compass";
-import {microphoneModuleDefinition} from "../../modules/microbit/microphone";
-import {mergeModuleDefinitions} from "../board_util";
-import {musicModuleDefinition} from "../../modules/microbit/music";
 import {convertToHex} from "./microbit_hex";
+import {accelerometerModuleDefinition} from "../../modules/accelerometer";
+import {ModuleDefinition} from "../../modules/module_definition";
+import {buttonsModuleDefinition} from "../../modules/buttons";
+import {getBlockGeneratorParams, useGeneratorName} from "../../modules/module_utils";
+import {magnetometerModuleDefinition} from "../../modules/magnetometer";
+import {temperatureModuleDefinition} from "../../modules/temperature";
+import {timeModuleDefinition} from "../../modules/time";
+import {buzzerModuleDefinition} from "../../modules/buzzer";
+import {soundModuleDefinition} from "../../modules/sound";
+import {ledMatrixModuleDefinition} from "../../modules/led_matrix";
+import {lightModuleDefinition} from "../../modules/light";
 
 interface MicrobitBoardInnerState {
   connected?: boolean,
@@ -30,8 +37,10 @@ export class MicrobitBoard extends AbstractBoard {
   initialized = false;
   innerState: MicrobitBoardInnerState = {};
   onUserEvent: (sensorName: string, state: unknown) => void;
+  context: QuickalgoLibrary;
 
-  init(selector, onUserEvent) {
+  init(selector, context, onUserEvent) {
+    this.context = context;
     this.onUserEvent = onUserEvent;
     this.importMicrobit(selector);
 
@@ -53,8 +62,10 @@ export class MicrobitBoard extends AbstractBoard {
     $(selector)
       .html(`${svgData}<div style="display: flex; align-items: center; margin-left: -30px; margin-right: 20px;"><button class="download_hex">.hex</button></div>`)
       .css('user-select', 'none')
-      .css('display', 'flex')
     ;
+    if ('none' !== $(selector).css('display')) {
+      $(selector).css('display', 'flex');
+    }
     this.microbitSvg = $(selector + ' svg');
     this.microbitDownloadHex = $(selector + ' .download_hex');
 
@@ -80,19 +91,17 @@ export class MicrobitBoard extends AbstractBoard {
     this.bindPinLogo('pin_logo');
 
     this.microbitDownloadHex.on('click', async (e) => {
-      window.task.getAnswer(async function (answer) {
-        const pythonCode = JSON.parse(answer).easy.document.lines.join("\n");
+      const pythonCode = await this.context.getPythonCode();
+      console.log({pythonCode})
+      const hexFile = await convertToHex(pythonCode);
 
-        const hexFile = await convertToHex(pythonCode);
-
-        const a = window.document.createElement('a');
-        const blob = new Blob([hexFile], { type: 'application/octet-stream' });
-        a.href = window.URL.createObjectURL(blob);
-        a.download = 'microbit-' + Date.now() + '.hex';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      });
+      const a = window.document.createElement('a');
+      const blob = new Blob([hexFile], { type: 'application/octet-stream' });
+      a.href = window.URL.createObjectURL(blob);
+      a.download = 'microbit-' + Date.now() + '.hex';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     });
   }
 
@@ -217,6 +226,14 @@ export class MicrobitBoard extends AbstractBoard {
         builtinSensors: [
           {type: "button", suggestedName: 'button_a'},
           {type: "button", suggestedName: 'button_b'},
+          {type: "button", suggestedName: 'pin_logo'},
+          { type: "temperature", suggestedName: this.strings.messages.sensorNameTemperature },
+          { type: "light", suggestedName: this.strings.messages.sensorNameLight },
+          { type: "accelerometer", suggestedName: this.strings.messages.sensorNameAccelerometer },
+          { type: "magnetometer", suggestedName: this.strings.messages.sensorNameMagnetometer },
+          { type: "ledmatrix", suggestedName: this.strings.messages.sensorNameLedMatrix },
+          { type: "sound", suggestedName: 'sound', unit: ''},
+          { type: "buzzer", suggestedName: this.strings.messages.sensorNameBuzzer },
         ],
       },
     ];
@@ -238,32 +255,142 @@ export class MicrobitBoard extends AbstractBoard {
     return microbitConnection;
   }
 
-  getCustomBlocks(context, strings): BoardCustomBlocks {
-    const accelerometerModule = thingzAccelerometerModuleDefinition(context, strings);
-    const compassModule = thingzCompassModuleDefinition(context, strings);
-    const buttonModule = thingzButtonsModuleDefinition(context, strings);
-    const temperatureModule = thingzTemperatureModuleDefinition(context, strings);
-    const timeModule = timeSleepModuleDefinition(context, strings);
-    const displayModule = displayModuleDefinition(context, strings);
-    const microphoneModule = microphoneModuleDefinition(context, strings);
-    const musicModule = musicModuleDefinition(context, strings);
+  getCustomFeatures(context, strings): ModuleDefinition {
+    const accelerometerModule = accelerometerModuleDefinition(context, strings);
+    accelerometerModule.readAcceleration.blocks.forEach((block: QuickalgoLibraryBlock) => {
+      block.codeGenerators = {
+        Python: (blocklyBlock) => {
+          const axis = blocklyBlock.getFieldValue('PARAM_0');
 
-    return mergeModuleDefinitions({
-      microbit: [
-        accelerometerModule,
-        compassModule,
-        buttonModule,
-        temperatureModule,
-        displayModule,
-        microphoneModule,
-      ],
-      music: [
-        musicModule,
-      ],
-      time: [
-        timeModule,
-      ],
+          return [`accelerometer.get_${axis}()`, window.Blockly.Python.ORDER_NONE];
+        },
+      };
     });
+    accelerometerModule.wasGesture.blocks.forEach((block: QuickalgoLibraryBlock) => {
+      block.codeGenerators = {
+        Python: (blocklyBlock) => {
+          let blockParams = getBlockGeneratorParams(block, blocklyBlock, 'Python');
+
+          return [`accelerometer.was_gesture(${blockParams})`, window.Blockly.Python.ORDER_NONE];
+        },
+      };
+    });
+
+    const buttonsModule = buttonsModuleDefinition(context, strings);
+    buttonsModule.isButtonPressedWithName.blocks.forEach((block: QuickalgoLibraryBlock) => {
+      block.codeGenerators = {
+        Python: (block) => {
+          const button = block.getFieldValue('PARAM_0');
+          const method = 'pin_logo' === button ? 'is_touched' : 'is_pressed';
+
+          return [`${button}.${method}()`, window.Blockly.Python.ORDER_NONE];
+        },
+      };
+    });
+
+    const buzzerModule = buzzerModuleDefinition(context, strings);
+
+    const ledMatrixModule = ledMatrixModuleDefinition(context, strings);
+    ledMatrixModule.ledMatrixShow.blocks.forEach((block: QuickalgoLibraryBlock) => {
+      block.codeGenerators = {
+        Python: (blocklyBlock) => {
+          let blockParams = getBlockGeneratorParams(block, blocklyBlock, 'Python');
+          if ('ledMatrixShowImage' === block.name) {
+            blockParams = `Image(${blockParams})`;
+          }
+
+          return `display.show(${blockParams});\n`;
+        },
+      };
+    });
+    ledMatrixModule.ledMatrixClear.blocks.forEach((block: QuickalgoLibraryBlock) => {
+      block.codeGenerators = {
+        Python: () => {
+          return `display.clear();\n`;
+        },
+      };
+    });
+    ledMatrixModule.ledMatrixGetPixel.blocks.forEach((block: QuickalgoLibraryBlock) => {
+      block.codeGenerators = {
+        Python: (blocklyBlock) => {
+          const blockParams = getBlockGeneratorParams(block, blocklyBlock, 'Python');
+
+          return [`display.get_pixel(${blockParams})`, window.Blockly.Python.ORDER_NONE];
+        },
+      };
+    });
+    ledMatrixModule.ledMatrixSetPixel.blocks.forEach((block: QuickalgoLibraryBlock) => {
+      block.codeGenerators = {
+        Python: (blocklyBlock) => {
+          const blockParams = getBlockGeneratorParams(block, blocklyBlock, 'Python');
+
+          return `display.set_pixel(${blockParams});\n`;
+        },
+      };
+    });
+
+    const lightMatrixModule = lightModuleDefinition(context);
+    lightMatrixModule.lightIntensity.blocks.forEach((block: QuickalgoLibraryBlock) => {
+      block.codeGenerators = {
+        Python: () => {
+          return [`display.read_light_level()`, window.Blockly.Python.ORDER_NONE];
+        },
+      };
+    });
+
+    const magnetometerModule = magnetometerModuleDefinition(context, strings);
+    magnetometerModule.readMagneticForce.blocks.forEach((block: QuickalgoLibraryBlock) => {
+      block.codeGenerators = {
+        Python: (block) => {
+          const axis = block.getFieldValue('PARAM_0');
+
+          return [`compass.get_${axis}()`, window.Blockly.Python.ORDER_NONE];
+        },
+      };
+    });
+    magnetometerModule.computeCompassHeading.blocks.forEach((block: QuickalgoLibraryBlock) => {
+      block.codeGenerators = {
+        Python: () => {
+          return [`compass.heading()`, window.Blockly.Python.ORDER_NONE];
+        },
+      };
+    });
+
+    const soundModule = soundModuleDefinition(context);
+    soundModule.soundLevel.blocks.forEach((block: QuickalgoLibraryBlock) => {
+      block.codeGenerators = {
+        Python: () => {
+          return [`microphone.sound_level()`, window.Blockly.Python.ORDER_NONE];
+        },
+      };
+    });
+
+    const temperatureModule = temperatureModuleDefinition(context);
+
+    const timeModule = timeModuleDefinition(context);
+    timeModule.sleep = timeModule.sleep_sec;
+
+    const features: ModuleDefinition = {
+      ...useGeneratorName(accelerometerModule, 'microbit'),
+      ...useGeneratorName(buttonsModule, 'microbit'),
+      ...useGeneratorName(buzzerModule, 'music'),
+      ...useGeneratorName(ledMatrixModule, 'microbit'),
+      ...useGeneratorName(lightMatrixModule, 'microbit'),
+      ...useGeneratorName(magnetometerModule, 'microbit'),
+      ...useGeneratorName(soundModule, 'microbit'),
+      ...useGeneratorName(temperatureModule, 'microbit'),
+      ...useGeneratorName(timeModule, 'time'),
+    };
+
+    for (let feature of Object.values(features)) {
+      if (feature.classMethods) {
+        for (let block of feature.blocks ?? []) {
+          block.hidden = true;
+        }
+      }
+    }
+
+    return features;
   }
 }
 

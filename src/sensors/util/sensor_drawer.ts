@@ -51,7 +51,7 @@ export class SensorDrawer {
     return undefined;
   }
 
-  drawSensor(sensor, juststate = false, donotmovefocusrect = false) {
+  drawSensor(sensor: AbstractSensor<any>, juststate = false, donotmovefocusrect = false) {
     // console.log('draw sensor', sensor, this.context, this.context.paper);
     // console.log(sensor.type)
     this.saveSensorStateIfNotRunning(sensor);
@@ -110,7 +110,6 @@ export class SensorDrawer {
 
       imgy += h * 0.05;
       state1y += h * 0.05;
-
     }
     if (sensor.type == "buzzer") {
       let sizeRatio = imgw / w;
@@ -120,6 +119,17 @@ export class SensorDrawer {
       }
     }
 
+    let focusRect = {
+      x: imgx,
+      y: imgy,
+      h: imgh,
+      w: imgw,
+    };
+    if (sensor.type == "accelerometer" ||
+      sensor.type == "gyroscope" ||
+      sensor.type == "magnetometer") {
+      focusRect.w = w*0.6;
+    }
 
     let portx = state1x;
     let porty = imgy;
@@ -145,17 +155,17 @@ export class SensorDrawer {
     let drawName = true;
 
     if (!sensor.focusrect || this.sensorHandler.isElementRemoved(sensor.focusrect)) {
-      sensor.focusrect = this.context.paper.rect(imgx, imgy, imgw, imgh);
+      sensor.focusrect = this.context.paper.rect(focusRect.x, focusRect.y, focusRect.w, focusRect.h);
     }
 
     sensor.focusrect.attr({
       "fill": "468DDF",
       "fill-opacity": 0,
       "opacity": 0,
-      "x": imgx,
-      "y": imgy,
-      "width": imgw,
-      "height": imgh,
+      "x": focusRect.x,
+      "y": focusRect.y,
+      "width": focusRect.w,
+      "height": focusRect.h,
     });
 
     if (this.context.autoGrading) {
@@ -165,16 +175,16 @@ export class SensorDrawer {
       if (scrolloffset > 0)
         fadeopacity = 0.3;
 
-      imgw = w * .80;
-      imgh = sensor.drawInfo.height * .80;
-
-      imgx = sensor.drawInfo.x + (imgw * 0.75) + scrolloffset;
-      imgy = sensor.drawInfo.y + (sensor.drawInfo.height / 2) - (imgh / 2);
+      // imgw = w * .80;
+      // imgh = sensor.drawInfo.height * .80;
+      // imgw = imgh;
+      //
+      // imgy = sensor.drawInfo.y + (sensor.drawInfo.height / 2);
 
       state1x = imgx + imgw * 1.2;
       state1y = imgy + (imgh / 2);
 
-      portx = x;
+      portx = x + 5;
       porty = imgy + (imgh / 2);
 
       portsize = imgh / 3;
@@ -272,7 +282,7 @@ export class SensorDrawer {
 
     if (drawParameters.drawName) {
       if (sensor.name) {
-        let sensorId = sensor.name;
+        let sensorId = sensor.label ?? sensor.name;
         if (this.context.useportforname)
           sensorId = sensor.port;
 
@@ -308,12 +318,16 @@ export class SensorDrawer {
     this.saveSensorStateIfNotRunning(sensor);
   }
 
-  setSlider(sensor, juststate, imgx, imgy, imgw, imgh, min, max) {
+  setSlider(sensor, juststate, imgx, imgy, imgw, imgh, min, max, slidersCount = undefined) {
+    if (!slidersCount) {
+      slidersCount = Array.isArray(sensor.state) ? sensor.state.length : 1;
+    }
+
     // console.log("setSlider",juststate)
     if (juststate) {
 
       if (Array.isArray(sensor.state)) {
-        for (let i = 0; i < sensor.state.length; i++) {
+        for (let i = 0; i < slidersCount; i++) {
           if (sensor.sliders[i] == undefined)
             continue;
 
@@ -400,19 +414,21 @@ export class SensorDrawer {
         let offset = 0;
         let sign = -1;
         if (sensor.drawInfo.x -
-          ((sensor.state.length - 1) * sensor.drawInfo.width / 5) < 0)
+          ((slidersCount - 1) * sensor.drawInfo.width / 5) < 0)
         {
           sign = 1;
           offset = sensor.drawInfo.width * .70;
         }
 
+        console.log({offset, sign});
+
         // if offset is equal to 0, we need to reverse
         if (offset == 0) {
-          for (let i = 0; i < sensor.state.length; i++) {
+          for (let i = 0; i < slidersCount; i++) {
             let sliderobj = this.createSlider(sensor,
               max,
               min,
-              sensor.drawInfo.x + offset + (sign * Math.abs(i + 1 - sensor.state.length) * h / 5),
+              sensor.focusrect.attr('x') - 25 + offset + (sign * Math.abs(i + 1 - slidersCount) * h / 5),
               sensor.drawInfo.y,
               h,
               h,
@@ -422,7 +438,7 @@ export class SensorDrawer {
           }
         }
         else {
-          for (let i = 0; i < sensor.state.length; i++) {
+          for (let i = 0; i < slidersCount; i++) {
             let sliderobj = this.createSlider(sensor,
               max,
               min,

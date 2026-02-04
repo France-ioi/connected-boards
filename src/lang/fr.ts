@@ -2,8 +2,8 @@ export default {
   label: {
     // Labels for the blocks
     sleep: "attendre %1 millisecondes",
-    'time.sleep': "attendre %1 secondes",
-    'time.sleep_us': "attendre %1 microsecondes",
+    sleep_sec: "attendre %1 secondes",
+    sleep_us: "attendre %1 microsecondes",
     currentTime: "temps écoulé en millisecondes",
 
     turnLedOn: "allumer la LED",
@@ -11,14 +11,13 @@ export default {
 
     setLedState: "passer la LED %1 à %2 ",
     toggleLedState: "inverser la LED %1",
-    setLedMatrixOne: "passer la LED %1 en position %2, %3 à %4",
 
     isLedOn: "LED allumée",
     isLedOnWithName: "LED %1 allumée",
 
     setLedBrightness: "mettre la luminosité de %1 à %2",
     getLedBrightness: "lire la luminosité de %1",
-    setLedColors: "mettre la couleur de %1 à r:%2 g:%3 b:%4",
+    setLedColors: "mettre la couleur de la LED à r:%1 g:%2 b:%3",
 
     turnBuzzerOn: "allumer le buzzer",
     turnBuzzerOff: "éteindre le buzzer",
@@ -43,12 +42,13 @@ export default {
     displayText2Lines: "afficher Ligne 1 : %1 Ligne 2 : %2",
 
     readTemperature: "température ambiante",
-    'thingz.temperature': "température ambiante",
+    temperature: "température ambiante",
     getTemperatureFromCloud: "temperature de la ville %1",
 
     readRotaryAngle: "état du potentiomètre %1",
     readDistance: "distance mesurée par %1",
     readLightIntensity: "intensité lumineuse",
+    lightIntensity: "intensité lumineuse",
     readHumidity: "humidité ambiante",
 
     setServoAngle: "mettre le servo %1 à l'angle %2",
@@ -65,14 +65,22 @@ export default {
     updateScreen: "mettre à jour l'écran",
     autoUpdate: "mode de mise à jour automatique de l'écran",
 
+    ledMatrixShowText: "afficher du texte sur l'écran LED",
+    ledMatrixShowImage: "afficher une image sur l'écran LED",
+    ledMatrixClear: "éteint toutes les LEDs",
+    ledMatrixGetPixel: "intensité du pixel en x: %1 y: %2",
+    ledMatrixSetPixel: "régler à %3 l'intensité du pixel en x: %1 y: %2",
+
     fill: "mettre la couleur de remplissage à %1",
     noFill: "ne pas remplir les formes",
     stroke: "mettre la couleur de tracé à %1",
     noStroke: "ne pas dessiner les contours",
 
     readAcceleration: "accélération en (m/s²) dans l'axe %1",
+    wasGesture: "geste effectué",
     computeRotation: "calcul de l'angle de rotation (°) sur l'accéléromètre %1",
     readSoundLevel: "volume sonore",
+    soundLevel: "volume sonore",
 
     readMagneticForce: "champ magnétique (µT) sur %1",
     computeCompassHeading: "direction de la boussole en (°)",
@@ -100,7 +108,6 @@ export default {
     turnLedOn: "turnLedOn",
     turnLedOff: "turnLedOff",
     setLedState: "setLedState",
-    setLedMatrixOne: "setLedMatrixOne",
 
     isButtonPressed: "isButtonPressed",
     isButtonPressedWithName: "isButtonPressed",
@@ -112,10 +119,10 @@ export default {
     displayText: "displayText",
     displayText2Lines: "displayText",
     readTemperature: "readTemperature",
-    'thingz.temperature': "temperature",
+    temperature: "temperature",
     sleep: "sleep",
-    'time.sleep': "sleep",
-    'time.sleep_us': "sleep_us",
+    sleep_sec: "sleep",
+    sleep_us: "sleep_us",
     setServoAngle: "setServoAngle",
     readRotaryAngle: "readRotaryAngle",
     readDistance: "readDistance",
@@ -164,7 +171,6 @@ export default {
 
     readSoundLevel: "readSoundLevel",
 
-
     readMagneticForce: "readMagneticForce",
     computeCompassHeading: "computeCompassHeading",
 
@@ -200,14 +206,14 @@ export default {
     buttonWasPressed: "buttonWasPressed(button) indique si le bouton a été appuyé depuis le dernier appel à cette fonction",
     onButtonPressed: "onButtonPressed(button, fonction) appelle la fonction indiquée lorsque le bouton est appuyé",
     setLedState: "setLedState(led, state) modifie l'état de la LED : True pour l'allumer, False pour l'éteindre",
-    setLedMatrixOne: "setLedMatrixOne(x, y, state) modifie l'état d'une LED de la matrice",
     toggleLedState: "toggleLedState(led) inverse l'état de la LED",
     displayText: "displayText(line1, line2) affiche une ou deux lignes de texte. line2 est optionnel",
     displayText2Lines: "displayText(line1, line2) affiche une ou deux lignes de texte. line2 est optionnel",
     readTemperature: "readTemperature(thermometer) retourne la température ambiante",
+    temperature: "temperature() retourne la température ambiante",
     sleep: "sleep(milliseconds) met en pause l'exécution pendant une durée en ms",
-    'time.sleep': "sleep(seconds) met en pause l'exécution pendant une durée en secondes",
-    'time.sleep_us': "sleep_us(microseconds) met en pause l'exécution pendant une durée en microsecondes",
+    sleep_sec: "sleep(seconds) met en pause l'exécution pendant une durée en secondes",
+    sleep_us: "sleep_us(microseconds) met en pause l'exécution pendant une durée en microsecondes",
     setServoAngle: "setServoAngle(servo, angle) change l'angle du servomoteur",
     readRotaryAngle: "readRotaryAngle(potentiometer) retourne la position potentiomètre",
     readDistance: "readDistance(distanceSensor) retourne la distance mesurée",
@@ -217,7 +223,6 @@ export default {
 
     setLedBrightness: "setLedBrightness(led, brightness) règle l'intensité lumineuse de la LED",
     getLedBrightness: "getLedBrightness(led) retourne l'intensité lumineuse de la LED",
-    setLedColors: "setLedColors(led, r, g, b) règle la couleur de la LED",
     getServoAngle: "getServoAngle(servo) retourne l'angle du servomoteur",
 
     isLedOn: "isLedOn() retourne True si la LED est allumée, False si elle est éteinte",
@@ -243,6 +248,10 @@ export default {
     clearScreen: "clearScreen() efface le contenu de l'écran",
     updateScreen: "updateScreen() mettre à jour l'écran",
     autoUpdate: "autoUpdate(auto) change le mode d'actualisation de l'écran",
+    'Display.show': "display.show(content) affiche un texte ou une image sur l'écran de LEDs",
+    'Display.clear': "display.clear() éteint toutes les LEDs",
+    'Display.get_pixel': "display.get_pixel(x, y) retourne l'intensité lumineuse du pixel aux coordonnées x, y",
+    'Display.set_pixel': "display.set_pixel(x, y, intensity) définit l'intensité lumineuse du pixel aux coordonnées x, y",
 
     fill: "fill(color) Remplir les formes avec la couleur donnée",
     noFill: "noFill() Ne pas remplir les formes",
@@ -251,6 +260,7 @@ export default {
 
 
     readAcceleration: "readAcceleration(axis) lit l'accélération en m/s² sur l'axe (X, Y ou Z)",
+    wasGesture: "wasGesture(gesture) retourne True si le geste indiqué a été effectué",
     computeRotation: "computeRotation(axis) calcule l'angle de rotation en degrés sur l'accéléromètre",
 
     readSoundLevel: "readSoundLevel(port) retourne le volume ambiant",
@@ -281,18 +291,28 @@ export default {
     setContinousServoDirection: "setContinousServoDirection(servo, direction)",
 
     // Galaxia
-    "pin.on": "pin.on() allume la broche",
-    "pin.off": "pin.off() éteint la broche",
-    "pwm.__constructor": "pwm = PWM(pin, freq, duty) initialise une sortie PWM sur une broche avec une fréquence et un rapport cyclique",
-    "pwm.duty": "pwm.duty(duty) définit le rapport cyclique pour la sortie PWM",
-    "pwm.duty_u16": "pwm.duty_u16(duty) définit le rapport cyclique avec une résolution de 16 bits",
-    "wlan.__constructor": "wlan = WLAN(interface) initialise l'interface WiFi",
-    "wlan.active": "wlan.active(active) active ou désactive l'interface WiFi",
-    "wlan.connect": "wlan.connect(ssid, password) connecte au réseau WiFi en utilisant le nom et le mot de passe fournis",
+    "Pin.__constructor": "pin = Pin(pinNumber, mode) initialise un pin",
+    "Pin.on": "pin.on() allume la broche",
+    "Pin.off": "pin.off() éteint la broche",
+    "PWM.__constructor": "pwm = PWM(pin, freq, duty) initialise une sortie PWM sur une broche avec une fréquence et un rapport cyclique",
+    "PWM.duty": "pwm.duty(duty) définit le rapport cyclique pour la sortie PWM",
+    "PWM.duty_u16": "pwm.duty_u16(duty) définit le rapport cyclique avec une résolution de 16 bits",
+    "WLAN.__constructor": "wlan = WLAN(interface) initialise l'interface WiFi",
+    "WLAN.active": "wlan.active(active) active ou désactive l'interface WiFi",
+    "WLAN.connect": "wlan.connect(ssid, password) connecte au réseau WiFi en utilisant le nom et le mot de passe fournis",
+    "music.pitch": "pitch(frequency) fait sonner à la fréquence indiquée",
+    "music.stop": "stop() arrête de jouer la fréquence",
     dumps: "dumps(content) sérialise un objet en une chaîne formatée en JSON",
     get: "get(url) envoie une requête HTTP GET",
     post: "post(url, data, headers) envoie une requête HTTP POST",
-    "image.__constructor": "Image(leds) crée une image qui peut être affichée sur la grille de leds",
+    time_pulse_us: "time_pulse_us(pin, level, timeout) détermine la durée d'une impulsion sur la broche spécifiée",
+    'Led.set_colors': "led.set_colors(red, green, blue) change la couleur de la LED",
+
+    // Microbit
+    "Image.__constructor": "Image(leds) crée une image qui peut être affichée sur la grille de leds",
+    "Accel.get_x": "retourne la valeur sur l'axe X de l'accélération en m/s²",
+    "Accel.was_gesture": "accelerometer.was_gesture(gesture) retourne True si le geste indiqué a été effectué",
+    "Button.is_pressed": "retourne True si le bouton est enfoncé, False sinon",
   },
   constant: {},
 
@@ -476,11 +496,11 @@ export default {
     yes: "Oui",
     no: "Non",
 
-    // sensorNameBuzzer: "buzzer",
-    sensorNameBuzzer: "buzz",
+    sensorNameBuzzer: "buzzer",
     sensorNameLed: "led",
-    sensorNameLedRgb: "ledRgb",
-    sensorNameLedDim: "ledDim",
+    sensorNameLedRgb: "led_rgb",
+    sensorNameLedDim: "led_dim",
+    sensorNameLedMatrix: 'led_matrix',
     // sensorNameRedLed: "redled",
     sensorNameRedLed: "Rled",
     // sensorNameGreenLed: "greenled",

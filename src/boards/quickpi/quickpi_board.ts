@@ -1,8 +1,26 @@
 import {AbstractBoard} from "../abstract_board";
-import {BoardCustomBlocks, ConnectionMethod} from "../../definitions";
+import {ConnectionMethod} from "../../definitions";
 import {getQuickPiConnection} from "./quickpi_connection";
-import {quickpiModuleDefinition} from "../../modules/quickpi/quickpi";
-import {mergeModuleDefinitions} from "../board_util";
+import {ModuleDefinition} from "../../modules/module_definition";
+import {accelerometerModuleDefinition} from "../../modules/accelerometer";
+import {buttonsModuleDefinition} from "../../modules/buttons";
+import {useGeneratorName} from "../../modules/module_utils";
+import {magnetometerModuleDefinition} from "../../modules/magnetometer";
+import {temperatureModuleDefinition} from "../../modules/temperature";
+import {timeModuleDefinition} from "../../modules/time";
+import {buzzerModuleDefinition} from "../../modules/buzzer";
+import {soundModuleDefinition} from "../../modules/sound";
+import {lightModuleDefinition} from "../../modules/light";
+import {screenModuleDefinition} from "../../modules/screen";
+import {servoModuleDefinition} from "../../modules/servo";
+import {ledModuleDefinition} from "../../modules/led";
+import {potentiometerModuleDefinition} from "../../modules/potentiometer";
+import {rangeModuleDefinition} from "../../modules/range";
+import {gyroscopeModuleDefinition} from "../../modules/gyroscope";
+import {irtransModuleDefinition} from "../../modules/irtrans";
+import {irrecvModuleDefinition} from "../../modules/irrecv";
+import {humidityModuleDefinition} from "../../modules/humidity";
+import {cloudStoreModuleDefinition} from "../../modules/cloud_store";
 
 export class QuickPiBoard extends AbstractBoard {
   getBoardDefinitions() {
@@ -53,7 +71,8 @@ export class QuickPiBoard extends AbstractBoard {
           { type: "range", subType: "vl53l0x", port: "i2c", suggestedName: this.strings.messages.sensorNameDistance + "1", },
           { type: "button", port: "D26", suggestedName: this.strings.messages.sensorNameButton + "1", },
           { type: "light", port: "A2", suggestedName: this.strings.messages.sensorNameLight + "1", },
-          { type: "stick", port: "D7", suggestedName: this.strings.messages.sensorNameStick + "1", }
+          { type: "stick", port: "D7", suggestedName: this.strings.messages.sensorNameStick + "1", },
+          { type: "cloudstore", port: "D5", suggestedName: this.strings.messages.sensorNameCloudStore + "1", },
         ],
       },
       {
@@ -82,14 +101,66 @@ export class QuickPiBoard extends AbstractBoard {
     return getQuickPiConnection;
   }
 
-  getCustomBlocks(context, strings): BoardCustomBlocks {
-    const quickpiModule = quickpiModuleDefinition(context, strings);
+  getCustomFeatures(context, strings): ModuleDefinition {
+    const accelerometerModule = accelerometerModuleDefinition(context, strings);
+    const buttonsModule = buttonsModuleDefinition(context, strings);
 
-    return mergeModuleDefinitions({
-      quickpi: [
-        quickpiModule,
-      ]
-    });
+    const buzzerModule = buzzerModuleDefinition(context, strings);
+    delete buzzerModule.pitch;
+    delete buzzerModule.stop;
+
+    const cloudStoreModule = cloudStoreModuleDefinition(context, strings);
+
+    const gyroscopeModule = gyroscopeModuleDefinition(context);
+    const humidityModule = humidityModuleDefinition(context);
+
+    const irtransModule = irtransModuleDefinition(context, strings);
+    const irrecvModule = irrecvModuleDefinition(context);
+
+    const ledModule = ledModuleDefinition(context, strings);
+    const lightModule = lightModuleDefinition(context);
+
+    const magnetometerModule = magnetometerModuleDefinition(context, strings);
+
+    const potentiometerModule = potentiometerModuleDefinition(context);
+    const rangeModule = rangeModuleDefinition(context);
+
+    const screenModule = screenModuleDefinition(context, strings);
+    const servoModule = servoModuleDefinition(context);
+    const soundModule = soundModuleDefinition(context);
+    const temperatureModule = temperatureModuleDefinition(context);
+
+    const timeModule = timeModuleDefinition(context);
+    delete timeModule.sleep_sec;
+    delete timeModule.sleep_us;
+
+
+    const features: ModuleDefinition = {
+      ...accelerometerModule,
+      ...buttonsModule,
+      ...buzzerModule,
+      ...cloudStoreModule,
+      ...gyroscopeModule,
+      ...humidityModule,
+      ...irrecvModule,
+      ...irtransModule,
+      ...ledModule,
+      ...lightModule,
+      ...magnetometerModule,
+      ...potentiometerModule,
+      ...rangeModule,
+      ...screenModule,
+      ...servoModule,
+      ...soundModule,
+      ...temperatureModule,
+      ...timeModule,
+    };
+
+    for (let feature in features) {
+      delete features[feature].classMethods;
+    }
+
+    return useGeneratorName(features, 'quickpi');
   }
 }
 

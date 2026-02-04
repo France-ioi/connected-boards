@@ -1,6 +1,7 @@
 import {SensorCollection} from "./sensors/sensor_collection";
 import {AbstractSensor} from "./sensors/abstract_sensor";
 import {AbstractBoard} from "./boards/abstract_board";
+import {SensorHandler} from "./sensors/util/sensor_handler";
 
 declare global {
   interface Window {
@@ -59,6 +60,7 @@ export interface Sensor {
   builtin?: boolean,
   showAsAnalog?: boolean,
   isDrawingScreen?: boolean,
+  unit?: string,
 }
 
 export interface BoardDefinition {
@@ -78,15 +80,22 @@ export enum ConnectionMethod {
   Bluetooth = 'bt',
 }
 
+export interface BlocklyBlock {
+  getFieldValue(field: string): string,
+}
+
 export interface QuickalgoLibraryBlock {
   name?: string,
   yieldsValue?: string|boolean,
   params?: string[],
+  blocklyInit?: Function,
   blocklyJson?: any,
   blocklyXml?: string,
   anyArgs?: boolean,
   variants?: any,
   hidden?: boolean,
+  handler: Function,
+  codeGenerators?: {[languageName: string]: (block: BlocklyBlock) => [string, string]|string}
 }
 
 export interface QuickalgoLibrary {
@@ -97,7 +106,6 @@ export interface QuickalgoLibrary {
   nbNodes: number;
   nbMoves?: number,
   strings: any,
-  customBlocks: {[generatorName: string]: {[categoryName: string]: QuickalgoLibraryBlock[]}},
   customConstants: {[generatorName: string]: {name: string, value: any}[]},
   customClasses: {[generatorName: string]: {[categoryName: string]: {[className: string]: any[]}}},
   customClassInstances: {[generatorName: string]: {[instanceName: string]: string}},
@@ -115,7 +123,7 @@ export interface QuickalgoLibrary {
   resetDisplay: () => void,
   remoteIRcodes: {[preset: string]: any},
   board: string,
-  findSensor: (type: string, port: string, error: boolean) => AbstractSensor<any>,
+  findSensor: <T extends AbstractSensor<any>>(type: string, port: string, error?: boolean) => T|null,
   useportforname: boolean,
   compactLayout: boolean,
   sensorsSaved: {[name: string]: any},
@@ -127,28 +135,26 @@ export interface QuickalgoLibrary {
   timeLineSlotHeight: number,
   timelineStartx: number,
   pixelsPerTime: number,
-}
-
-export interface QuickAlgoConstant {
-  name: string,
-  value: any,
-}
-
-export interface QuickAlgoCustomClass {
-  defaultInstanceName?: string,
-  init?: QuickalgoLibraryBlock,
-  blocks: QuickalgoLibraryBlock[],
-  constants?: QuickAlgoConstant[],
-}
-
-export interface BoardCustomBlocks {
-  customBlocks?: {[generatorName: string]: {[categoryName: string]: QuickalgoLibraryBlock[]}},
-  customConstants?: {[generatorName: string]: {name: string, value: any}[]},
-  customClasses?: {[generatorName: string]: {[categoryName: string]: {[className: string]: QuickAlgoCustomClass}}},
-  customClassInstances?: {[generatorName: string]: {[instanceName: string]: string}},
-
-  customBlockImplementations?: {[generatorName: string]: {[blockName: string]: Function}},
-  customClassImplementations?: {[generatorName: string]: {[className: string]: {[methodName: string]: Function}}},
+  sensorHandler: SensorHandler,
+  getSensorState: (name: string) => any,
+  waitForEvent: (action: (callback: Function) => void, func: Function) => void,
+  waitDelay: (callback: Function, result?: unknown, delay?: number) => void,
+  advanceToNextRelease: (sensorType: string, port: string) => void,
+  blocklyHelper: any,
+  increaseTimeBy: (time: number) => void,
+  registerQuickPiEvent:  (name: string, newState: unknown, setInSensor?: boolean, allowFail?: boolean) => void,
+  getPythonCode: () => Promise<string>,
+  infos: {
+    customLedMatrixImages: {name: string, value: string}[],
+    enabledGestures?: string[],
+  },
+  success: boolean,
+  failImmediately: string,
+  forceGradingWithoutDisplay: boolean,
+  maxTime: number,
+  loopsForever: boolean,
+  gradingStatesBySensor: {[sensorName: string]: {hit: boolean, time: number, state: unknown, input: boolean}[]},
+  actualStatesBySensor: {[sensorName: string]: {hit: boolean, time: number, state: unknown, input: boolean}[]},
 }
 
 export interface SensorDefinition {
