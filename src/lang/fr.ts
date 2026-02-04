@@ -17,7 +17,7 @@ export default {
 
     setLedBrightness: "mettre la luminosité de %1 à %2",
     getLedBrightness: "lire la luminosité de %1",
-    setLedColors: "mettre la couleur de %1 à r:%2 g:%3 b:%4",
+    setLedColors: "mettre la couleur de la LED à r:%1 g:%2 b:%3",
 
     turnBuzzerOn: "allumer le buzzer",
     turnBuzzerOff: "éteindre le buzzer",
@@ -223,7 +223,6 @@ export default {
 
     setLedBrightness: "setLedBrightness(led, brightness) règle l'intensité lumineuse de la LED",
     getLedBrightness: "getLedBrightness(led) retourne l'intensité lumineuse de la LED",
-    setLedColors: "setLedColors(led, r, g, b) règle la couleur de la LED",
     getServoAngle: "getServoAngle(servo) retourne l'angle du servomoteur",
 
     isLedOn: "isLedOn() retourne True si la LED est allumée, False si elle est éteinte",
@@ -292,19 +291,22 @@ export default {
     setContinousServoDirection: "setContinousServoDirection(servo, direction)",
 
     // Galaxia
-    "pin.on": "pin.on() allume la broche",
-    "pin.off": "pin.off() éteint la broche",
-    "pwm.__constructor": "pwm = PWM(pin, freq, duty) initialise une sortie PWM sur une broche avec une fréquence et un rapport cyclique",
-    "pwm.duty": "pwm.duty(duty) définit le rapport cyclique pour la sortie PWM",
-    "pwm.duty_u16": "pwm.duty_u16(duty) définit le rapport cyclique avec une résolution de 16 bits",
-    "wlan.__constructor": "wlan = WLAN(interface) initialise l'interface WiFi",
-    "wlan.active": "wlan.active(active) active ou désactive l'interface WiFi",
-    "wlan.connect": "wlan.connect(ssid, password) connecte au réseau WiFi en utilisant le nom et le mot de passe fournis",
+    "Pin.__constructor": "pin = Pin(pinNumber, mode) initialise un pin",
+    "Pin.on": "pin.on() allume la broche",
+    "Pin.off": "pin.off() éteint la broche",
+    "PWM.__constructor": "pwm = PWM(pin, freq, duty) initialise une sortie PWM sur une broche avec une fréquence et un rapport cyclique",
+    "PWM.duty": "pwm.duty(duty) définit le rapport cyclique pour la sortie PWM",
+    "PWM.duty_u16": "pwm.duty_u16(duty) définit le rapport cyclique avec une résolution de 16 bits",
+    "WLAN.__constructor": "wlan = WLAN(interface) initialise l'interface WiFi",
+    "WLAN.active": "wlan.active(active) active ou désactive l'interface WiFi",
+    "WLAN.connect": "wlan.connect(ssid, password) connecte au réseau WiFi en utilisant le nom et le mot de passe fournis",
     "music.pitch": "pitch(frequency) fait sonner à la fréquence indiquée",
     "music.stop": "stop() arrête de jouer la fréquence",
     dumps: "dumps(content) sérialise un objet en une chaîne formatée en JSON",
     get: "get(url) envoie une requête HTTP GET",
     post: "post(url, data, headers) envoie une requête HTTP POST",
+    time_pulse_us: "time_pulse_us(pin, level, timeout) détermine la durée d'une impulsion sur la broche spécifiée",
+    'Led.set_colors': "led.set_colors(red, green, blue) change la couleur de la LED",
 
     // Microbit
     "Image.__constructor": "Image(leds) crée une image qui peut être affichée sur la grille de leds",

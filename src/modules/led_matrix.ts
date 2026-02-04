@@ -1,8 +1,7 @@
 import {ModuleDefinition} from "./module_definition";
 import {QuickalgoLibrary} from "../definitions";
-import {displayAlphabet} from "./microbit/display_alphabet";
+import {displayAlphabet} from "./display_alphabet";
 import {SensorLedMatrix} from "../sensors/led_matrix";
-import {AbstractSensor} from "../sensors/abstract_sensor";
 
 function convertImageFromString(str: string) {
   return str.split(':').map(e => e.split('').map(Number)).slice(0, 5);

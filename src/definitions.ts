@@ -106,7 +106,6 @@ export interface QuickalgoLibrary {
   nbNodes: number;
   nbMoves?: number,
   strings: any,
-  customBlocks: {[generatorName: string]: {[categoryName: string]: QuickalgoLibraryBlock[]}},
   customConstants: {[generatorName: string]: {name: string, value: any}[]},
   customClasses: {[generatorName: string]: {[categoryName: string]: {[className: string]: any[]}}},
   customClassInstances: {[generatorName: string]: {[instanceName: string]: string}},
@@ -168,16 +167,6 @@ export interface QuickAlgoCustomClass {
   init?: QuickalgoLibraryBlock,
   blocks: QuickalgoLibraryBlock[],
   constants?: QuickAlgoConstant[],
-}
-
-export interface BoardCustomBlocks {
-  customBlocks?: {[generatorName: string]: {[categoryName: string]: QuickalgoLibraryBlock[]}},
-  customConstants?: {[generatorName: string]: {name: string, value: any}[]},
-  customClasses?: {[generatorName: string]: {[categoryName: string]: {[className: string]: QuickAlgoCustomClass}}},
-  customClassInstances?: {[generatorName: string]: {[instanceName: string]: string}},
-
-  customBlockImplementations?: {[generatorName: string]: {[blockName: string]: Function}},
-  customClassImplementations?: {[generatorName: string]: {[className: string]: {[methodName: string]: Function}}},
 }
 
 export interface SensorDefinition {

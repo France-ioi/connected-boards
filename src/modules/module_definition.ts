@@ -1,6 +1,7 @@
 import {QuickalgoLibraryBlock} from "../definitions";
 
 export interface ModuleClassDefinition {
+  defaultInstanceName?: string,
   instances?: string[],
   init?: QuickalgoLibraryBlock,
   methods?: {[methodName: string]: QuickalgoLibraryBlock},

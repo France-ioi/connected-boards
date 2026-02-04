@@ -1,23 +1,13 @@
 import {AbstractBoard} from "../abstract_board";
 import {
-  BoardCustomBlocks,
   BoardDefinition,
   ConnectionMethod,
   QuickalgoLibrary,
   QuickalgoLibraryBlock
 } from "../../definitions";
-import {thingzAccelerometerModuleDefinition} from "../../modules/thingz/accelerometer";
-import {thingzButtonsModuleDefinition} from "../../modules/thingz/buttons";
-import {thingzTemperatureModuleDefinition} from "../../modules/thingz/temperature";
-import {timeSleepModuleDefinition} from "../../modules/time/sleep";
 // @ts-ignore
 import microbitSvg from '../../../images/microbit.svg';
 import {MicrobitConnection} from "./microbit_connexion";
-import {displayModuleDefinition} from "../../modules/microbit/display";
-import {thingzCompassModuleDefinition} from "../../modules/thingz/compass";
-import {microphoneModuleDefinition} from "../../modules/microbit/microphone";
-import {mergeModuleDefinitions} from "../board_util";
-import {musicModuleDefinition} from "../../modules/microbit/music";
 import {convertToHex} from "./microbit_hex";
 import {accelerometerModuleDefinition} from "../../modules/accelerometer";
 import {ModuleDefinition} from "../../modules/module_definition";
@@ -265,34 +255,6 @@ export class MicrobitBoard extends AbstractBoard {
     return microbitConnection;
   }
 
-  getCustomBlocks(context, strings): BoardCustomBlocks {
-    const accelerometerModule = thingzAccelerometerModuleDefinition(context, strings);
-    const compassModule = thingzCompassModuleDefinition(context, strings);
-    const buttonModule = thingzButtonsModuleDefinition(context, strings);
-    const temperatureModule = thingzTemperatureModuleDefinition(context, strings);
-    const timeModule = timeSleepModuleDefinition(context, strings);
-    const displayModule = displayModuleDefinition(context, strings);
-    const microphoneModule = microphoneModuleDefinition(context, strings);
-    const musicModule = musicModuleDefinition(context, strings);
-
-    return mergeModuleDefinitions({
-      microbit: [
-        accelerometerModule,
-        compassModule,
-        buttonModule,
-        temperatureModule,
-        displayModule,
-        microphoneModule,
-      ],
-      music: [
-        musicModule,
-      ],
-      time: [
-        timeModule,
-      ],
-    });
-  }
-
   getCustomFeatures(context, strings): ModuleDefinition {
     const accelerometerModule = accelerometerModuleDefinition(context, strings);
     accelerometerModule.readAcceleration.blocks.forEach((block: QuickalgoLibraryBlock) => {
@@ -422,7 +384,7 @@ export class MicrobitBoard extends AbstractBoard {
 
     for (let feature of Object.values(features)) {
       if (feature.classMethods) {
-        for (let block of feature.blocks) {
+        for (let block of feature.blocks ?? []) {
           block.hidden = true;
         }
       }
