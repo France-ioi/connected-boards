@@ -1,6 +1,6 @@
 import {AbstractBoard} from "../abstract_board";
 import {ConnectionMethod} from "../../definitions";
-import {getQuickPiConnection} from "./quickpi_connection";
+import {QuickPiConnection} from "./quickpi_connection";
 import {ModuleDefinition} from "../../modules/module_definition";
 import {accelerometerModuleDefinition} from "../../modules/accelerometer";
 import {buttonsModuleDefinition} from "../../modules/buttons";
@@ -21,6 +21,8 @@ import {irtransModuleDefinition} from "../../modules/irtrans";
 import {irrecvModuleDefinition} from "../../modules/irrecv";
 import {humidityModuleDefinition} from "../../modules/humidity";
 import {cloudStoreModuleDefinition} from "../../modules/cloud_store";
+
+let quickpiConnection = null;
 
 export class QuickPiBoard extends AbstractBoard {
   getBoardDefinitions() {
@@ -98,7 +100,13 @@ export class QuickPiBoard extends AbstractBoard {
   }
 
   getConnection() {
-    return getQuickPiConnection;
+    if (!quickpiConnection) {
+      quickpiConnection = function (userName, _onConnect, _onDisconnect, _onChangeBoard) {
+        return new QuickPiConnection(userName, _onConnect, _onDisconnect, _onChangeBoard);
+      }
+    }
+
+    return quickpiConnection;
   }
 
   getCustomFeatures(context, strings): ModuleDefinition {
