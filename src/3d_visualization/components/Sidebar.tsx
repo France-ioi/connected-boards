@@ -20,7 +20,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentType, onSelectType, mode, part
   if (mode !== AppMode.CONSTRUCTION) return null;
 
   const categoriesToRender = [
-    ...(recentPartTypes.length > 0 ? [{ name: 'Recent', types: recentPartTypes, isRecent: true }] : []),
+    // ...(recentPartTypes.length > 0 ? [{ name: 'Recent', types: recentPartTypes, isRecent: true }] : []),
     ...CATEGORIES
   ];
 

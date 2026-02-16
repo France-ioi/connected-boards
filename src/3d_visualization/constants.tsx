@@ -71,7 +71,7 @@ export const PART_DEFINITIONS = [
 
 export const CATEGORIES = [
   { name: 'Basics', types: [PartType.BLOCK, PartType.BLOCK_LONG, PartType.WEDGE, PartType.STABILIZER, PartType.LIGHT] },
-  { name: 'Mechanical', types: [PartType.MOTOR, PartType.JOINT, PartType.WHEEL, PartType.THRUSTER] },
+  // { name: 'Mechanical', types: [PartType.MOTOR, PartType.JOINT, PartType.WHEEL, PartType.THRUSTER] },
 ];
 
 export const PAINT_CATEGORIES = [

@@ -61,7 +61,7 @@ const ControlHUD: React.FC<ControlHUDProps> = ({
     { id: AppMode.DELETE, label: 'Erase', icon: <Trash2 size={18} /> },
     { id: AppMode.PAINT, label: 'Paint', icon: <Palette size={18} /> },
     { id: AppMode.SETTINGS, label: 'Config', icon: <Settings size={18} /> },
-    { id: AppMode.LIBRARY, label: 'Library', icon: <FolderOpen size={18} /> },
+    // { id: AppMode.LIBRARY, label: 'Library', icon: <FolderOpen size={18} /> },
     { id: AppMode.PLAY, label: 'Run', icon: <Play size={18} /> },
   ];
 

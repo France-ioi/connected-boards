@@ -13,7 +13,7 @@ import {createSensor} from "./sensors/sensor_factory";
 import {SensorDrawTimeLineParameters} from "./sensors/abstract_sensor";
 import {microbitBoard} from "./boards/microbit/microbit_board";
 import {ModuleFeature} from "./modules/module_definition";
-import {ThreeDimensionVisualizationApp} from "./3d_visualization/App";
+import AppContainer from "./3d_visualization/AppContainer";
 
 const boards: {[board: string]: AbstractBoard} = {
     galaxia: galaxiaBoard,
@@ -51,7 +51,11 @@ var getContext = function (display, infos, curLevel) {
     context.sensorHandler = sensorHandler;
 
     context.getComponent = () => {
-        return ThreeDimensionVisualizationApp;
+        if (!infos['3d_visualization']) {
+            return null;
+        }
+
+        return AppContainer;
     };
 
     // List of concepts to be included by conceptViewer
@@ -991,11 +995,8 @@ var getContext = function (display, infos, curLevel) {
     };
 
     context.resetDisplay = function() {
-        // console.log("resetDisplay")
-        return;
-        if (!context.display || !this.raphaelFactory)
+        if (!context.display || !this.raphaelFactory || (infos['3d_visualization'] && 'components' !== context.displayMode))
             return;
-
 
         context.autoGrading = context.displayAutoGrading;
 
