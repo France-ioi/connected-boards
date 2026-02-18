@@ -3,11 +3,14 @@ import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { RigidBody, CuboidCollider, CylinderCollider, useRevoluteJoint, RapierRigidBody } from '@react-three/rapier';
 import { useFrame } from '@react-three/fiber';
 import { PartData, PartType, AppMode } from '../types';
+import { DragState, PushState } from './Scene';
 import PartMesh from './PartMesh';
 import * as THREE from 'three';
 
 interface PlayMachineProps {
   parts: PartData[];
+  dragState?: DragState;
+  pushState?: PushState;
 }
 
 const getPartCells = (part: PartData): THREE.Vector3[] => {
@@ -41,7 +44,8 @@ const IslandMotor: React.FC<{
   config: JointConfig;
   motorIslandOrigin: THREE.Vector3;
   rotorIslandOrigin: THREE.Vector3;
-}> = ({ body1, body2, config, motorIslandOrigin, rotorIslandOrigin }) => {
+  rotorVisuals: React.MutableRefObject<{ [id: string]: THREE.Group | null }>;
+}> = ({ body1, body2, config, motorIslandOrigin, rotorIslandOrigin, rotorVisuals }) => {
   const { motorPart } = config;
 
   const jointParams = useMemo(() => {
@@ -134,6 +138,37 @@ const IslandMotor: React.FC<{
     }
 
     jointRef.current.configureMotorVelocity(targetVelocity, power * 50);
+
+    // Visual Update
+    const visualGroup = rotorVisuals.current[motorPart.id];
+    if (visualGroup && body1.current && body2.current) {
+        const r1 = body1.current.rotation();
+        const r2 = body2.current.rotation();
+        
+        const q1 = new THREE.Quaternion(r1.x, r1.y, r1.z, r1.w);
+        const q2 = new THREE.Quaternion(r2.x, r2.y, r2.z, r2.w);
+        
+        // Relative rotation: q1^-1 * q2
+        const q1Inv = q1.clone().invert();
+        const qRel = q1Inv.multiply(q2);
+        
+        // Motor axis in Body 1 space
+        const axis = new THREE.Vector3(...jointParams.axis);
+        
+        let perp = new THREE.Vector3(1, 0, 0);
+        if (Math.abs(axis.dot(perp)) > 0.9) perp = new THREE.Vector3(0, 1, 0);
+        perp.sub(axis.clone().multiplyScalar(axis.dot(perp))).normalize();
+        
+        const perpRot = perp.clone().applyQuaternion(qRel);
+        
+        const cross = new THREE.Vector3().crossVectors(perp, perpRot);
+        const sinTheta = cross.dot(axis);
+        const cosTheta = perp.dot(perpRot);
+        
+        const theta = Math.atan2(sinTheta, cosTheta);
+        
+        visualGroup.rotation.z = theta;
+    }
   });
 
   return null;
@@ -149,7 +184,6 @@ const WheelSteeringJoint: React.FC<{
   const { wheelPart } = config;
   const jointParams = useMemo(() => {
     const quat = new THREE.Quaternion(...wheelPart.rotation);
-    // Pivot at the attachment point (behind the axle/tire)
     const pivotLocal = new THREE.Vector3(0, 0, -0.4).applyQuaternion(quat);
     const pivotWorld = new THREE.Vector3(...wheelPart.position).add(pivotLocal);
     
@@ -308,8 +342,191 @@ const LightController: React.FC<{
   return null;
 };
 
-const PlayMachine: React.FC<PlayMachineProps> = ({ parts }) => {
+// --- Physics Drag Controller ---
+const DragController: React.FC<{
+  islandRefs: React.MutableRefObject<React.RefObject<RapierRigidBody>[]>;
+  dragState?: DragState;
+  islands: { parts: PartData[], origin: THREE.Vector3 }[];
+}> = ({ islandRefs, dragState, islands }) => {
+  
+  // To avoid calculating the local anchor every frame, we calculate it once when drag starts
+  const activeDragRef = useRef<{
+    bodyIdx: number;
+    localAnchor: THREE.Vector3;
+  } | null>(null);
+
+  // Reset when drag stops
+  useEffect(() => {
+    if (!dragState?.isDragging) {
+      activeDragRef.current = null;
+    }
+  }, [dragState?.isDragging]);
+
+  useFrame(() => {
+    if (!dragState?.isDragging || !dragState.partId || !dragState.targetPosition || !dragState.hitPoint) return;
+
+    // Find the body if we haven't yet
+    if (!activeDragRef.current) {
+      // Find which island contains the part
+      const islandIdx = islands.findIndex(isl => isl.parts.some(p => p.id === dragState.partId));
+      if (islandIdx === -1) return;
+
+      const body = islandRefs.current[islandIdx]?.current;
+      if (!body) return;
+
+      // Calculate local anchor based on initial hit point
+      const bodyTranslation = body.translation();
+      const bodyRotation = body.rotation();
+      const bodyQuat = new THREE.Quaternion(bodyRotation.x, bodyRotation.y, bodyRotation.z, bodyRotation.w);
+      
+      const worldHit = dragState.hitPoint;
+      const relPos = new THREE.Vector3(
+        worldHit.x - bodyTranslation.x,
+        worldHit.y - bodyTranslation.y,
+        worldHit.z - bodyTranslation.z
+      );
+      
+      // Inverse rotate to get local
+      const bodyQuatInv = bodyQuat.clone().invert();
+      const localAnchor = relPos.applyQuaternion(bodyQuatInv);
+
+      activeDragRef.current = {
+        bodyIdx: islandIdx,
+        localAnchor
+      };
+    }
+
+    // Apply Force
+    if (activeDragRef.current) {
+       const body = islandRefs.current[activeDragRef.current.bodyIdx]?.current;
+       if (!body) return;
+
+       // Calculate current world position of the anchor
+       const bodyTrans = body.translation();
+       const bodyRot = body.rotation();
+       const bodyQ = new THREE.Quaternion(bodyRot.x, bodyRot.y, bodyRot.z, bodyRot.w);
+       
+       const currentAnchorWorld = activeDragRef.current.localAnchor.clone().applyQuaternion(bodyQ).add(new THREE.Vector3(bodyTrans.x, bodyTrans.y, bodyTrans.z));
+       
+       // Vector to target
+       const target = dragState.targetPosition;
+       const diff = new THREE.Vector3().subVectors(target, currentAnchorWorld);
+       
+       // Spring Force (Proportional)
+       const k = 500; // Stiffness
+       const force = diff.clone().multiplyScalar(k);
+       
+       // Damping Force (Derivative)
+       const linVel = body.linvel();
+       const damping = 20;
+       force.sub(new THREE.Vector3(linVel.x, linVel.y, linVel.z).multiplyScalar(damping));
+
+       body.applyImpulseAtPoint(
+          { x: force.x * 0.016, y: force.y * 0.016, z: force.z * 0.016 },
+          { x: currentAnchorWorld.x, y: currentAnchorWorld.y, z: currentAnchorWorld.z },
+          true
+       );
+       
+       body.wakeUp();
+    }
+  });
+
+  return null;
+};
+
+// --- Physics Push Controller ---
+const PushController: React.FC<{
+  islandRefs: React.MutableRefObject<React.RefObject<RapierRigidBody>[]>;
+  pushState?: PushState;
+  islands: { parts: PartData[], origin: THREE.Vector3 }[];
+}> = ({ islandRefs, pushState, islands }) => {
+  const activePushRef = useRef<{
+    bodyIdx: number;
+    localAnchor: THREE.Vector3;
+    forceDir: THREE.Vector3;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!pushState?.isPushing || !pushState.partId || !pushState.hitPoint || !pushState.forceDir) {
+      activePushRef.current = null;
+      return;
+    }
+    
+    const islandIdx = islands.findIndex(isl => isl.parts.some(p => p.id === pushState.partId));
+    if (islandIdx === -1) return;
+    const body = islandRefs.current[islandIdx]?.current;
+    if (!body) return;
+
+    // Calc local anchor
+    const trans = body.translation();
+    const rot = body.rotation();
+    const q = new THREE.Quaternion(rot.x, rot.y, rot.z, rot.w);
+    const worldHit = pushState.hitPoint;
+    const rel = new THREE.Vector3(worldHit.x - trans.x, worldHit.y - trans.y, worldHit.z - trans.z);
+    const localAnchor = rel.applyQuaternion(q.clone().invert());
+
+    activePushRef.current = {
+      bodyIdx: islandIdx,
+      localAnchor,
+      forceDir: pushState.forceDir.clone()
+    };
+  }, [pushState?.isPushing, pushState?.partId, islands]);
+
+  useFrame((state, delta) => {
+    if (!activePushRef.current) return;
+    const body = islandRefs.current[activePushRef.current.bodyIdx]?.current;
+    if (!body) return;
+
+    const mass = body.mass();
+    const desiredSpeed = 2.0; // approx 2 m/s
+    
+    // Flatten force direction to horizontal plane (XZ) to prevent pinning the object to the floor
+    const rawDir = activePushRef.current.forceDir;
+    const moveDir = new THREE.Vector3(rawDir.x, 0, rawDir.z).normalize();
+    
+    // Fallback if looking straight down/up (prevent NaN/Zero vector)
+    if (moveDir.lengthSq() < 0.1) moveDir.copy(rawDir);
+    
+    // Get current velocity projected onto push direction
+    const linVel = body.linvel();
+    const currentVelVec = new THREE.Vector3(linVel.x, linVel.y, linVel.z);
+    const projectedSpeed = currentVelVec.dot(moveDir);
+    
+    // Safety clamp for max velocity to prevent physics explosion
+    const currentSpeedVal = currentVelVec.length();
+    const maxSafeSpeed = 20.0;
+
+    // If moving slower than desired speed in that direction, apply force
+    if (projectedSpeed < desiredSpeed && currentSpeedVal < maxSafeSpeed) {
+       // Proportional control to reach target speed
+       const speedDiff = desiredSpeed - projectedSpeed;
+       // Extremely High gain to ensure movement against friction and mass
+       // Increased from 20.0 to 100.0
+       const forceMag = mass * speedDiff * 100.0; 
+       
+       const force = moveDir.clone().multiplyScalar(forceMag);
+       
+       const trans = body.translation();
+       const rot = body.rotation();
+       const q = new THREE.Quaternion(rot.x, rot.y, rot.z, rot.w);
+       const worldPoint = activePushRef.current.localAnchor.clone().applyQuaternion(q).add(new THREE.Vector3(trans.x, trans.y, trans.z));
+
+       body.applyImpulseAtPoint(
+            { x: force.x * delta, y: force.y * delta, z: force.z * delta },
+            { x: worldPoint.x, y: worldPoint.y, z: worldPoint.z },
+            true
+       );
+    }
+
+    body.wakeUp();
+  });
+
+  return null;
+}
+
+const PlayMachine: React.FC<PlayMachineProps> = ({ parts, dragState, pushState }) => {
   const [lightStates, setLightStates] = useState<{ [id: string]: boolean }>({});
+  const motorRotorRefs = useRef<{ [id: string]: THREE.Group | null }>({});
 
   const handleLightStateChange = (id: string, isOn: boolean) => {
     setLightStates(prev => {
@@ -420,7 +637,12 @@ const PlayMachine: React.FC<PlayMachineProps> = ({ parts }) => {
     return { islands: finalIslands, motorConnections: mConnections, steeringConnections: steeringConfigs };
   }, [parts]);
 
-  const islandRefs = useMemo(() => islands.map(() => React.createRef<RapierRigidBody>()), [islands]);
+  const islandRefs = useRef(islands.map(() => React.createRef<RapierRigidBody>()));
+
+  // Ref Updates when islands change
+  useEffect(() => {
+     islandRefs.current = islands.map(() => React.createRef<RapierRigidBody>());
+  }, [islands.length]);
 
   return (
     <>
@@ -428,19 +650,22 @@ const PlayMachine: React.FC<PlayMachineProps> = ({ parts }) => {
         <LightController key={p.id} part={p} onStateChange={handleLightStateChange} />
       ))}
 
+      <DragController islandRefs={islandRefs} dragState={dragState} islands={islands} />
+      <PushController islandRefs={islandRefs} pushState={pushState} islands={islands} />
+
       {islands.map((island, idx) => {
         const thrusters = island.isTireOnly ? [] : island.parts.filter(p => p.type === PartType.THRUSTER);
         return (
           <React.Fragment key={`island-frag-${idx}`}>
             <RigidBody
-              ref={islandRefs[idx]}
+              ref={islandRefs.current[idx]}
               key={`island-${idx}`}
               position={[island.origin.x, island.origin.y, island.origin.z]}
               colliders={false}
               friction={0.8}
               restitution={0.2}
-              linearDamping={0.5}
-              angularDamping={0.5}
+              linearDamping={0.1}
+              angularDamping={0.2}
               ccd={true}
             >
               {island.parts.map(part => {
@@ -454,7 +679,7 @@ const PlayMachine: React.FC<PlayMachineProps> = ({ parts }) => {
                 const wheelRadius = 0.845;
 
                 return (
-                  <group key={part.id} position={relPos} quaternion={new THREE.Quaternion(...part.rotation)}>
+                  <group key={part.id} position={relPos} quaternion={new THREE.Quaternion(...part.rotation)} userData={{ partId: part.id }}>
                     <PartMesh 
                       type={part.type} 
                       mode={AppMode.PLAY}
@@ -463,6 +688,7 @@ const PlayMachine: React.FC<PlayMachineProps> = ({ parts }) => {
                       settings={part.settings}
                       subPart={part.type === PartType.WHEEL ? (island.isTireOnly ? 'tire' : (isSteerable ? 'plate' : undefined)) : undefined}
                       lightOn={part.type === PartType.LIGHT ? (lightStates[part.id] ?? true) : undefined}
+                      onRotorRef={part.type === PartType.MOTOR ? (el) => (motorRotorRefs.current[part.id] = el) : undefined}
                     />
                     
                     {part.type === PartType.WHEEL ? (
@@ -478,6 +704,8 @@ const PlayMachine: React.FC<PlayMachineProps> = ({ parts }) => {
                        )
                     ) : part.type === PartType.BLOCK_LONG ? (
                       <CuboidCollider args={[0.5, 0.5, 1.5]} />
+                    ) : part.type === PartType.CYLINDER ? (
+                      <CylinderCollider args={[0.5, 0.5]} friction={3.0} />
                     ) : part.type === PartType.STABILIZER ? (
                       <CuboidCollider args={[0.5, 0.5, 0.5]} mass={5.0} />
                     ) : (
@@ -489,7 +717,7 @@ const PlayMachine: React.FC<PlayMachineProps> = ({ parts }) => {
             </RigidBody>
             {thrusters.length > 0 && (
               <IslandThrusters 
-                body={islandRefs[idx]} 
+                body={islandRefs.current[idx]} 
                 thrusters={thrusters} 
                 islandOrigin={island.origin} 
               />
@@ -501,19 +729,20 @@ const PlayMachine: React.FC<PlayMachineProps> = ({ parts }) => {
       {motorConnections.map((conn, idx) => (
         <IslandMotor
           key={`motor-${idx}`}
-          body1={islandRefs[conn.motorIslandIdx]}
-          body2={islandRefs[conn.rotorIslandIdx]}
+          body1={islandRefs.current[conn.motorIslandIdx]}
+          body2={islandRefs.current[conn.rotorIslandIdx]}
           config={conn}
           motorIslandOrigin={islands[conn.motorIslandIdx].origin}
           rotorIslandOrigin={islands[conn.rotorIslandIdx].origin}
+          rotorVisuals={motorRotorRefs}
         />
       ))}
 
       {steeringConnections.map((conn, idx) => (
         <WheelSteeringJoint
           key={`steer-${idx}`}
-          body1={islandRefs[conn.islandIdx]}
-          body2={islandRefs[conn.steeringIslandIdx]}
+          body1={islandRefs.current[conn.islandIdx]}
+          body2={islandRefs.current[conn.steeringIslandIdx]}
           config={conn}
           island1Origin={islands[conn.islandIdx].origin}
           island2Origin={islands[conn.steeringIslandIdx].origin}

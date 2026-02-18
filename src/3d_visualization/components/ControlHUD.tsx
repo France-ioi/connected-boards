@@ -1,5 +1,6 @@
+
 import React, { useState, useRef, useEffect } from 'react';
-import { AppMode, PlayTool } from '../types';
+import { AppMode, PlayTool, SelectedFace } from '../types';
 import { 
   Play, 
   Pause,
@@ -17,7 +18,8 @@ import {
   Zap,
   Trash,
   FolderOpen,
-  BoxSelect
+  BoxSelect,
+  CheckCircle2
 } from 'lucide-react';
 
 interface ControlHUDProps {
@@ -35,10 +37,12 @@ interface ControlHUDProps {
   setHoveredRotationAxis: (axis: number | null) => void;
   onToggleHelp: () => void;
   toggleFacePicker: () => void;
+  selectedFace: SelectedFace | null;
+  onReset: () => void;
 }
 
 const ControlHUD: React.FC<ControlHUDProps> = ({ 
-  mode, setMode, isPaused, togglePause, playTool, setPlayTool, undo, moveAll, clearAll, rotation, rotateAxis, setHoveredRotationAxis, onToggleHelp, toggleFacePicker
+  mode, setMode, isPaused, togglePause, playTool, setPlayTool, undo, moveAll, clearAll, rotation, rotateAxis, setHoveredRotationAxis, onToggleHelp, toggleFacePicker, selectedFace, onReset
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -61,15 +65,27 @@ const ControlHUD: React.FC<ControlHUDProps> = ({
     { id: AppMode.DELETE, label: 'Erase', icon: <Trash2 size={18} /> },
     { id: AppMode.PAINT, label: 'Paint', icon: <Palette size={18} /> },
     { id: AppMode.SETTINGS, label: 'Config', icon: <Settings size={18} /> },
-    // { id: AppMode.LIBRARY, label: 'Library', icon: <FolderOpen size={18} /> },
+    { id: AppMode.LIBRARY, label: 'Library', icon: <FolderOpen size={18} /> },
     { id: AppMode.PLAY, label: 'Run', icon: <Play size={18} /> },
   ];
 
   const currentModeData = modes.find(m => m.id === mode) || modes[0];
 
   const handleModeClick = (selectedMode: AppMode) => {
-    setMode(selectedMode);
+    if (selectedMode === AppMode.PLAY && mode === AppMode.PLAY) {
+      onReset();
+    } else {
+      setMode(selectedMode);
+    }
     setIsMenuOpen(false);
+  };
+
+  const handleMainButtonClick = () => {
+    // If we are in Play mode and opening the menu, reset the simulation
+    if (mode === AppMode.PLAY && !isMenuOpen) {
+      onReset();
+    }
+    setIsMenuOpen(!isMenuOpen);
   };
 
   return (
@@ -83,7 +99,7 @@ const ControlHUD: React.FC<ControlHUDProps> = ({
           </div>
 
           <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            onClick={handleMainButtonClick}
             className={`
               flex flex-col items-center justify-center w-14 h-14 rounded-2xl transition-all duration-300 relative overflow-hidden group
               ${isPlayMode ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/30' : mode === AppMode.LIBRARY ? 'bg-amber-600 shadow-lg shadow-amber-600/30 text-white' : 'bg-blue-600 shadow-lg shadow-blue-600/30 text-white'}
@@ -214,13 +230,15 @@ const ControlHUD: React.FC<ControlHUDProps> = ({
                   w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 group relative active:scale-90
                   ${mode === AppMode.FACE_PICKER 
                     ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/40' 
-                    : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'
+                    : selectedFace
+                      ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/40' 
+                      : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'
                   }
                 `}
               >
                 <BoxSelect size={18} />
                 <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 px-2.5 py-1.5 bg-slate-900 text-white text-[8px] font-bold rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap border border-white/10 shadow-2xl transition-all z-50 transform translate-y-1 group-hover:translate-y-0">
-                  Face Selection Tool
+                  {selectedFace ? 'Face Locked (Click to Change)' : 'Face Selection Tool'}
                   <div className="absolute top-full left-1/2 -translate-x-1/2 border-x-4 border-x-transparent border-t-4 border-t-slate-900" />
                 </div>
               </button>

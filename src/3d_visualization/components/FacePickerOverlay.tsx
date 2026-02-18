@@ -1,5 +1,5 @@
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, Environment, PerspectiveCamera } from '@react-three/drei';
 import * as THREE from 'three';
@@ -12,6 +12,7 @@ interface FacePickerOverlayProps {
   selectedFace: SelectedFace | null;
   onSelectFace: (face: SelectedFace) => void;
   onClose: () => void;
+  onClear?: () => void;
 }
 
 const FacePickerScene: React.FC<{
@@ -78,17 +79,36 @@ const FacePickerScene: React.FC<{
   );
 };
 
-const FacePickerOverlay: React.FC<FacePickerOverlayProps> = ({ type, selectedFace, onSelectFace, onClose }) => {
+const FacePickerOverlay: React.FC<FacePickerOverlayProps> = ({ type, selectedFace, onSelectFace, onClose, onClear }) => {
+  const [tempSelectedFace, setTempSelectedFace] = useState<SelectedFace | null>(selectedFace);
+  const [isWait, setIsWait] = useState(false);
+
+  useEffect(() => {
+    setTempSelectedFace(selectedFace);
+  }, [selectedFace]);
+
+  const handleFaceSelect = (face: SelectedFace) => {
+    if (isWait) return;
+    
+    setTempSelectedFace(face);
+    setIsWait(true);
+
+    // Visual delay to show feedback
+    setTimeout(() => {
+      onSelectFace(face);
+    }, 500);
+  };
+
   return (
     <div className="absolute inset-0 z-[100] bg-slate-950/90 backdrop-blur-2xl flex flex-col animate-in fade-in duration-300">
       {/* Header UI */}
-      <div className="p-8 flex items-center justify-between border-b border-white/5">
+      <div className="p-8 flex items-center justify-between border-b border-white/5 pointer-events-auto">
         <div>
-          <h2 className="text-2xl font-black text-white tracking-tighter uppercase">Face Inspection</h2>
+          <h2 className="text-2xl font-black text-white tracking-tighter uppercase">Attachment Face Selection</h2>
           <p className="text-sm text-slate-400 mt-1">Rotate the part and click any face to use it as the attachment point.</p>
         </div>
         <div className="flex items-center gap-4">
-          {selectedFace && (
+          {tempSelectedFace && (
             <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/20 text-emerald-400 rounded-xl border border-emerald-500/30 animate-in zoom-in-95 duration-200">
               <CheckCircle2 size={16} />
               <span className="text-xs font-black uppercase tracking-widest">Face Locked</span>
@@ -104,30 +124,33 @@ const FacePickerOverlay: React.FC<FacePickerOverlayProps> = ({ type, selectedFac
       </div>
 
       {/* Main Viewport */}
-      <div className="flex-1 relative">
-        <Canvas shadows>
+      <div className="flex-1 relative cursor-pointer">
+        <Canvas 
+          shadows 
+          onPointerMissed={(e) => {
+            // If the user clicks the empty background (misses the part), handle clear/close
+            // We ensure it's a click event
+            if (e.type === 'click') {
+              if (onClear) onClear();
+              else onClose();
+            }
+          }}
+        >
           <PerspectiveCamera makeDefault position={[3, 3, 3]} fov={50} />
-          <FacePickerScene type={type} selectedFace={selectedFace} onSelectFace={onSelectFace} />
+          <FacePickerScene type={type} selectedFace={tempSelectedFace} onSelectFace={handleFaceSelect} />
         </Canvas>
 
         {/* Floating Instruction */}
         <div className="absolute bottom-12 left-1/2 -translate-x-1/2 pointer-events-none text-center space-y-2">
           <div className="px-6 py-3 bg-slate-900/80 border border-white/10 rounded-full backdrop-blur-md shadow-2xl">
             <p className="text-xs font-bold text-slate-300 uppercase tracking-widest">
-              {selectedFace ? 'Selected attachment point confirmed' : 'Select an attachment face to proceed'}
+              Select an attachment face to proceed
             </p>
           </div>
+          <p className="text-[10px] text-slate-500 font-medium uppercase tracking-widest opacity-60">
+            {onClear ? 'Click background to clear selection' : 'Click background to cancel'}
+          </p>
         </div>
-      </div>
-
-      {/* Footer / Confirm */}
-      <div className="p-8 border-t border-white/5 bg-slate-950/50 flex justify-center">
-        <button
-          onClick={onClose}
-          className="px-16 py-4 bg-blue-600 hover:bg-blue-500 text-white font-black text-sm rounded-2xl shadow-xl shadow-blue-600/30 transition-all active:scale-95 flex items-center gap-3"
-        >
-          {selectedFace ? 'CONFIRM ATTACHMENT' : 'RETURN TO ASSEMBLY'}
-        </button>
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { PartType } from './types';
-import { Box, Triangle, Cpu, Settings2, Circle, Anchor, StretchHorizontal, Square, Zap, Sparkles, Layers, Lightbulb, Rocket } from 'lucide-react';
+import { Box, Triangle, Cpu, Settings2, Circle, Anchor, StretchHorizontal, Square, Zap, Sparkles, Layers, Lightbulb, Rocket, Scan, Cylinder } from 'lucide-react';
 
 export const PART_DEFINITIONS = [
   {
@@ -17,6 +17,13 @@ export const PART_DEFINITIONS = [
     icon: <StretchHorizontal size={20} />,
     description: 'A solid 3x1x1 construction block.',
     color: '#2563eb',
+  },
+  {
+    type: PartType.CYLINDER,
+    name: 'Cylinder',
+    icon: <Cylinder size={20} />,
+    description: 'A solid 1x1x1 cylindrical block.',
+    color: '#3b82f6',
   },
   {
     type: PartType.WEDGE,
@@ -47,6 +54,13 @@ export const PART_DEFINITIONS = [
     color: '#eab308',
   },
   {
+    type: PartType.SENSOR,
+    name: 'Distance Sensor',
+    icon: <Scan size={20} />,
+    description: 'Detects objects in front and displays distance.',
+    color: '#64748b',
+  },
+  {
     type: PartType.JOINT,
     name: 'Passive Joint',
     icon: <Settings2 size={20} />,
@@ -70,8 +84,9 @@ export const PART_DEFINITIONS = [
 ];
 
 export const CATEGORIES = [
-  { name: 'Basics', types: [PartType.BLOCK, PartType.BLOCK_LONG, PartType.WEDGE, PartType.STABILIZER, PartType.LIGHT] },
-  // { name: 'Mechanical', types: [PartType.MOTOR, PartType.JOINT, PartType.WHEEL, PartType.THRUSTER] },
+  { name: 'Basics', types: [PartType.BLOCK, PartType.BLOCK_LONG, PartType.CYLINDER, PartType.WEDGE, PartType.STABILIZER, PartType.LIGHT] },
+  { name: 'Mechanical', types: [PartType.MOTOR, PartType.JOINT, PartType.WHEEL, PartType.THRUSTER] },
+  { name: 'Sensors', types: [PartType.SENSOR] },
 ];
 
 export const PAINT_CATEGORIES = [

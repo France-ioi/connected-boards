@@ -11,16 +11,24 @@ export enum AppMode {
   LIBRARY = 'LIBRARY'
 }
 
+export enum PaintMode {
+  BLOCK = 'BLOCK',
+  FACE = 'FACE',
+  FILL = 'FILL'
+}
+
 export enum PartType {
   BLOCK = 'BLOCK',
   BLOCK_LONG = 'BLOCK_LONG',
+  CYLINDER = 'CYLINDER',
   WEDGE = 'WEDGE',
   MOTOR = 'MOTOR',
   JOINT = 'JOINT',
   WHEEL = 'WHEEL',
   STABILIZER = 'STABILIZER',
   LIGHT = 'LIGHT',
-  THRUSTER = 'THRUSTER'
+  THRUSTER = 'THRUSTER',
+  SENSOR = 'SENSOR'
 }
 
 export enum PlayTool {
@@ -41,6 +49,7 @@ export interface PartData {
   rotation: [number, number, number, number]; // Quaternion [x, y, z, w]
   customColor?: string;
   customFinish?: 'matte' | 'glossy' | 'metallic' | 'neon';
+  faceColors?: { [faceIndex: number]: string }; // Map face index (0-5) to color
   settings?: {
     forwardKey?: string;
     backwardKey?: string;
@@ -61,6 +70,10 @@ export interface PartData {
     steeringRange?: number;
     steeringSpeed?: number;
   };
+}
+
+export interface FloorTileMap {
+  [key: string]: string; // key: "x,z", value: colorHex
 }
 
 export interface MachineState {
