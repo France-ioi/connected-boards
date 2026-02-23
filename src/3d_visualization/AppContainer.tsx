@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {ThreeDimensionVisualizationApp} from "./App";
+import {ShadowRoot} from "./ShadowRoot";
 
 enum DisplayMode {
   ThreeDimension = '3d',
@@ -17,9 +18,11 @@ const AppContainer: React.FC = () => {
   }, [displayMode]);
 
   return (
-    <div className="w-full h-full relative">
+    <div style={{width: '100%', height: '100%', position: 'relative'}}>
       {DisplayMode.ThreeDimension === displayMode ?
-        <ThreeDimensionVisualizationApp/>
+        <ShadowRoot>
+          <ThreeDimensionVisualizationApp/>
+        </ShadowRoot>
         :
         <div id="taskContent">
           <div id="taskIntro"/>
@@ -29,12 +32,12 @@ const AppContainer: React.FC = () => {
         </div>
       }
 
-      <div className={`
-        absolute top-2 right-2 z-[200] cursor-pointer
-      `} onClick={() => setDisplayMode(DisplayMode.ThreeDimension === displayMode ? DisplayMode.Components : DisplayMode.ThreeDimension)}
-      >
-        Change
-      </div>
+      {/*<div className={`*/}
+      {/*  absolute top-2 right-2 z-[200] cursor-pointer*/}
+      {/*`} onClick={() => setDisplayMode(DisplayMode.ThreeDimension === displayMode ? DisplayMode.Components : DisplayMode.ThreeDimension)}*/}
+      {/*>*/}
+      {/*  Change*/}
+      {/*</div>*/}
     </div>
   )
 }

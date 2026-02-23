@@ -3,7 +3,9 @@ import nodeResolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import replace from '@rollup/plugin-replace';
 import styles from 'rollup-plugin-styles';
+import postcss from 'rollup-plugin-postcss';
 import image from '@rollup/plugin-image';
+import tailwindcss from '@tailwindcss/postcss';
 
 export default {
   input: 'src/index.ts',
@@ -43,6 +45,18 @@ export default {
     }),
     styles({
       mode: 'extract',
+      exclude: '**/shadow-tailwind.css',
+    }),
+    postcss({
+      include: '**/shadow-tailwind.css',
+      plugins: [
+        tailwindcss(),
+      ],
+      inject: false,
+      extract: false,
+      minimize: true,
+      modules: false,
+      use: [],
     }),
     image(),
   ],
