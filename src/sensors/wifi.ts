@@ -2,7 +2,6 @@ import {AbstractSensor, SensorDrawParameters, SensorDrawTimeLineParameters} from
 import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {deepSubsetEqual, getImg, textEllipsis} from "../util";
-import {networkWlanModuleDefinition} from "../modules/network/wlan";
 import {drawBubbleTimeline} from "./util/bubble_timeline";
 
 interface SensorWifiState {

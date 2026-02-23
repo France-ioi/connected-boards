@@ -50,6 +50,7 @@ export interface PartData {
   customColor?: string;
   customFinish?: 'matte' | 'glossy' | 'metallic' | 'neon';
   faceColors?: { [faceIndex: number]: string }; // Map face index (0-5) to color
+  sensorName?: string,
   settings?: {
     forwardKey?: string;
     backwardKey?: string;

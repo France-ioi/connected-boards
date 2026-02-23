@@ -1,5 +1,4 @@
 import {SensorLed} from "./led";
-import {QuickalgoLibrary, Sensor} from "../definitions";
 import {SensorLedRgb} from "./led_rgb";
 import {SensorLedDim} from "./led_dim";
 import {SensorLedMatrix} from "./led_matrix";
@@ -48,13 +47,3 @@ export const sensorsList = {
   temperature: SensorTemperature,
   wifi: SensorWifi,
 };
-
-export function createSensor(sensor: Sensor, context: QuickalgoLibrary, strings: any) {
-  if (sensor.type in sensorsList) {
-    return new sensorsList[sensor.type](sensor, context, strings);
-  }
-
-  return {
-    ...sensor,
-  };
-}

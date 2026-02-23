@@ -17,6 +17,8 @@ import SettingsPanel from './components/SettingsPanel';
 import HelpDialog from './components/HelpDialog';
 import ConfirmDialog from './components/ConfirmDialog';
 import FacePickerOverlay from './components/FacePickerOverlay';
+import {QuickalgoLibrary} from "../definitions";
+import {updateContextSensors} from "./3d_interface";
 
 const STORAGE_KEY = 'machine-crafter-3d-save';
 
@@ -136,7 +138,7 @@ const KeyboardCameraControls: React.FC<{ controlsRef: React.RefObject<any>, isDr
   return null;
 };
 
-const App: React.FC = () => {
+export const ThreeDimensionVisualizationApp: React.FC<{context: QuickalgoLibrary}> = ({context}) => {
   const [mode, setMode] = useState<AppMode>(AppMode.CONSTRUCTION);
   const [paintMode, setPaintMode] = useState<PaintMode>(PaintMode.BLOCK);
   const [isPaused, setIsPaused] = useState(false);
@@ -508,6 +510,10 @@ const App: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentRotation, mode, editingPartId, undo, parts]);
 
+  useEffect(() => {
+    updateContextSensors(parts, context);
+  }, [parts]);
+
   const editingPart = parts.find(p => p.id === editingPartId);
 
   return (
@@ -670,4 +676,3 @@ const App: React.FC = () => {
   );
 };
 
-export const ThreeDimensionVisualizationApp = App;

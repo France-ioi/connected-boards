@@ -3,7 +3,6 @@ import {getImg} from "../util";
 import {getSessionStorage, setSessionStorage} from "../helpers/session_storage";
 import {showasConnecting} from "../display";
 import {getConnectionDialogHTML} from "./connection_dialog";
-import {createSensor} from "../sensors/sensor_factory";
 
 export function showConfig({context, strings, mainBoard}) {
   const availableConnectionMethods: ConnectionMethod[] = mainBoard.getAvailableConnectionMethods();
@@ -305,12 +304,12 @@ export function showConfig({context, strings, mainBoard}) {
           var port = $("#qpi-add-sensor-parent-" + sensorID + " .port").text();
           var name = sensorHandler.getNewSensorSuggestedName(sensorDefinition.suggestedName);
 
-          const newSensor = createSensor({
+          const newSensor = sensorHandler.createSensor({
             type: sensorDefinition.name,
             subType: sensorDefinition.subType,
             port: port,
             name: name
-          }, context, strings);
+          });
 
           context.sensorsList.add(newSensor);
 

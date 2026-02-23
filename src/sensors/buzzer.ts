@@ -7,7 +7,6 @@ import {getImg} from "../util";
 export class SensorBuzzer extends AbstractSensor<any> {
   private buzzeron: any;
   private buzzeroff: any;
-  private muteBtn: any;
   private buzzerInterval: any;
   private ringingState: boolean;
   public type = 'buzzer';

@@ -19,6 +19,16 @@ export class SensorCollection {
     return this.entries.length;
   }
 
+  public findSensorByName(sensorName: string): AbstractSensor<any>|null {
+    for (let sensor of this.entries) {
+      if (sensorName === sensor.name) {
+        return sensor;
+      }
+    }
+
+    return null;
+  }
+
   // public filterBy...() {
   //
   // }
