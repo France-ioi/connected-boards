@@ -18,7 +18,7 @@ import HelpDialog from './components/HelpDialog';
 import ConfirmDialog from './components/ConfirmDialog';
 import FacePickerOverlay from './components/FacePickerOverlay';
 import {QuickalgoLibrary} from "../definitions";
-import {updateContextSensors} from "./3d_interface";
+import {subscribeToContextStateChanges, updateContextSensors} from "./3d_interface";
 
 const STORAGE_KEY = 'machine-crafter-3d-save';
 
@@ -512,6 +512,7 @@ export const ThreeDimensionVisualizationApp: React.FC<{context: QuickalgoLibrary
 
   useEffect(() => {
     updateContextSensors(parts, context);
+    subscribeToContextStateChanges(context, parts, setParts);
   }, [parts]);
 
   const editingPart = parts.find(p => p.id === editingPartId);

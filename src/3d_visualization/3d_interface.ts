@@ -1,9 +1,25 @@
 import {PartData, PartType} from "./types";
 import {QuickalgoLibrary} from "../definitions";
+import {AbstractSensor} from "../sensors/abstract_sensor";
+import React from "react";
 
 const syncPartTypes = {
   [PartType.LIGHT]: 'led',
 };
+
+export function changePartState(context: QuickalgoLibrary, part: PartData, state: unknown): void {
+  if (!part.sensorName) {
+    return;
+  }
+
+  const sensorState = context.getSensorState(part.sensorName);
+  if (sensorState === state) {
+    return;
+  }
+
+  console.log('update part state', {sensor: part.sensorName, state});
+  context.registerQuickPiEvent(part.sensorName, state);
+}
 
 export function updateContextSensors(parts: PartData[], context: QuickalgoLibrary) {
   const {sensorsList} = context;
@@ -28,8 +44,15 @@ export function updateContextSensors(parts: PartData[], context: QuickalgoLibrar
       });
 
       part.sensorName = sensorName;
+      console.log('part', newSensor.state);
 
       sensorsList.add(newSensor);
+
+      setTimeout(() => {
+        const initialState = newSensor.getInitialState();
+        context.registerQuickPiEvent(sensorName, initialState, true, false);
+      });
+
       hasChanges = true;
     } else {
       const sensor = sensorsList.findSensorByName(part.sensorName);
@@ -49,4 +72,25 @@ export function updateContextSensors(parts: PartData[], context: QuickalgoLibrar
     context.recreateDisplay = true;
     context.resetDisplay();
   }
+}
+
+export function subscribeToContextStateChanges(context: QuickalgoLibrary, parts: PartData[], setParts:  React.Dispatch<React.SetStateAction<PartData[]>>) {
+  context.sensorStateListener = (sensor: AbstractSensor<any>) => {
+    if ('object' !== typeof sensor) {
+      return;
+    }
+
+    const part = parts.find(part => sensor.name === part.sensorName);
+    if (!part) {
+      return;
+    }
+
+    if (part.innerState === sensor.state) {
+      return;
+    }
+
+    console.log('subscribed to context state');
+
+    setParts(parts => parts.map(p => sensor.name === part.sensorName ? { ...p, innerState: sensor.state } : p));
+  };
 }

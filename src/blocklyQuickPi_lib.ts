@@ -2536,7 +2536,7 @@ var getContext = function (display, infos, curLevel) {
         }
 
         if (context.autoGrading && context.gradingStatesBySensor != undefined && !allowFail) {
-            if(!context.actualStatesBySensor[name]) {
+            if (!context.actualStatesBySensor[name]) {
                 context.actualStatesBySensor[name] = [];
             }
             var actualStates = context.actualStatesBySensor[name];

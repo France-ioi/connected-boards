@@ -1,11 +1,13 @@
 
-import React, { useMemo, useRef, useState, useEffect } from 'react';
+import React, {useMemo, useRef, useState, useEffect, useContext} from 'react';
 import { RigidBody, CuboidCollider, CylinderCollider, useRevoluteJoint, RapierRigidBody } from '@react-three/rapier';
 import { useFrame } from '@react-three/fiber';
 import { PartData, PartType, AppMode } from '../types';
 import { DragState, PushState } from './Scene';
 import PartMesh from './PartMesh';
 import * as THREE from 'three';
+import {changePartState} from "../3d_interface";
+import {QuickalgoContext} from "../QuickalgoContext";
 
 interface PlayMachineProps {
   parts: PartData[];
@@ -295,8 +297,22 @@ const LightController: React.FC<{
   part: PartData;
   onStateChange: (id: string, isOn: boolean) => void;
 }> = ({ part, onStateChange }) => {
-  const [isOn, setIsOn] = useState(true);
+  const [isOn, setIsOn] = useState(part.innerState as boolean);
   const prevKeyPressed = useRef(false);
+  const onStateChangeRef = useRef(onStateChange);
+  onStateChangeRef.current = onStateChange;
+  const skipCallback = useRef(false);
+
+  // Sync external changes to innerState without triggering the callback
+  useEffect(() => {
+    const newState = part.innerState as boolean;
+    setIsOn(prev => {
+      if (prev !== newState) {
+        skipCallback.current = true;
+      }
+      return newState;
+    });
+  }, [part.innerState]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -336,8 +352,12 @@ const LightController: React.FC<{
   }, [part.settings]);
 
   useEffect(() => {
-    onStateChange(part.id, isOn);
-  }, [isOn, part.id, onStateChange]);
+    if (skipCallback.current) {
+      skipCallback.current = false;
+      return;
+    }
+    onStateChangeRef.current(part.id, isOn);
+  }, [isOn, part.id]);
 
   return null;
 };
@@ -525,14 +545,13 @@ const PushController: React.FC<{
 }
 
 const PlayMachine: React.FC<PlayMachineProps> = ({ parts, dragState, pushState }) => {
-  const [lightStates, setLightStates] = useState<{ [id: string]: boolean }>({});
   const motorRotorRefs = useRef<{ [id: string]: THREE.Group | null }>({});
+  const context = useContext(QuickalgoContext);
+
+  console.log('play machine', parts);
 
   const handleLightStateChange = (id: string, isOn: boolean) => {
-    setLightStates(prev => {
-      if (prev[id] === isOn) return prev;
-      return { ...prev, [id]: isOn };
-    });
+    changePartState(context, parts.find(part => id === part.id), isOn);
   };
 
   const { islands, motorConnections, steeringConnections } = useMemo(() => {
@@ -687,7 +706,7 @@ const PlayMachine: React.FC<PlayMachineProps> = ({ parts, dragState, pushState }
                       customFinish={part.customFinish} 
                       settings={part.settings}
                       subPart={part.type === PartType.WHEEL ? (island.isTireOnly ? 'tire' : (isSteerable ? 'plate' : undefined)) : undefined}
-                      lightOn={part.type === PartType.LIGHT ? (lightStates[part.id] ?? true) : undefined}
+                      lightOn={part.type === PartType.LIGHT ? (part.innerState as boolean) : undefined}
                       onRotorRef={part.type === PartType.MOTOR ? (el) => (motorRotorRefs.current[part.id] = el) : undefined}
                     />
                     
