@@ -50,7 +50,9 @@ const ControlHUD: React.FC<ControlHUDProps> = ({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      const path = event.composedPath();
+
+      if (menuRef.current && !path.includes(menuRef.current)) {
         setIsMenuOpen(false);
       }
     };
