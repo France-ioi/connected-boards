@@ -21,6 +21,7 @@ import {irtransModuleDefinition} from "../../modules/irtrans";
 import {irrecvModuleDefinition} from "../../modules/irrecv";
 import {humidityModuleDefinition} from "../../modules/humidity";
 import {cloudStoreModuleDefinition} from "../../modules/cloud_store";
+import {motorModuleDefinition} from "../../modules/motor";
 
 let quickpiConnection = null;
 
@@ -129,6 +130,7 @@ export class QuickPiBoard extends AbstractBoard {
     const lightModule = lightModuleDefinition(context);
 
     const magnetometerModule = magnetometerModuleDefinition(context, strings);
+    const motorModule = motorModuleDefinition(context);
 
     const potentiometerModule = potentiometerModuleDefinition(context);
     const rangeModule = rangeModuleDefinition(context);
@@ -155,6 +157,7 @@ export class QuickPiBoard extends AbstractBoard {
       ...ledModule,
       ...lightModule,
       ...magnetometerModule,
+      ...motorModule,
       ...potentiometerModule,
       ...rangeModule,
       ...screenModule,

@@ -52,6 +52,7 @@ export default {
     readHumidity: "humidité ambiante",
 
     setServoAngle: "mettre le servo %1 à l'angle %2",
+    setMotorSpeed: "changer la vitesse du moteur %1 à %2",
     getServoAngle: "angle du servo %1",
 
     setContinousServoDirection: "la direction du servo continu  %1 %2",
@@ -215,6 +216,7 @@ export default {
     sleep_sec: "sleep(seconds) met en pause l'exécution pendant une durée en secondes",
     sleep_us: "sleep_us(microseconds) met en pause l'exécution pendant une durée en microsecondes",
     setServoAngle: "setServoAngle(servo, angle) change l'angle du servomoteur",
+    setMotorSpeed: "setMotorSpeed(motor, speed) change la vitesse du moteur",
     readRotaryAngle: "readRotaryAngle(potentiometer) retourne la position potentiomètre",
     readDistance: "readDistance(distanceSensor) retourne la distance mesurée",
     readLightIntensity: "readLightIntensity(lightSensor) retourne l'intensité lumineuse",
