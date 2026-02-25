@@ -1,10 +1,10 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { Canvas, useThree, useFrame } from '@react-three/fiber';
-import { Physics } from '@react-three/rapier';
-import {OrbitControls, Environment, Grid, Sky, PerspectiveCamera} from '@react-three/drei';
-import { AppMode, PartData, PartType, GRID_SIZE, PlayTool, SelectedFace, PaintMode, FloorTileMap } from './types';
-import { PART_DEFINITIONS } from './constants';
-import { v4 as uuidv4 } from 'uuid';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
+import {Canvas, useFrame, useThree} from '@react-three/fiber';
+import {Physics} from '@react-three/rapier';
+import {Environment, Grid, OrbitControls, PerspectiveCamera, Sky} from '@react-three/drei';
+import {AppMode, FloorTileMap, PaintMode, PartData, PartType, PlayTool, SelectedFace} from './types';
+import {PART_DEFINITIONS} from './constants';
+import {v4 as uuidv4} from 'uuid';
 import * as THREE from 'three';
 
 // Components
@@ -19,7 +19,7 @@ import ConfirmDialog from './components/ConfirmDialog';
 import FacePickerOverlay from './components/FacePickerOverlay';
 import {QuickalgoLibrary} from "../definitions";
 import {subscribeToContextStateChanges, updateContextSensors} from "./3d_interface";
-import {useSelector} from "react-redux";
+import {useDispatch, useSelector} from "react-redux";
 
 const STORAGE_KEY = 'machine-crafter-3d-save';
 
@@ -169,10 +169,23 @@ export const ThreeDimensionVisualizationApp: React.FC<{context: QuickalgoLibrary
   const axisTimeoutRef = useRef<any>(null);
 
   const stepperStatus = useSelector((state: any) => state.stepper.status);
+  const dispatch = useDispatch();
+  
+  const changeMode = (newMode: AppMode) => {
+    if (AppMode.PLAY === mode && AppMode.PLAY !== newMode) {
+      dispatch({type: 'Stepper.Exit'});
+    }
+
+    setMode(newMode);
+  };
 
   useEffect(() => {
     if ('running' === stepperStatus) {
-      handleResetSimulation();
+      if (AppMode.PLAY !== mode) {
+        setMode(AppMode.PLAY);
+      } else {
+        handleResetSimulation();
+      }
     }
   }, [stepperStatus]);
 
@@ -389,7 +402,7 @@ export const ThreeDimensionVisualizationApp: React.FC<{context: QuickalgoLibrary
           setFloorTiles(loaded.floorTiles || {});
         }
         showToast("Machine Loaded");
-        setMode(AppMode.CONSTRUCTION);
+        changeMode(AppMode.CONSTRUCTION);
       } catch (e) {
         showToast("Error loading file");
       }
@@ -613,14 +626,14 @@ export const ThreeDimensionVisualizationApp: React.FC<{context: QuickalgoLibrary
         <LibraryPanel
           onSave={saveMachine}
           onLoad={loadMachine}
-          onClose={() => setMode(AppMode.CONSTRUCTION)}
+          onClose={() => changeMode(AppMode.CONSTRUCTION)}
           partCount={parts.length}
         />
       )}
 
       <ControlHUD
         mode={mode}
-        setMode={setMode}
+        setMode={changeMode}
         isPaused={isPaused}
         togglePause={() => setIsPaused(!isPaused)}
         playTool={playTool}
@@ -632,7 +645,7 @@ export const ThreeDimensionVisualizationApp: React.FC<{context: QuickalgoLibrary
         rotateAxis={rotateAxis}
         setHoveredRotationAxis={setHoveredRotationAxis}
         onToggleHelp={() => setIsHelpOpen(!isHelpOpen)}
-        toggleFacePicker={() => setMode(mode === AppMode.FACE_PICKER ? AppMode.CONSTRUCTION : AppMode.FACE_PICKER)}
+        toggleFacePicker={() => changeMode(mode === AppMode.FACE_PICKER ? AppMode.CONSTRUCTION : AppMode.FACE_PICKER)}
         selectedFace={selectedFace}
         onReset={handleResetSimulation}
       />
@@ -655,13 +668,13 @@ export const ThreeDimensionVisualizationApp: React.FC<{context: QuickalgoLibrary
           selectedFace={selectedFace}
           onSelectFace={(face) => {
             setSelectedFace(face);
-            setMode(AppMode.CONSTRUCTION);
+            changeMode(AppMode.CONSTRUCTION);
             showToast("Attachment Point Set");
           }}
-          onClose={() => setMode(AppMode.CONSTRUCTION)}
+          onClose={() => changeMode(AppMode.CONSTRUCTION)}
           onClear={() => {
             setSelectedFace(null);
-            setMode(AppMode.CONSTRUCTION);
+            changeMode(AppMode.CONSTRUCTION);
             showToast("Attachment Mode Disabled");
           }}
         />
