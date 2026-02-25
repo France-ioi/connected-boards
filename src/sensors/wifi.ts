@@ -3,6 +3,7 @@ import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {deepSubsetEqual, getImg, textEllipsis} from "../util";
 import {drawBubbleTimeline} from "./util/bubble_timeline";
+import {SensorType} from "./sensor_factory";
 
 interface SensorWifiState {
   active?: boolean,
@@ -25,8 +26,7 @@ interface SensorWifiState {
 export class SensorWifi extends AbstractSensor<SensorWifiState> {
   declare public state?: SensorWifiState;
   protected active: any;
-  private lastWifiState: SensorWifiState;
-  public type = 'wifi';
+  public type = SensorType.Wifi;
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

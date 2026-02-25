@@ -2,10 +2,10 @@ import {AbstractSensor, SensorDrawParameters, SensorDrawTimeLineParameters} from
 import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
-import {type} from "jquery";
+import {SensorType} from "./sensor_factory";
 
 export class SensorAccelerometer extends AbstractSensor<any> {
-  public type = 'accelerometer';
+  public type = SensorType.Accelerometer;
   public gestures: Record<string, any> = {};
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {

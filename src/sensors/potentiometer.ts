@@ -2,10 +2,11 @@ import {AbstractSensor, SensorDrawParameters} from "./abstract_sensor";
 import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
+import {SensorType} from "./sensor_factory";
 
 export class SensorPotentiometer extends AbstractSensor<any> {
   private pale: any;
-  public type = 'potentiometer';
+  public type = SensorType.Potentiometer;
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

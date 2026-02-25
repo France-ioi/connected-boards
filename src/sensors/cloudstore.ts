@@ -5,9 +5,10 @@ import {deepEqual, getImg, isPrimitive} from "../util";
 import {quickPiLocalLanguageStrings} from "../lang/language_strings";
 import {LocalQuickStore} from "./util/local_quickpi_store";
 import {QuickStore} from "./util/quickpi_store";
+import {SensorType} from "./sensor_factory";
 
 export class SensorCloudStore extends AbstractSensor<any> {
-  public type = 'cloudstore';
+  public type = SensorType.CloudStore;
   public quickStore: QuickStore|LocalQuickStore;
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {

@@ -2,9 +2,10 @@ import {AbstractSensor, SensorDrawParameters} from "./abstract_sensor";
 import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
+import {SensorType} from "./sensor_factory";
 
 export class SensorClock extends AbstractSensor<any> {
-  public type = 'clock';
+  public type = SensorType.Clock;
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

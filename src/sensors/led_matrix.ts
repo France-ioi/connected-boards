@@ -2,13 +2,14 @@ import {AbstractSensor, SensorDrawTimeLineParameters} from "./abstract_sensor";
 import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {drawBubbleTimeline} from "./util/bubble_timeline";
+import {SensorType} from "./sensor_factory";
 
 type SensorLedMatrixState = number[][];
 
 export class SensorLedMatrix extends AbstractSensor<SensorLedMatrixState> {
   private ledmatrixOff: any;
   private ledmatrixOn: any;
-  public type = 'ledmatrix';
+  public type = SensorType.LedMatrix;
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

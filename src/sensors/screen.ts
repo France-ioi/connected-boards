@@ -4,6 +4,7 @@ import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
 import {screenDrawing} from "./util/screen";
 import {initScreenDrawing} from "../modules/screen";
+import {SensorType} from "./sensor_factory";
 
 export class SensorScreen extends AbstractSensor<any> {
   private screenrect: any;
@@ -13,7 +14,7 @@ export class SensorScreen extends AbstractSensor<any> {
   private tooltipText;
   public isDrawingScreen?: boolean;
   public screenDrawing: screenDrawing;
-  public type = 'screen';
+  public type = SensorType.Screen;
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

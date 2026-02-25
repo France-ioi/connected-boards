@@ -3,13 +3,14 @@ import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
 import {generateIrRemoteDialog} from "./irtrans";
+import {SensorType} from "./sensor_factory";
 
 export class SensorIrRecv extends AbstractSensor<any> {
   private buttonon: any;
   private buttonoff: any;
   public waitingForIrMessage: (code: string) => void;
   public waitingForIrMessageTimeout: ReturnType<typeof setTimeout>;
-  public type = 'irrecv';
+  public type = SensorType.IrRecv;
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

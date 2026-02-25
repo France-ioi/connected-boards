@@ -2,10 +2,11 @@ import {AbstractSensor, SensorDrawParameters, SensorDrawTimeLineParameters} from
 import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
+import {SensorType} from "./sensor_factory";
 
 export class SensorMagnetometer extends AbstractSensor<any> {
   private needle: any;
-  public type = 'magnetometer';
+  public type = SensorType.Magnetometer;
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

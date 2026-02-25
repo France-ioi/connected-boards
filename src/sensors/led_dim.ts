@@ -2,11 +2,12 @@ import {AbstractSensor} from "./abstract_sensor";
 import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {getImg} from "../util";
 import {SensorHandler} from "./util/sensor_handler";
+import {SensorType} from "./sensor_factory";
 
 export class SensorLedDim extends AbstractSensor<any> {
   private ledon: any;
   private ledoff: any;
-  public type = 'leddim';
+  public type = SensorType.LedDim;
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

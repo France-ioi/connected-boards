@@ -2,7 +2,7 @@ import {AbstractSensor, SensorDrawParameters, SensorDrawTimeLineParameters} from
 import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
-import {type} from "jquery";
+import {SensorType} from "./sensor_factory";
 
 const gpios = [10, 9, 11, 8, 7];
 
@@ -14,7 +14,7 @@ export class SensorStick extends AbstractSensor<any> {
   private imgcenter: any;
   private stateArrow: any;
   declare public portText?: any;
-  public type = 'stick';
+  public type = SensorType.Stick;
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

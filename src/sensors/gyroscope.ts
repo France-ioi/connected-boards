@@ -3,6 +3,7 @@ import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
 import {gyroscope3D} from "./util/gyroscope3d";
+import {SensorType} from "./sensor_factory";
 
 export class SensorGyroscope extends AbstractSensor<any> {
   private canvas: any;
@@ -12,7 +13,7 @@ export class SensorGyroscope extends AbstractSensor<any> {
   public previousState: number[];
   private old_state: number[];
   public lastSpeedChange: Date;
-  public type = 'gyroscope';
+  public type = SensorType.Gyroscope;
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {
