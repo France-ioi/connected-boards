@@ -14,7 +14,7 @@ const AppContainer: React.FC = ({context}: {context: QuickalgoLibrary}) => {
               context={context}
             />
           </ShadowRoot>
-          <div id="grid" style={{height: '100px'}}/>
+          <div id="grid" style={{height: '150px'}}/>
         </div>
       </div>
     </QuickalgoContext.Provider>

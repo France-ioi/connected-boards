@@ -7,6 +7,7 @@ import {SensorType} from "../sensors/sensor_types";
 const syncPartTypes = {
   [PartType.LIGHT]: SensorType.Led,
   [PartType.SENSOR]: SensorType.Range,
+  [PartType.MOTOR]: SensorType.Motor,
 };
 
 export function changePartState(context: QuickalgoLibrary, part: PartData, state: unknown): void {

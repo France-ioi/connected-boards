@@ -23,6 +23,7 @@ import {SensorTemperature} from "./temperature";
 import {SensorWifi} from "./wifi";
 import {AbstractSensor} from "./abstract_sensor";
 import {SensorType} from "./sensor_types";
+import {SensorMotor} from "./motor";
 
 export const sensorsList: Record<SensorType, typeof AbstractSensor<any>> = {
   [SensorType.Accelerometer]: SensorAccelerometer,
@@ -40,6 +41,7 @@ export const sensorsList: Record<SensorType, typeof AbstractSensor<any>> = {
   [SensorType.LedRgb]: SensorLedRgb,
   [SensorType.Light]: SensorLight,
   [SensorType.Magnetometer]: SensorMagnetometer,
+  [SensorType.Motor]: SensorMotor,
   [SensorType.Potentiometer]: SensorPotentiometer,
   [SensorType.Range]: SensorRange,
   [SensorType.Screen]: SensorScreen,

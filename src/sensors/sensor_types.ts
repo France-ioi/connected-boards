@@ -14,6 +14,7 @@ export enum SensorType {
   LedRgb = 'ledrgb',
   Light = 'light',
   Magnetometer = 'magnetometer',
+  Motor = 'motor',
   Potentiometer = 'potentiometer',
   Range = 'range',
   Screen = 'screen',

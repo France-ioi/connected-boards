@@ -47,7 +47,8 @@ const IslandMotor: React.FC<{
   motorIslandOrigin: THREE.Vector3;
   rotorIslandOrigin: THREE.Vector3;
   rotorVisuals: React.MutableRefObject<{ [id: string]: THREE.Group | null }>;
-}> = ({ body1, body2, config, motorIslandOrigin, rotorIslandOrigin, rotorVisuals }) => {
+  state: number;
+}> = ({ body1, body2, config, motorIslandOrigin, rotorIslandOrigin, rotorVisuals, state }) => {
   const { motorPart } = config;
 
   const jointParams = useMemo(() => {
@@ -107,9 +108,9 @@ const IslandMotor: React.FC<{
       const accel = speed * delta * 2.0;
       let currentSpeed = cruiseSpeed.current;
       
-      let inputDir = 0;
-      if (keys[forwardKey]) inputDir += 1;
-      if (keys[backwardKey]) inputDir -= 1;
+      let inputDir = state / 100;
+      // if (keys[forwardKey]) inputDir += 1;
+      // if (keys[backwardKey]) inputDir -= 1;
       
       const proposedSpeed = currentSpeed + (inputDir * accel);
       const isCrossingZero = (currentSpeed > 0 && proposedSpeed < 0) || (currentSpeed < 0 && proposedSpeed > 0);
@@ -135,8 +136,9 @@ const IslandMotor: React.FC<{
       cruiseSpeed.current = currentSpeed;
       targetVelocity = cruiseSpeed.current;
     } else {
-      if (keys[forwardKey]) targetVelocity = speed;
-      else if (keys[backwardKey]) targetVelocity = -speed;
+      targetVelocity = speed * state / 100;
+      // if (keys[forwardKey]) targetVelocity = speed;
+      // else if (keys[backwardKey]) targetVelocity = -speed;
     }
 
     jointRef.current.configureMotorVelocity(targetVelocity, power * 50);
@@ -755,6 +757,7 @@ const PlayMachine: React.FC<PlayMachineProps> = ({ parts, dragState, pushState }
           motorIslandOrigin={islands[conn.motorIslandIdx].origin}
           rotorIslandOrigin={islands[conn.rotorIslandIdx].origin}
           rotorVisuals={motorRotorRefs}
+          state={conn.motorPart.innerState as number}
         />
       ))}
 
