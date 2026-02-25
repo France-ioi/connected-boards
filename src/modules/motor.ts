@@ -11,7 +11,7 @@ export function motorModuleDefinition(context: QuickalgoLibrary) {
     if (!context.display || context.autoGrading || context.offLineMode) {
       context.waitDelay(callback);
     } else {
-      let command = "setMotorSpeed(\"" + name + "\"," + angle + ")";
+      let command = "setMotorSpeed(\"" + name + "\"," + speed + ")";
       const cb = context.runner.waitCallback(callback);
       context.quickPiConnection.sendCommand(command, cb);
     }
