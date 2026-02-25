@@ -48,7 +48,8 @@ const IslandMotor: React.FC<{
   rotorIslandOrigin: THREE.Vector3;
   rotorVisuals: React.MutableRefObject<{ [id: string]: THREE.Group | null }>;
   state: number;
-}> = ({ body1, body2, config, motorIslandOrigin, rotorIslandOrigin, rotorVisuals, state }) => {
+  onStateChange: (id: string, state: number) => void;
+}> = ({ body1, body2, config, motorIslandOrigin, rotorIslandOrigin, rotorVisuals, state, onStateChange }) => {
   const { motorPart } = config;
 
   const jointParams = useMemo(() => {
@@ -80,27 +81,39 @@ const IslandMotor: React.FC<{
     jointParams.anchor2,
     jointParams.axis
   ]);
-
-  const [keys, setKeys] = useState<{ [key: string]: boolean }>({});
   const cruiseSpeed = useRef(0);
   const zeroStopTimer = useRef(0);
 
+
   useEffect(() => {
-    const down = (e: KeyboardEvent) => setKeys(prev => ({ ...prev, [e.key.toLowerCase()]: true }));
-    const up = (e: KeyboardEvent) => setKeys(prev => ({ ...prev, [e.key.toLowerCase()]: false }));
+    const settings = motorPart.settings || { forwardKey: 'w', backwardKey: 's' };
+    const { forwardKey = 'w', backwardKey = 's' } = settings;
+
+    const pressKey = (key: string, pressed: boolean) => {
+      if (forwardKey === key && pressed) {
+        onStateChange(motorPart.id, 100);
+      } else if (backwardKey === key && pressed) {
+        onStateChange(motorPart.id, -100);
+      } else if (forwardKey === key || backwardKey === key) {
+        onStateChange(motorPart.id, 0);
+      }
+    };
+
+    const down = (e: KeyboardEvent) => pressKey(e.key.toLowerCase(), true);
+    const up = (e: KeyboardEvent) => pressKey(e.key.toLowerCase(), false);
     window.addEventListener('keydown', down);
     window.addEventListener('keyup', up);
     return () => {
       window.removeEventListener('keydown', down);
       window.removeEventListener('keyup', up);
     };
-  }, []);
+  }, [motorPart.settings, onStateChange]);
 
   useFrame((_, delta) => {
     if (!jointRef.current) return;
 
-    const settings = motorPart.settings || { forwardKey: 'w', backwardKey: 's', speed: 15, power: 100, controlMode: 'momentary' };
-    const { forwardKey = 'w', backwardKey = 's', speed = 15, power = 100, controlMode = 'momentary' } = settings;
+    const settings = motorPart.settings || { speed: 15, power: 100, controlMode: 'momentary' };
+    const {speed = 15, power = 100, controlMode = 'momentary' } = settings;
 
     let targetVelocity = 0;
 
@@ -552,8 +565,8 @@ const PlayMachine: React.FC<PlayMachineProps> = ({ parts, dragState, pushState }
 
   console.log('play machine', parts);
 
-  const handleLightStateChange = (id: string, isOn: boolean) => {
-    changePartState(context, parts.find(part => id === part.id), isOn);
+  const handleStateChange = (partId: string, state: unknown) => {
+    changePartState(context, parts.find(part => partId === part.id), state);
   };
 
   const { islands, motorConnections, steeringConnections } = useMemo(() => {
@@ -668,7 +681,7 @@ const PlayMachine: React.FC<PlayMachineProps> = ({ parts, dragState, pushState }
   return (
     <>
       {parts.filter(p => p.type === PartType.LIGHT).map(p => (
-        <LightController key={p.id} part={p} onStateChange={handleLightStateChange} />
+        <LightController key={p.id} part={p} onStateChange={handleStateChange} />
       ))}
 
       <DragController islandRefs={islandRefs} dragState={dragState} islands={islands} />
@@ -758,6 +771,7 @@ const PlayMachine: React.FC<PlayMachineProps> = ({ parts, dragState, pushState }
           rotorIslandOrigin={islands[conn.rotorIslandIdx].origin}
           rotorVisuals={motorRotorRefs}
           state={conn.motorPart.innerState as number}
+          onStateChange={handleStateChange}
         />
       ))}
 
