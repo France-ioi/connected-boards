@@ -19,6 +19,7 @@ import ConfirmDialog from './components/ConfirmDialog';
 import FacePickerOverlay from './components/FacePickerOverlay';
 import {QuickalgoLibrary} from "../definitions";
 import {subscribeToContextStateChanges, updateContextSensors} from "./3d_interface";
+import {useSelector} from "react-redux";
 
 const STORAGE_KEY = 'machine-crafter-3d-save';
 
@@ -166,6 +167,14 @@ export const ThreeDimensionVisualizationApp: React.FC<{context: QuickalgoLibrary
   const controlsRef = useRef<any>(null);
   const toastTimeout = useRef<any>(null);
   const axisTimeoutRef = useRef<any>(null);
+
+  const stepperStatus = useSelector((state: any) => state.stepper.status);
+
+  useEffect(() => {
+    if ('running' === stepperStatus) {
+      handleResetSimulation();
+    }
+  }, [stepperStatus]);
 
   const showToast = (msg: string) => {
     setToast(msg);
