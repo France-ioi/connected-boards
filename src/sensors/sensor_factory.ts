@@ -22,32 +22,7 @@ import {SensorSound} from "./sound";
 import {SensorTemperature} from "./temperature";
 import {SensorWifi} from "./wifi";
 import {AbstractSensor} from "./abstract_sensor";
-
-export enum SensorType {
-  Accelerometer = 'accelerometer',
-  Button = 'button',
-  Buzzer = 'buzzer',
-  Clock = 'clock',
-  CloudStore = 'cloudstore',
-  Gyroscope = 'gyroscope',
-  Humidity = 'humidity',
-  IrRecv = 'irrecv',
-  IrTrans = 'irtrans',
-  Led = 'led',
-  LedDim = 'leddim',
-  LedMatrix = 'ledmatrix',
-  LedRgb = 'ledrgb',
-  Light = 'light',
-  Magnetometer = 'magnetometer',
-  Potentiometer = 'potentiometer',
-  Range = 'range',
-  Screen = 'screen',
-  Servo = 'servo',
-  Sound = 'sound',
-  Stick = 'stick',
-  Temperature = 'temperature',
-  Wifi = 'wifi',
-}
+import {SensorType} from "./sensor_types";
 
 export const sensorsList: Record<SensorType, typeof AbstractSensor<any>> = {
   [SensorType.Accelerometer]: SensorAccelerometer,

@@ -5,7 +5,7 @@ import {deepEqual, getImg, isPrimitive} from "../util";
 import {quickPiLocalLanguageStrings} from "../lang/language_strings";
 import {LocalQuickStore} from "./util/local_quickpi_store";
 import {QuickStore} from "./util/quickpi_store";
-import {SensorType} from "./sensor_factory";
+import {SensorType} from "./sensor_types";
 
 export class SensorCloudStore extends AbstractSensor<any> {
   public type = SensorType.CloudStore;

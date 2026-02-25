@@ -3,7 +3,7 @@ import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
 import {gyroscope3D} from "./util/gyroscope3d";
-import {SensorType} from "./sensor_factory";
+import {SensorType} from "./sensor_types";
 
 export class SensorGyroscope extends AbstractSensor<any> {
   private canvas: any;

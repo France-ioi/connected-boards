@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { Physics } from '@react-three/rapier';
-import { OrbitControls, Environment, Grid, Sky, PerspectiveCamera } from '@react-three/drei';
+import {OrbitControls, Environment, Grid, Sky, PerspectiveCamera} from '@react-three/drei';
 import { AppMode, PartData, PartType, GRID_SIZE, PlayTool, SelectedFace, PaintMode, FloorTileMap } from './types';
 import { PART_DEFINITIONS } from './constants';
 import { v4 as uuidv4 } from 'uuid';

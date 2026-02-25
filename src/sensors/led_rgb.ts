@@ -2,7 +2,7 @@ import {AbstractSensor, SensorDrawTimeLineParameters} from "./abstract_sensor";
 import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {getImg} from "../util";
 import {SensorHandler} from "./util/sensor_handler";
-import {SensorType} from "./sensor_factory";
+import {SensorType} from "./sensor_types";
 
 export class SensorLedRgb extends AbstractSensor<any> {
   private ledimage: any;

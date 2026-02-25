@@ -1,13 +1,16 @@
 
-import React, { useMemo, useRef, useState, useEffect } from 'react';
+import React, {useMemo, useRef, useState, useEffect, Suspense, useContext} from 'react';
 import * as THREE from 'three';
-import { PartType, AppMode, SelectedFace } from '../types';
+import {PartType, AppMode, SelectedFace, PartData} from '../types';
 import { PART_DEFINITIONS } from '../constants';
 import { Edges, RoundedBox, Cylinder, Box, Text, Circle, Line } from '@react-three/drei';
 import { useRapier } from '@react-three/rapier'; 
 import { useFrame, useThree } from '@react-three/fiber';
+import {changePartState} from "../3d_interface";
+import {QuickalgoContext} from "../QuickalgoContext";
 
 interface PartMeshProps {
+  part?: PartData,
   type: PartType;
   mode?: AppMode;
   isGhost?: boolean;
@@ -26,7 +29,7 @@ interface PartMeshProps {
 }
 
 // Active sensor component that performs raycasting
-const SensorRaycaster: React.FC = () => {
+const SensorRaycaster: React.FC<{part: PartData}> = ({part}) => {
   const { world, rapier } = useRapier();
   const { scene } = useThree(); 
   const textRef = useRef<any>(null);
@@ -36,6 +39,7 @@ const SensorRaycaster: React.FC = () => {
   const lastUpdate = useRef<number>(0);
   
   const visualRaycaster = useMemo(() => new THREE.Raycaster(), []);
+  const context = useContext(QuickalgoContext);
 
   useFrame((state) => {
     if (!groupRef.current || !textRef.current || !world || !rapier || !beamRef.current || !hitDotRef.current) return;
@@ -133,6 +137,7 @@ const SensorRaycaster: React.FC = () => {
     // Text Update
     if (hasHit) {
        const val = Math.floor(closestDistFromFace * 10);
+       changePartState(context, part, Math.min(500, val));
        if (val < 100) {
          textRef.current.text = val.toString().padStart(2, '0');
        } else {
@@ -140,6 +145,7 @@ const SensorRaycaster: React.FC = () => {
        }
     } else {
        textRef.current.text = '--';
+       changePartState(context, part, 500);
     }
   });
 
@@ -148,8 +154,8 @@ const SensorRaycaster: React.FC = () => {
       <Text 
         ref={textRef}
         position={[0, 0.51, 0]} 
-        rotation={[-Math.PI / 2, 0, 0]} 
-        fontSize={0.8} 
+        rotation={[-Math.PI / 2, 0, 0]}
+        fontSize={0.8}
         color="#ef4444"
         anchorX="center"
         anchorY="middle"
@@ -174,7 +180,7 @@ const SensorRaycaster: React.FC = () => {
 };
 
 const PartMesh: React.FC<PartMeshProps> = ({ 
-  type, mode, isGhost, isSelected, isHighlighted, isSetting, customColor, customFinish, faceColors, settings, subPart, lightOn = true, selectedFace, highlightedFace, onRotorRef
+  part, type, mode, isGhost, isSelected, isHighlighted, isSetting, customColor, customFinish, faceColors, settings, subPart, lightOn = true, selectedFace, highlightedFace, onRotorRef
 }) => {
   const definition = PART_DEFINITIONS.find(d => d.type === type);
   const baseColor = isSetting ? '#fbbf24' : (customColor || definition?.color || '#ffffff');
@@ -485,18 +491,21 @@ const PartMesh: React.FC<PartMeshProps> = ({
             
             {/* Logic & Display */}
             {mode === AppMode.PLAY && !isGhost ? (
-               <SensorRaycaster />
+               <SensorRaycaster part={part}/>
             ) : (
-               <Text 
-                position={[0, 0.51, 0]} 
-                rotation={[-Math.PI / 2, 0, 0]} 
-                fontSize={0.8} 
-                color="#ef4444"
-                anchorX="center"
-                anchorY="middle"
-               >
-                 X
-               </Text>
+              <Suspense fallback={null}>
+                 <Text
+                  position={[0, 0.51, 0]}
+                  rotation={[-Math.PI / 2, 0, 0]}
+                  fontSize={0.8}
+                  color="#ef4444"
+                  anchorX="center"
+                  anchorY="middle"
+                  characters="0123456789X-"
+                 >
+                   X
+                 </Text>
+              </Suspense>
             )}
           </group>
         );

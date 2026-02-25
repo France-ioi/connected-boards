@@ -3,7 +3,7 @@ import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {deepSubsetEqual, getImg, textEllipsis} from "../util";
 import {drawBubbleTimeline} from "./util/bubble_timeline";
-import {SensorType} from "./sensor_factory";
+import {SensorType} from "./sensor_types";
 
 interface SensorWifiState {
   active?: boolean,

@@ -2,7 +2,7 @@ import {AbstractSensor, SensorDrawTimeLineParameters} from "./abstract_sensor";
 import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {drawBubbleTimeline} from "./util/bubble_timeline";
-import {SensorType} from "./sensor_factory";
+import {SensorType} from "./sensor_types";
 
 type SensorLedMatrixState = number[][];
 

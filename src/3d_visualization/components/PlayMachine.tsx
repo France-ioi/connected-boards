@@ -699,7 +699,8 @@ const PlayMachine: React.FC<PlayMachineProps> = ({ parts, dragState, pushState }
 
                 return (
                   <group key={part.id} position={relPos} quaternion={new THREE.Quaternion(...part.rotation)} userData={{ partId: part.id }}>
-                    <PartMesh 
+                    <PartMesh
+                      part={part}
                       type={part.type} 
                       mode={AppMode.PLAY}
                       customColor={part.customColor} 

@@ -2,7 +2,7 @@ import {AbstractSensor, SensorDrawParameters} from "./abstract_sensor";
 import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
-import {SensorType} from "./sensor_factory";
+import {SensorType} from "./sensor_types";
 
 export function generateIrRemoteDialog(strings: any) {
   return "<div class=\"content qpi\">" +

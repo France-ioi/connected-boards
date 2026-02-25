@@ -2,9 +2,11 @@ import {AppMode, PartData, PartType} from "./types";
 import {QuickalgoLibrary} from "../definitions";
 import {AbstractSensor} from "../sensors/abstract_sensor";
 import React from "react";
+import {SensorType} from "../sensors/sensor_types";
 
 const syncPartTypes = {
-  [PartType.LIGHT]: 'led',
+  [PartType.LIGHT]: SensorType.Led,
+  [PartType.SENSOR]: SensorType.Range,
 };
 
 export function changePartState(context: QuickalgoLibrary, part: PartData, state: unknown): void {
@@ -42,7 +44,8 @@ export function updateContextSensors(parts: PartData[], context: QuickalgoLibrar
         subType: sensorDefinition.subType,
         name: sensorName,
       });
-      newSensor.state = newSensor.getInitialState();
+
+      newSensor.state = newSensor.getInitialState ? newSensor.getInitialState() : undefined;
 
       part.sensorName = sensorName;
       part.innerState = newSensor.state;
@@ -81,7 +84,7 @@ export function subscribeToContextStateChanges(context: QuickalgoLibrary, parts:
     }
 
     const part = parts.find(part => sensor.name === part.sensorName);
-    // console.log('[3d] sensor state listener', sensor.name, sensor.state, parts);
+    console.log('[3d] sensor state listener', sensor.name, sensor.state, parts);
 
     if (!part) {
       return;
@@ -91,7 +94,7 @@ export function subscribeToContextStateChanges(context: QuickalgoLibrary, parts:
       return;
     }
 
-    // console.log('[3d] subscribed to context state');
+    console.log('[3d] subscribed to context state');
 
     setParts(parts => parts.map(p => sensor.name === p.sensorName ? { ...p, innerState: sensor.state } : p));
     setMode(AppMode.PLAY);

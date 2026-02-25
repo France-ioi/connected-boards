@@ -3,7 +3,7 @@ import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
 import {generateIrRemoteDialog} from "./irtrans";
-import {SensorType} from "./sensor_factory";
+import {SensorType} from "./sensor_types";
 
 export class SensorIrRecv extends AbstractSensor<any> {
   private buttonon: any;
