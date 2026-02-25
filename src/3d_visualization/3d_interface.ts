@@ -91,6 +91,6 @@ export function subscribeToContextStateChanges(context: QuickalgoLibrary, parts:
 
     console.log('subscribed to context state');
 
-    setParts(parts => parts.map(p => sensor.name === part.sensorName ? { ...p, innerState: sensor.state } : p));
+    setParts(parts => parts.map(p => sensor.name === p.sensorName ? { ...p, innerState: sensor.state } : p));
   };
 }

@@ -511,9 +511,13 @@ export const ThreeDimensionVisualizationApp: React.FC<{context: QuickalgoLibrary
   }, [currentRotation, mode, editingPartId, undo, parts]);
 
   useEffect(() => {
+    if (!context) {
+      return;
+    }
+
     updateContextSensors(parts, context);
     subscribeToContextStateChanges(context, parts, setParts);
-  }, [parts]);
+  }, [parts, context]);
 
   const editingPart = parts.find(p => p.id === editingPartId);
 
