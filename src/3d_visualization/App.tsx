@@ -516,7 +516,7 @@ export const ThreeDimensionVisualizationApp: React.FC<{context: QuickalgoLibrary
     }
 
     updateContextSensors(parts, context);
-    subscribeToContextStateChanges(context, parts, setParts);
+    subscribeToContextStateChanges(context, parts, setParts, setMode);
   }, [parts, context]);
 
   const editingPart = parts.find(p => p.id === editingPartId);

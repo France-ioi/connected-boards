@@ -1,4 +1,4 @@
-import {PartData, PartType} from "./types";
+import {AppMode, PartData, PartType} from "./types";
 import {QuickalgoLibrary} from "../definitions";
 import {AbstractSensor} from "../sensors/abstract_sensor";
 import React from "react";
@@ -42,15 +42,15 @@ export function updateContextSensors(parts: PartData[], context: QuickalgoLibrar
         subType: sensorDefinition.subType,
         name: sensorName,
       });
+      newSensor.state = newSensor.getInitialState();
 
       part.sensorName = sensorName;
-      console.log('part', newSensor.state);
+      part.innerState = newSensor.state;
 
       sensorsList.add(newSensor);
 
       setTimeout(() => {
-        const initialState = newSensor.getInitialState();
-        context.registerQuickPiEvent(sensorName, initialState, true, false);
+        context.registerQuickPiEvent(sensorName, newSensor.state, true, false);
       });
 
       hasChanges = true;
@@ -74,13 +74,15 @@ export function updateContextSensors(parts: PartData[], context: QuickalgoLibrar
   }
 }
 
-export function subscribeToContextStateChanges(context: QuickalgoLibrary, parts: PartData[], setParts:  React.Dispatch<React.SetStateAction<PartData[]>>) {
+export function subscribeToContextStateChanges(context: QuickalgoLibrary, parts: PartData[], setParts: React.Dispatch<React.SetStateAction<PartData[]>>, setMode: React.Dispatch<React.SetStateAction<AppMode>>) {
   context.sensorStateListener = (sensor: AbstractSensor<any>) => {
     if ('object' !== typeof sensor) {
       return;
     }
 
     const part = parts.find(part => sensor.name === part.sensorName);
+    // console.log('[3d] sensor state listener', sensor.name, sensor.state, parts);
+
     if (!part) {
       return;
     }
@@ -89,8 +91,9 @@ export function subscribeToContextStateChanges(context: QuickalgoLibrary, parts:
       return;
     }
 
-    console.log('subscribed to context state');
+    // console.log('[3d] subscribed to context state');
 
     setParts(parts => parts.map(p => sensor.name === p.sensorName ? { ...p, innerState: sensor.state } : p));
+    setMode(AppMode.PLAY);
   };
 }
