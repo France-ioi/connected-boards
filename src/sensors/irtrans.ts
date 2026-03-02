@@ -2,6 +2,7 @@ import {AbstractSensor, SensorDrawParameters} from "./abstract_sensor";
 import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
+import {SensorType} from "./sensor_types";
 
 export function generateIrRemoteDialog(strings: any) {
   return "<div class=\"content qpi\">" +
@@ -27,7 +28,7 @@ export function generateIrRemoteDialog(strings: any) {
 export class SensorIrTrans extends AbstractSensor<any> {
   private ledon: any;
   private ledoff: any;
-  public type = 'irtrans';
+  public type = SensorType.IrTrans;
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

@@ -119,6 +119,7 @@ export interface QuickalgoLibrary {
   quickPiConnection: any,
   sensorsList: SensorCollection,
   stopLiveUpdate: boolean,
+  recreateDisplay?: boolean,
   resetSensorTable: () => void,
   resetDisplay: () => void,
   remoteIRcodes: {[preset: string]: any},

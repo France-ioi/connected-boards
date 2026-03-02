@@ -1,6 +1,6 @@
 import {AbstractBoard} from "../abstract_board";
 import {ConnectionMethod} from "../../definitions";
-import {getQuickPiConnection} from "./quickpi_connection";
+import {QuickPiConnection} from "./quickpi_connection";
 import {ModuleDefinition} from "../../modules/module_definition";
 import {accelerometerModuleDefinition} from "../../modules/accelerometer";
 import {buttonsModuleDefinition} from "../../modules/buttons";
@@ -21,6 +21,9 @@ import {irtransModuleDefinition} from "../../modules/irtrans";
 import {irrecvModuleDefinition} from "../../modules/irrecv";
 import {humidityModuleDefinition} from "../../modules/humidity";
 import {cloudStoreModuleDefinition} from "../../modules/cloud_store";
+import {motorModuleDefinition} from "../../modules/motor";
+
+let quickpiConnection = null;
 
 export class QuickPiBoard extends AbstractBoard {
   getBoardDefinitions() {
@@ -98,7 +101,13 @@ export class QuickPiBoard extends AbstractBoard {
   }
 
   getConnection() {
-    return getQuickPiConnection;
+    if (!quickpiConnection) {
+      quickpiConnection = function (userName, _onConnect, _onDisconnect, _onChangeBoard) {
+        return new QuickPiConnection(userName, _onConnect, _onDisconnect, _onChangeBoard);
+      }
+    }
+
+    return quickpiConnection;
   }
 
   getCustomFeatures(context, strings): ModuleDefinition {
@@ -121,6 +130,7 @@ export class QuickPiBoard extends AbstractBoard {
     const lightModule = lightModuleDefinition(context);
 
     const magnetometerModule = magnetometerModuleDefinition(context, strings);
+    const motorModule = motorModuleDefinition(context);
 
     const potentiometerModule = potentiometerModuleDefinition(context);
     const rangeModule = rangeModuleDefinition(context);
@@ -147,6 +157,7 @@ export class QuickPiBoard extends AbstractBoard {
       ...ledModule,
       ...lightModule,
       ...magnetometerModule,
+      ...motorModule,
       ...potentiometerModule,
       ...rangeModule,
       ...screenModule,

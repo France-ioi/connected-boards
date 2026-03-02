@@ -3,14 +3,14 @@ import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {buzzerSound} from "./util/buzzer_sound";
 import {getImg} from "../util";
+import {SensorType} from "./sensor_types";
 
 export class SensorBuzzer extends AbstractSensor<any> {
   private buzzeron: any;
   private buzzeroff: any;
-  private muteBtn: any;
   private buzzerInterval: any;
   private ringingState: boolean;
-  public type = 'buzzer';
+  public type = SensorType.Buzzer;
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

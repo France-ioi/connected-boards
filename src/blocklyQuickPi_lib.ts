@@ -9,10 +9,10 @@ import {SensorHandler} from "./sensors/util/sensor_handler";
 import {showasConnecting} from "./display";
 import {QuickalgoLibrary, Sensor} from "./definitions";
 import {SensorCollection} from "./sensors/sensor_collection";
-import {createSensor} from "./sensors/sensor_factory";
 import {SensorDrawTimeLineParameters} from "./sensors/abstract_sensor";
 import {microbitBoard} from "./boards/microbit/microbit_board";
 import {ModuleFeature} from "./modules/module_definition";
+import AppContainer from "./3d_visualization/AppContainer";
 
 const boards: {[board: string]: AbstractBoard} = {
     galaxia: galaxiaBoard,
@@ -48,6 +48,14 @@ var getContext = function (display, infos, curLevel) {
 
     const sensorHandler = new SensorHandler(context, strings);
     context.sensorHandler = sensorHandler;
+
+    context.getComponent = () => {
+        if (!infos['3d_visualization']) {
+            return null;
+        }
+
+        return AppContainer;
+    };
 
     // List of concepts to be included by conceptViewer
     context.getConceptList = function() {
@@ -182,7 +190,7 @@ var getContext = function (display, infos, curLevel) {
         addDefaultBoardSensors();
     } else {
         for (let sensor of infos.quickPiSensors) {
-            const realSensor = createSensor(sensor, context, strings);
+            const realSensor = sensorHandler.createSensor(sensor);
             context.sensorsList.add(realSensor);
         }
     }
@@ -886,11 +894,11 @@ var getContext = function (display, infos, curLevel) {
             if (board.builtinSensors) {
                 for (var i = 0; i < board.builtinSensors.length; i++) {
                     let sensor = board.builtinSensors[i];
-                    let newSensor = createSensor({
+                    let newSensor = sensorHandler.createSensor({
                         "type": sensor.type,
                         "port": sensor.port,
                         "builtin": true,
-                    }, context, strings);
+                    });
 
                     if (sensor.subType) {
                         newSensor.subType = sensor.subType;
@@ -965,11 +973,11 @@ var getContext = function (display, infos, curLevel) {
         context.sensorsList = new SensorCollection();
 
         for (var i = 0; i < newSensors.length; i++) {
-            let sensor = createSensor({
+            let sensor = sensorHandler.createSensor({
                 type: newSensors[i].type,
                 port: newSensors[i].port,
                 name: newSensors[i].name
-            }, context, strings);
+            });
 
             if (newSensors[i].subType)
                 sensor.subType = newSensors[i].subType;
@@ -986,10 +994,8 @@ var getContext = function (display, infos, curLevel) {
     };
 
     context.resetDisplay = function() {
-        // console.log("resetDisplay")
         if (!context.display || !this.raphaelFactory)
             return;
-
 
         context.autoGrading = context.displayAutoGrading;
 
@@ -1685,11 +1691,11 @@ var getContext = function (display, infos, curLevel) {
             for (var i = 0; i < boardDefaultSensors.length; i++) {
                 var sensor = boardDefaultSensors[i];
 
-                let newSensor = createSensor({
+                let newSensor = sensorHandler.createSensor({
                     "type": sensor.type,
                     "port": sensor.port,
                     "builtin": true,
-                }, context, strings);
+                });
 
                 if (sensor.subType) {
                     newSensor.subType = sensor.subType;
@@ -2530,7 +2536,7 @@ var getContext = function (display, infos, curLevel) {
         }
 
         if (context.autoGrading && context.gradingStatesBySensor != undefined && !allowFail) {
-            if(!context.actualStatesBySensor[name]) {
+            if (!context.actualStatesBySensor[name]) {
                 context.actualStatesBySensor[name] = [];
             }
             var actualStates = context.actualStatesBySensor[name];

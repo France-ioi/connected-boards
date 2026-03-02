@@ -2,9 +2,10 @@ import {AbstractSensor, SensorDrawParameters} from "./abstract_sensor";
 import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
+import {SensorType} from "./sensor_types";
 
 export class SensorHumidity extends AbstractSensor<any> {
-  public type = 'humidity';
+  public type = SensorType.Humidity;
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

@@ -2,9 +2,10 @@ import {AbstractSensor, SensorDrawParameters} from "./abstract_sensor";
 import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
+import {SensorType} from "./sensor_types";
 
 export class SensorSound extends AbstractSensor<any> {
-  public type = 'sound';
+  public type = SensorType.Sound;
   public unit;
 
   constructor(sensorData: any, context: QuickalgoLibrary, strings: any) {

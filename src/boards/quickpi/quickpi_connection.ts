@@ -1,240 +1,250 @@
-let g_instance = null;
-let NEED_VERSION = 2;
+const NEED_VERSION = 2;
 
-export const getQuickPiConnection = function (userName, _onConnect, _onDisconnect, _onChangeBoard) {
-    this.onConnect = _onConnect;
-    this.onDisconnect = _onDisconnect;
+export class QuickPiConnection {
+    static instance = null;
 
-    if (g_instance) {
-        return g_instance;
+    private userName: any;
+    private onConnect: any;
+    private onDisconnect: any;
+    private onChangeBoard: any;
+    private wsSession: any;
+    private transaction: boolean;
+    private resultsCallbackArray: any;
+    private commandMode: boolean;
+    private sessionTainted: boolean;
+    private connected: boolean;
+    private locked: string;
+    private pingInterval: any;
+    private pingsWithoutPong: number;
+    private oninstalled: any;
+    private commandQueue: any[];
+    private seq: number;
+    private wrongVersion: boolean;
+    private onDistributedEvent: any;
+
+
+    constructor(userName, onConnect, onDisconnect, onChangeBoard) {
+        if (QuickPiConnection.instance) {
+            return QuickPiConnection.instance;
+        }
+
+        this.userName = userName;
+        this.onConnect = onConnect;
+        this.onDisconnect = onDisconnect;
+        this.onChangeBoard = onChangeBoard;
+
+        this.wsSession = null;
+        this.transaction = false;
+        this.resultsCallbackArray = null;
+        this.commandMode = false;
+        this.sessionTainted = false;
+        this.connected = false;
+        this.locked = "";
+        this.pingInterval = null;
+        this.pingsWithoutPong = 0;
+        this.oninstalled = null;
+        this.commandQueue = [];
+        this.seq = 0;
+        this.wrongVersion = false;
+        this.onDistributedEvent = null;
+
+        QuickPiConnection.instance = this;
     }
 
-    this.raspiServer = "";
-    this.wsSession = null;
-    this.transaction = false;
-    this.resultsCallbackArray = null;
-    this.commandMode = false;
-    this.userName = userName;
-    this.sessionTainted = false;
-    this.connected = false;
-    this.onConnect = _onConnect;
-    this.onDisconnect = _onDisconnect;
-    this.onChangeBoard = _onChangeBoard;
-    this.locked = "";
-    this.pingInterval = null;
-    this.pingsWithoutPong = 0;
-    this.oninstalled = null;
-    this.commandQueue = [];
-    this.seq = 0;
-    this.wrongVersion = false;
-    this.onDistributedEvent = null;
+    /* =========================
+       CONNECTION
+    ========================= */
 
-    this.connect = function(url) {
-        if (this.wsSession != null) {
-            return;
-        }
+    connect(url) {
+        if (this.wsSession) return;
 
         this.locked = "";
         this.pingsWithoutPong = 0;
         this.commandQueue = [];
         this.resultsCallbackArray = [];
         this.wrongVersion = false;
-
         this.seq = Math.floor(Math.random() * 65536);
 
         this.wsSession = new WebSocket(url);
 
         this.wsSession.onopen = () => {
-            var command =
-            {
-                "command": "grabLock",
-                "username": userName,
-                "detectionLib": pythonLibDetection
-            }
-
+            const command = {
+                command: "grabLock",
+                username: this.userName,
+                detectionLib: pythonLibDetection
+            };
             this.wsSession.send(JSON.stringify(command));
-        }
+        };
 
         this.wsSession.onmessage = (evt) => {
-            var message = JSON.parse(evt.data);
+            const message = JSON.parse(evt.data);
 
-            if (message.command == "hello") {
-                var version = 0;
-                if (message.version)
-                    version = message.version;
+            switch (message.command) {
 
-                if (version < NEED_VERSION) {
-                    this.wrongVersion = true;
-                    this.wsSession.close();
-                    this.onclose();
-                }
-                else {
-                    var replaceLib = pythonLibHash != message.libraryHash;
+                case "hello": {
+                    const version = message.version || 0;
 
+                    if (version < NEED_VERSION) {
+                        this.wrongVersion = true;
+                        this.wsSession.close();
+                        this.onclose();
+                        return;
+                    }
 
-                    if (replaceLib)
+                    const replaceLib =
+                      pythonLibHash !== message.libraryHash;
+
+                    if (replaceLib) {
                         this.transferPythonLib();
-                    else {
-                        var command =
-                        {
-                            "command": "pythonLib",
-                            "replaceLib": false,
-                        };
-
-                        this.wsSession.send(JSON.stringify(command));
+                    } else {
+                        this.wsSession.send(JSON.stringify({
+                            command: "pythonLib",
+                            replaceLib: false
+                        }));
                     }
 
                     this.connected = true;
-                    this.onConnect();
+                    this.onConnect?.();
 
                     this.pingInterval = setInterval(() => {
-                        var command =
-                        {
-                            "command": "ping"
-                        }
-        
-                        if (this.pingsWithoutPong > 8)
-                        {
+                        if (this.pingsWithoutPong > 8) {
                             this.wsSession.close();
                             this.onclose();
                         } else {
                             this.pingsWithoutPong++;
-                            this.wsSession.send(JSON.stringify(command));
-                            this.lastPingSend = + new Date();
+                            this.wsSession.send(JSON.stringify({ command: "ping" }));
                         }
-        
-                        }, 4000);        
+                    }, 4000);
 
-                    if (this.onChangeBoard && message.board)
-                    {
+                    if (this.onChangeBoard && message.board) {
                         this.onChangeBoard(message.board);
                     }
+                    break;
                 }
-            }
-            if (message.command == "locked") {
-                this.locked = message.lockedby;
-            } else if (message.command == "pong") {
-                this.pingsWithoutPong = 0;
-            } else if (message.command == "installed") {
 
-                if (this.oninstalled != null)
-                    this.oninstalled();
+                case "locked":
+                    this.locked = message.lockedby;
+                    break;
 
-            } else if (message.command == "startCommandMode") {
-                if (this.commandQueue.length > 0)
-                {
-                    let command = this.commandQueue.shift();
-                    this.resultsCallbackArray = [];
-                    this.sendCommand(command.command, command.callback);
-                }
-            } else if (message.command == "execLineresult") {
-                if (this.commandMode) {
+                case "pong":
+                    this.pingsWithoutPong = 0;
+                    break;
 
-                    //console.log("Result seq: " + message.seq);
+                case "installed":
+                    this.oninstalled?.();
+                    break;
 
-                    if (this.resultsCallbackArray && this.resultsCallbackArray.length > 0)
-                    {
-                        //console.log("resultsCallbackArray has elements")
-                        if (message.seq >= this.resultsCallbackArray[0].seq)
-                        {
-                            //console.log("we under the seq");
-                            var callbackelement = null;
-                            var found = false;
-
-                            while (this.resultsCallbackArray.length > 0)
-                            {
-                                callbackelement = this.resultsCallbackArray.shift();
-
-                                if (callbackelement.seq == message.seq)
-                                {
-                                    //console.log("we found it " + callbackelement.command, message.seq );
-                                    found = true;
-                                    break;
-                                }
-                            }
-
-                            if (found) {
-                                callbackelement.callback(message.result);
-                            }
-                        }
+                case "startCommandMode":
+                    if (this.commandQueue.length > 0) {
+                        const cmd = this.commandQueue.shift();
+                        this.resultsCallbackArray = [];
+                        this.sendCommand(cmd.command, cmd.callback);
                     }
+                    break;
 
+                case "execLineresult":
+                    this.handleExecResult(message);
+                    break;
 
-                    if (this.commandQueue.length > 0 && !this.transaction)
-                    {
-                        let command = this.commandQueue.shift();
+                case "closed":
+                    this.wsSession?.close();
+                    break;
 
-                        this.sendCommand(command.command, command.callback);
+                case "distributedEvent":
+                    this.onDistributedEvent?.(message.event);
+                    break;
+            }
+        };
+
+        this.wsSession.onclose = () => {
+            if (!this.wsSession) return;
+
+            clearInterval(this.pingInterval);
+            this.pingInterval = null;
+
+            this.wsSession = null;
+            this.commandMode = false;
+            this.sessionTainted = false;
+            this.connected = false;
+
+            this.onDisconnect?.(this.connected, this.wrongVersion);
+        };
+    }
+
+    /* =========================
+       MESSAGE HANDLING
+    ========================= */
+
+    handleExecResult(message) {
+        if (!this.commandMode) return;
+
+        if (this.resultsCallbackArray?.length) {
+            if (message.seq >= this.resultsCallbackArray[0].seq) {
+
+                let callbackelement = null;
+                let found = false;
+
+                while (this.resultsCallbackArray.length > 0) {
+                    callbackelement = this.resultsCallbackArray.shift();
+                    if (callbackelement.seq === message.seq) {
+                        found = true;
+                        break;
                     }
                 }
-            } else if (message.command == "closed") {
-                if (this.wsSession) {
-                    this.wsSession.close();
+
+                if (found) {
+                    callbackelement.callback(message.result);
                 }
-            }
-            else if (message.command == "distributedEvent")
-            {
-                if (this.onDistributedEvent)
-                    this.onDistributedEvent(message.event);
             }
         }
 
-        this.wsSession.onclose = (event) => {
-            if (this.wsSession != null) {
-                clearInterval(this.pingInterval);
-                this.pingInterval = null;
-
-                this.wsSession = null;
-                this.commandMode = false;
-                this.sessionTainted = false;
-
-                this.connected = false;
-
-                this.onDisconnect(this.connected, this.wrongVersion);
-            }
+        if (this.commandQueue.length > 0 && !this.transaction) {
+            const cmd = this.commandQueue.shift();
+            this.sendCommand(cmd.command, cmd.callback);
         }
     }
 
-    this.transferPythonLib = function()
-    {
-        var size = 10*1025; // Max 5KbSize
-        var numChunks = Math.ceil(pythonLib.length / size);
+    /* =========================
+       LIB TRANSFER
+    ========================= */
+
+    transferPythonLib() {
+        const size = 10 * 1025;
+        const numChunks = Math.ceil(pythonLib.length / size);
 
         for (let i = 0, o = 0; i < numChunks; ++i, o += size) {
+            const chunk = pythonLib.substr(o, size);
 
-            var chunk = pythonLib.substr(o, size);
-            var command =
-            {
-                "command": "pythonLib",
-                "replaceLib": true,
-                "library": chunk,
-                "last": ((numChunks -1 ) == i),
-            };
-
-            this.wsSession.send(JSON.stringify(command));
+            this.wsSession.send(JSON.stringify({
+                command: "pythonLib",
+                replaceLib: true,
+                library: chunk,
+                last: (numChunks - 1) === i
+            }));
         }
     }
 
-    this.isAvailable = function(ipaddress, callback) {
-        this.url = "ws://" + ipaddress + ":5000/api/v1/commands";
+    /* =========================
+       STATE HELPERS
+    ========================= */
+
+    isAvailable(ip, callback) {
+        const url = `ws://${ip}:5000/api/v1/commands`;
 
         try {
-           var websocket = new WebSocket(this.url);
-
-           websocket.onopen = function () {
-               websocket.onclose = null;
-               websocket.close();
-               callback(true);
-           }
-           websocket.onclose = function () {
-               callback(false);
-           }
-        } catch(err) {
+            const ws = new WebSocket(url);
+            ws.onopen = () => {
+                ws.onclose = null;
+                ws.close();
+                callback(true);
+            };
+            ws.onclose = () => callback(false);
+        } catch {
             callback(false);
         }
     }
 
-    this.onclose = function() {
+    onclose() {
         clearInterval(this.pingInterval);
         this.pingInterval = null;
 
@@ -243,150 +253,109 @@ export const getQuickPiConnection = function (userName, _onConnect, _onDisconnec
         this.sessionTainted = false;
         this.connected = false;
 
-        this.onDisconnect(this.connected, this.wrongVersion);
-
+        this.onDisconnect?.(this.connected, this.wrongVersion);
     }
 
-    this.wasLocked = function()
-    {
-        if (this.locked)
-            return true;
-
-        return false;
+    wasLocked() {
+        return !!this.locked;
     }
 
-    this.isConnecting = function () {
+    isConnecting() {
         return this.wsSession != null;
     }
 
-    this.isConnected = function () {
+    isConnected() {
         return this.connected;
     }
 
-    this.executeProgram = function (pythonProgram) {
-        if (this.wsSession == null)
-            return;
+    /* =========================
+       PROGRAM CONTROL
+    ========================= */
+
+    executeProgram(pythonProgram) {
+        if (!this.wsSession) return;
 
         this.commandMode = false;
 
-        var fullProgram = pythonLib + pythonProgram;
-        var command =
-        {
-            "command": "startRunMode",
-            "program": fullProgram
-        }
-
-        this.wsSession.send(JSON.stringify(command));
+        this.wsSession.send(JSON.stringify({
+            command: "startRunMode",
+            program: pythonLib + pythonProgram
+        }));
     }
 
-
-    this.installProgram = function (pythonProgram, oninstall) {
-        if (this.wsSession == null)
-            return;
+    installProgram(program, oninstall) {
+        if (!this.wsSession) return;
 
         this.commandMode = false;
         this.oninstalled = oninstall;
 
-        var fullProgram = pythonProgram;
-        var command =
-        {
-            "command": "install",
-            "program": fullProgram
-        }
-
-        this.wsSession.send(JSON.stringify(command));
+        this.wsSession.send(JSON.stringify({
+            command: "install",
+            program
+        }));
     }
 
-    this.runDistributed = function (pythonProgram, graphDefinition, oninstall) {
-        if (this.wsSession == null)
-            return;
+    runDistributed(program, graphDefinition, oninstall) {
+        if (!this.wsSession) return;
 
         this.commandMode = false;
         this.oninstalled = oninstall;
 
-        var fullProgram = pythonLib + pythonProgram;
-        var command =
-        {
-            "command": "rundistributed",
-            "program": fullProgram,
-            "graph": graphDefinition
-        }
-
-        this.wsSession.send(JSON.stringify(command));
+        this.wsSession.send(JSON.stringify({
+            command: "rundistributed",
+            program: pythonLib + program,
+            graph: graphDefinition
+        }));
     }
 
-    this.stopProgram = function() {
-        if (this.wsSession != null) {
-            var command =
-            {
-                "command": "stopAll",
-            }
-
-            this.wsSession.send(JSON.stringify(command));
-        }
+    stopProgram() {
+        this.wsSession?.send(JSON.stringify({ command: "stopAll" }));
     }
 
-    this.releaseLock = function() {
-        if (this.wsSession == null)
-            return;
-
-        if (this.wsSession != null) {
-            var command =
-            {
-                "command": "close",
-            }
-
-            this.wsSession.send(JSON.stringify(command));
-        }
+    releaseLock() {
+        this.wsSession?.send(JSON.stringify({ command: "close" }));
     }
 
-    this.startNewSession = function() {
-        if (this.wsSession == null)
-            return;
+    /* =========================
+       COMMAND MODE
+    ========================= */
 
-        if (this.commandMode && !this.sessionTainted)
-            return;
+    startNewSession() {
+        if (!this.wsSession) return;
+        if (this.commandMode && !this.sessionTainted) return;
 
         this.resultsCallbackArray = [];
         this.commandMode = true;
         this.sessionTainted = false;
-
-        var command =
-        {
-            "command": "startCommandMode",
-        }
-
         this.commandQueue = [];
-        this.wsSession.send(JSON.stringify(command));
+
+        this.wsSession.send(JSON.stringify({
+            command: "startCommandMode"
+        }));
     }
 
-    this.startTransaction = function()
-    {
+    startTransaction() {
         this.transaction = true;
     }
 
-    this.endTransaction = function()
-    {
+    endTransaction() {
         const messages = [];
         this.resultsCallbackArray = [];
 
-        for (var i = 0; i < this.commandQueue.length; i++)
-        {
+        for (const cmd of this.commandQueue) {
             this.seq++;
-            messages.push(
-            {
-                "command": "execLine",
-                "line": this.commandQueue[i].command,
-                "seq": this.seq,
-                "long": this.commandQueue[i].long? true: false
+
+            messages.push({
+                command: "execLine",
+                line: cmd.command,
+                seq: this.seq,
+                long: !!cmd.long
             });
 
-            //console.log("trans seq: " + seq);
-
-            this.resultsCallbackArray.push ({
-                "seq": this.seq,
-                "callback": this.commandQueue[i].callback,
-                "command": this.commandQueue[i].command
+            this.resultsCallbackArray.push({
+                seq: this.seq,
+                callback: cmd.callback,
+                command: cmd.command
             });
 
             this.sessionTainted = true;
@@ -394,66 +363,45 @@ export const getQuickPiConnection = function (userName, _onConnect, _onDisconnec
 
         this.commandQueue = [];
 
-        var command =
-        {
-            "command": "transaction",
-            "messages": messages,
-        }
-
-        this.wsSession.send(JSON.stringify(command));
+        this.wsSession.send(JSON.stringify({
+            command: "transaction",
+            messages
+        }));
 
         this.transaction = false;
     }
 
-    this.sendCommand = function (command, callback, long) {
+    sendCommand(command, callback, long = undefined) {
+        if (!this.wsSession || this.wsSession.readyState !== 1) return;
 
-        if (this.wsSession != null && this.wsSession.readyState == 1) {
-            if (!this.transaction) {
-                if (!this.commandMode) {
-                    this.startNewSession();
-
-                    console.log("..............................");
-
-                    this.commandQueue.push ({
-                        "command": command,
-                        "callback": callback,
-                        "long": long? true: false
-                    });
-                } else {
-                    this.seq++;
-                    var commandobj =
-                    {
-                        "command": "execLine",
-                        "line": command,
-                        "seq": this.seq,
-                        "long": long? true: false
-                    }
-
-                    //console.log("send command ", command, seq);
-
-                    //console.log("Sending seq: " + seq);
-                    this.resultsCallbackArray.push ({
-                        "seq": this.seq,
-                        "callback": callback,
-                        "command": command,
-                    });
-
-                    this.sessionTainted = true;
-                    this.wsSession.send(JSON.stringify(commandobj));
-                }
-            }
-            else {
-                this.commandQueue.push ({
-                    command: command,
-                    callback: callback
-                });
-            }
+        if (this.transaction) {
+            this.commandQueue.push({ command, callback, long });
+            return;
         }
+
+        if (!this.commandMode) {
+            this.startNewSession();
+            this.commandQueue.push({ command, callback, long });
+            return;
+        }
+
+        this.seq++;
+
+        this.resultsCallbackArray.push({
+            seq: this.seq,
+            callback,
+            command
+        });
+
+        this.sessionTainted = true;
+
+        this.wsSession.send(JSON.stringify({
+            command: "execLine",
+            line: command,
+            seq: this.seq,
+            long: !!long
+        }));
     }
-
-
-    g_instance = this;
-    return this;
 }
 
 

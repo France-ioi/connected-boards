@@ -2,13 +2,14 @@ import {AbstractSensor, SensorDrawParameters} from "./abstract_sensor";
 import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
+import {SensorType} from "./sensor_types";
 
 export class SensorButton extends AbstractSensor<any> {
   private buttonon: any;
   private buttonoff: any;
   public wasPressed: boolean;
   public onPressed: () => void;
-  public type = 'button';
+  public type = SensorType.Button;
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

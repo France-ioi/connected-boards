@@ -2,12 +2,13 @@ import {AbstractSensor, SensorDrawParameters} from "./abstract_sensor";
 import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
+import {SensorType} from "./sensor_types";
 
 export class SensorRange extends AbstractSensor<any> {
   private rangedistance: any;
   private rangedistancestart: any;
   private rangedistanceend: any;
-  public type = 'range';
+  public type = SensorType.Range;
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {
@@ -47,6 +48,10 @@ export class SensorRange extends AbstractSensor<any> {
       val = Math.round(val);
       callback(val);
     });
+  }
+
+  getInitialState() {
+    return 500;
   }
 
   draw(sensorHandler: SensorHandler, {imgx, imgy, imgw, imgh, juststate, fadeopacity, state1x, state1y, sensorAttr}: SensorDrawParameters) {

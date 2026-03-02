@@ -2,11 +2,12 @@ import {AbstractSensor, SensorDrawParameters} from "./abstract_sensor";
 import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
+import {SensorType} from "./sensor_types";
 
 export class SensorLight extends AbstractSensor<any> {
   private moon: any;
   private sun: any;
-  public type = 'light';
+  public type = SensorType.Light;
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

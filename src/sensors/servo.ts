@@ -2,12 +2,13 @@ import {AbstractSensor, SensorDrawParameters} from "./abstract_sensor";
 import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 import {getImg} from "../util";
+import {SensorType} from "./sensor_types";
 
 export class SensorServo extends AbstractSensor<any> {
   private pale: any;
   private center: any;
   private updatetimeout: any;
-  public type = 'servo';
+  public type = SensorType.Servo;
 
   static getDefinition(context: QuickalgoLibrary, strings: any): SensorDefinition {
     return {

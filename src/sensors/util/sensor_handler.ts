@@ -1,5 +1,5 @@
 import {SensorDrawer} from "./sensor_drawer";
-import {SensorDefinition} from "../../definitions";
+import {QuickalgoLibrary, Sensor, SensorDefinition} from "../../definitions";
 import {sensorsList} from "../sensor_factory";
 import {AbstractSensor} from "../abstract_sensor";
 
@@ -195,5 +195,15 @@ export class SensorHandler {
 
   actuatorsInRunningModeError() {
     window.displayHelper.showPopupMessage(this.strings.messages.actuatorsWhenRunning, 'blanket');
+  }
+
+  createSensor(sensor: Sensor) {
+    if (sensor.type in sensorsList) {
+      return new sensorsList[sensor.type](sensor, this.context, this.strings);
+    }
+
+    return {
+      ...sensor,
+    };
   }
 }
