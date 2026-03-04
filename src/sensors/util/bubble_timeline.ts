@@ -4,7 +4,7 @@ import {AbstractSensor, SensorDrawTimeLineParameters} from "../abstract_sensor";
 export function drawBubbleTimeline<T>(sensor: AbstractSensor<T>, sensorHandler: SensorHandler, state: T, expectedState: T, type: string, drawParameters: SensorDrawTimeLineParameters, drawBubble: () => HTMLDivElement) {
   const {startx, ypositionmiddle, color, strokewidth} = drawParameters;
 
-  const sensorDef = sensorHandler.findSensorDefinition(this);
+  const sensorDef = sensorHandler.findSensorDefinition(sensor);
   if (type != "actual" || !sensor.lastState || !sensorDef.compareState(sensor.lastState, state)) {
     let stateBubble = sensor.context.paper.text(startx, ypositionmiddle + 10, '\uf27a');
     stateBubble.attr({

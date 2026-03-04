@@ -653,7 +653,7 @@ export class SensorDrawer {
 
         var yspace = this.context.timeLineSlotHeight / 3;
         var ypositiontop = sensor.drawInfo.y + (yspace * i)
-        var ypositionbottom = ypositiontop + yspace;
+        var ypositionbottom = ypositiontop + this.context.timeLineSlotHeight / 4;
 
         var offset = (ypositionbottom - ypositiontop) * this.sensorHandler.findSensorDefinition(sensor).getPercentageFromState(state[i], sensor);
 

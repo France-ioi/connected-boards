@@ -395,7 +395,7 @@ var getContext = function (display, infos, curLevel) {
 
                     if(expectedState.hit || expectedState.input ) { continue; } // Was hit, valid
                     var newFailInfo = null;
-                    if(actualStates) {
+                    if(actualStates && actualStates[0].time <= expectedState.time) {
                         // Scroll through actual states until we get the state at this time
                         while(actualIdx + 1 < actualStates.length && actualStates[actualIdx+1].time <= expectedState.time) {
                             actualIdx += 1;
@@ -431,6 +431,10 @@ var getContext = function (display, infos, curLevel) {
                 var expectedIdx = 0;
                 for(var i = 0; i < actualStates.length ; i++) {
                     var actualState = actualStates[i];
+                    if (expectedStates[0].time > actualState.time) {
+                        continue;
+                    }
+
                     while(expectedIdx + 1 < expectedStates.length && expectedStates[expectedIdx+1].time <= actualState.time) {
                         expectedIdx += 1;
                     }
