@@ -193,6 +193,7 @@ export class SensorDrawer {
       namex = portx;
       namesize = portsize;
       nameanchor = "start";
+      stateanchor = "start";
     }
     namesize = Math.min(namesize, maxNameSize);
     statesize = Math.min(statesize, maxStateSize);
