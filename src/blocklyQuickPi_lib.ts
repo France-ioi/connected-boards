@@ -2539,6 +2539,10 @@ var getContext = function (display, infos, curLevel) {
             sensorHandler.drawSensor(sensor);
         }
 
+        context.logActualState(sensor, name, newState, allowFail);
+    }
+
+    context.logActualState = function (sensor, name, newState, allowFail) {
         if (context.autoGrading && context.gradingStatesBySensor != undefined && !allowFail) {
             if (!context.actualStatesBySensor[name]) {
                 context.actualStatesBySensor[name] = [];
@@ -2560,7 +2564,7 @@ var getContext = function (display, infos, curLevel) {
 
             context.increaseTime(sensor);
         }
-    }
+    };
 
     function drawNewStateChangesSensor(name, newState=null) {
         var sensor = sensorHandler.findSensorByName(name);
@@ -2763,6 +2767,9 @@ var getContext = function (display, infos, curLevel) {
                 if(sensor) {
                     // Redraw from the beginning of this state
                     sensor.lastDrawnTime = Math.min(sensor.lastDrawnTime, stateTime.time);
+                    if (sensor.state !== state) {
+                        context.logActualState(sensor, name, state, false);
+                    }
                 }
             }
             else {
