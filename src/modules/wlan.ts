@@ -128,7 +128,7 @@ export function wlanModuleDefinition(context: QuickalgoLibrary, strings) {
     }
 
     if (!context.display || context.autoGrading || context.offLineMode) {
-      const state = context.getSensorState(sensor.name);
+      const state = sensor.state;
 
       context.runner.noDelay(callback, !!state.connected);
     } else {

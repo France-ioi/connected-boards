@@ -183,7 +183,7 @@ export function ledMatrixModuleDefinition(context: QuickalgoLibrary, strings) {
       throw `There is no LED matrix.`;
     }
 
-    let state = context.getSensorState(sensor.name);
+    let state = sensor.state;
     state[y][x] = intensity;
     context.registerQuickPiEvent(sensor.name, state);
 

@@ -48,7 +48,6 @@ export function buttonsModuleDefinition(context: QuickalgoLibrary, strings) {
     if (!context.display || context.autoGrading || context.offLineMode) {
 
       if (sensor.type == "stick") {
-        let state = context.getSensorState(name);
         let stickDefinition = sensorHandler.findSensorDefinition(sensor);
         let buttonstate = stickDefinition.getButtonState(name, sensor.state);
 
@@ -88,8 +87,6 @@ export function buttonsModuleDefinition(context: QuickalgoLibrary, strings) {
     let sensor = sensorHandler.findSensorByName<SensorButton>(name, true);
 
     if (!context.display || context.autoGrading || context.offLineMode) {
-      let state = context.getSensorState(name);
-
       let wasPressed = !!sensor.wasPressed;
       sensor.wasPressed = false;
 
