@@ -1,4 +1,4 @@
-import {QuickalgoLibrary} from "../definitions";
+import {QuickalgoLibrary, SensorDefinition} from "../definitions";
 import {SensorHandler} from "./util/sensor_handler";
 
 export interface SensorDrawParameters {
@@ -96,4 +96,6 @@ export abstract class AbstractSensor<T> {
   public setLiveState?(state: T, callback): void;
   public getInitialState?(): T;
   public drawTimelineState?(sensorHandler: SensorHandler, state: any, expectedState: any, type: string, drawParameters: SensorDrawTimeLineParameters): void;
+
+  static getDefinition?(context: QuickalgoLibrary, strings: any): SensorDefinition;
 }

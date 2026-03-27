@@ -353,7 +353,6 @@ var getContext = function (display, infos, curLevel) {
 
     infos.checkEndEveryTurn = true;
     infos.checkEndCondition = function (context: QuickalgoLibrary, lastTurn) {
-
         if (!context.display && !context.autoGrading && !context.forceGradingWithoutDisplay) {
             context.success = true;
             throw (strings.messages.manualTestSuccess);
@@ -380,7 +379,7 @@ var getContext = function (display, infos, curLevel) {
 
             for(var sensorName in context.gradingStatesBySensor) {
                 // Cycle through each sensor from the grading states
-                var sensor = sensorHandler.findSensorByName(sensorName);
+                var sensor = sensorHandler.findSensorByName(sensorName, true);
                 var sensorDef = sensorHandler.findSensorDefinition(sensor);
 
                 var expectedStates = context.gradingStatesBySensor[sensorName];
@@ -2116,7 +2115,7 @@ var getContext = function (display, infos, curLevel) {
 
             for(var sensorName in context.gradingStatesBySensor) {
                 // Cycle through each sensor from the grading states
-                var sensor = sensorHandler.findSensorByName(sensorName);
+                var sensor = sensorHandler.findSensorByName(sensorName, true);
                 var sensorDef = sensorHandler.findSensorDefinition(sensor);
 
                 var expectedStates = context.gradingStatesBySensor[sensorName];

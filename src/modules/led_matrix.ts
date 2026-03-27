@@ -128,9 +128,9 @@ export function ledMatrixModuleDefinition(context: QuickalgoLibrary, strings) {
       statesToDisplay = [];
       for (let char of String(image).split('')) {
         if (char in displayAlphabet) {
-          statesToDisplay.push(displayAlphabet[char]);
+          statesToDisplay.push(convertImageFromString(displayAlphabet[char].join(':')));
         } else {
-          statesToDisplay.push(displayAlphabet['?']);
+          statesToDisplay.push(convertImageFromString(displayAlphabet['?'].join(':')));
         }
       }
     }
