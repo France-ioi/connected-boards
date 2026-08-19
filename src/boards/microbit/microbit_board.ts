@@ -262,7 +262,7 @@ export class MicrobitBoard extends AbstractBoard {
         Python: (blocklyBlock) => {
           const axis = blocklyBlock.getFieldValue('PARAM_0');
 
-          return [`accelerometer.get_${axis}()`, window.Blockly.Python.ORDER_NONE];
+          return [`accelerometer.get_${axis}()`, 99];
         },
       };
     });
@@ -271,7 +271,7 @@ export class MicrobitBoard extends AbstractBoard {
         Python: (blocklyBlock) => {
           let blockParams = getBlockGeneratorParams(block, blocklyBlock, 'Python');
 
-          return [`accelerometer.was_gesture(${blockParams})`, window.Blockly.Python.ORDER_NONE];
+          return [`accelerometer.was_gesture(${blockParams})`, 99];
         },
       };
     });
@@ -283,7 +283,7 @@ export class MicrobitBoard extends AbstractBoard {
           const button = block.getFieldValue('PARAM_0');
           const method = 'pin_logo' === button ? 'is_touched' : 'is_pressed';
 
-          return [`${button}.${method}()`, window.Blockly.Python.ORDER_NONE];
+          return [`${button}.${method}()`, 99];
         },
       };
     });
@@ -315,7 +315,7 @@ export class MicrobitBoard extends AbstractBoard {
         Python: (blocklyBlock) => {
           const blockParams = getBlockGeneratorParams(block, blocklyBlock, 'Python');
 
-          return [`display.get_pixel(${blockParams})`, window.Blockly.Python.ORDER_NONE];
+          return [`display.get_pixel(${blockParams})`, 99];
         },
       };
     });
@@ -333,7 +333,7 @@ export class MicrobitBoard extends AbstractBoard {
     lightMatrixModule.lightIntensity.blocks.forEach((block: QuickalgoLibraryBlock) => {
       block.codeGenerators = {
         Python: () => {
-          return [`display.read_light_level()`, window.Blockly.Python.ORDER_NONE];
+          return [`display.read_light_level()`, 99];
         },
       };
     });
@@ -344,14 +344,14 @@ export class MicrobitBoard extends AbstractBoard {
         Python: (block) => {
           const axis = block.getFieldValue('PARAM_0');
 
-          return [`compass.get_${axis}()`, window.Blockly.Python.ORDER_NONE];
+          return [`compass.get_${axis}()`, 99];
         },
       };
     });
     magnetometerModule.computeCompassHeading.blocks.forEach((block: QuickalgoLibraryBlock) => {
       block.codeGenerators = {
         Python: () => {
-          return [`compass.heading()`, window.Blockly.Python.ORDER_NONE];
+          return [`compass.heading()`, 99];
         },
       };
     });
@@ -360,7 +360,7 @@ export class MicrobitBoard extends AbstractBoard {
     soundModule.soundLevel.blocks.forEach((block: QuickalgoLibraryBlock) => {
       block.codeGenerators = {
         Python: () => {
-          return [`microphone.sound_level()`, window.Blockly.Python.ORDER_NONE];
+          return [`microphone.sound_level()`, 99];
         },
       };
     });

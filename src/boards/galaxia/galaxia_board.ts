@@ -244,7 +244,7 @@ export class GalaxiaBoard extends AbstractBoard {
         Python: (block) => {
           const axis = block.getFieldValue('PARAM_0');
 
-          return [`accelerometer.get_${axis}()`, window.Blockly.Python.ORDER_NONE];
+          return [`accelerometer.get_${axis}()`, 99];
         },
       };
     });
@@ -256,7 +256,7 @@ export class GalaxiaBoard extends AbstractBoard {
           const button = block.getFieldValue('PARAM_0');
           const method = 'touch' === button.substring(0, 5) ? 'is_touched' : 'is_pressed';
 
-          return [`${button}.${method}()`, window.Blockly.Python.ORDER_NONE];
+          return [`${button}.${method}()`, 99];
         },
       };
     });
@@ -269,7 +269,7 @@ export class GalaxiaBoard extends AbstractBoard {
     lightModule.lightIntensity.blocks.forEach((block: QuickalgoLibraryBlock) => {
       block.codeGenerators = {
         Python: () => {
-          return [`display.read_light_level()`, window.Blockly.Python.ORDER_NONE];
+          return [`display.read_light_level()`, 99];
         },
       };
     });
@@ -283,7 +283,7 @@ export class GalaxiaBoard extends AbstractBoard {
         Python: (block) => {
           const axis = block.getFieldValue('PARAM_0');
 
-          return [`compass.get_${axis}()`, window.Blockly.Python.ORDER_NONE];
+          return [`compass.get_${axis}()`, 99];
         },
       };
     });

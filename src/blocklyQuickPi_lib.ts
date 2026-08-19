@@ -2909,9 +2909,9 @@ var getContext = function (display, infos, curLevel) {
 
     // Color indexes of block categories (as a hue in the range 0–420)
     context.provideBlocklyColours = function () {
-        window.Blockly.HSV_SATURATION = 0.65;
-        window.Blockly.HSV_VALUE = 0.80;
-        window.Blockly.Blocks.inputs.HUE = 50;
+        if (window.Blockly) {
+            window.Blockly.Blocks.inputs.HUE = 50;
+        }
 
         return {
             categories: {
