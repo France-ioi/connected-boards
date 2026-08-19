@@ -1,5 +1,20 @@
 import {ModuleDefinition} from "./module_definition";
-import {BlocklyBlock, QuickalgoLibraryBlock} from "../definitions";
+import {BlocklyBlock, BlocklyGenerator, QuickalgoLibraryBlock} from "../definitions";
+
+// `ORDER_ATOMIC` in Blockly 10 and earlier, `Order.ATOMIC` since Blockly 11. Both are 0,
+// but we only have a name for it when running on the old global Blockly.
+const ORDER_ATOMIC = 0;
+
+/**
+ * The code generator to emit with, whichever Blockly is hosting us.
+ *
+ * Blockly 11+ passes the running generator to each block generator, so we get it handed
+ * down from the caller. The old global Blockly passes nothing and keeps its generators on
+ * `window.Blockly`, indexed by language.
+ */
+function getGenerator(language: string, generator?: BlocklyGenerator): BlocklyGenerator {
+  return generator ?? window.Blockly[language];
+}
 
 export function useGeneratorName(module: ModuleDefinition, generatorName: string): ModuleDefinition {
   for (let feature of Object.values(module)) {
@@ -9,7 +24,8 @@ export function useGeneratorName(module: ModuleDefinition, generatorName: string
   return module;
 }
 
-export function getBlockGeneratorParams(blockInfo: QuickalgoLibraryBlock, block: BlocklyBlock, language) {
+export function getBlockGeneratorParams(blockInfo: QuickalgoLibraryBlock, block: BlocklyBlock, language, generator?: BlocklyGenerator) {
+  const codeGenerator = getGenerator(language, generator);
   let params = "";
   let args0 = blockInfo.blocklyJson.args0;
   let blockParams = blockInfo.params;
@@ -27,9 +43,9 @@ export function getBlockGeneratorParams(blockInfo: QuickalgoLibraryBlock, block:
       }
 
       if (blockParams && blockParams[iArgs0] == 'Statement') {
-        params += "function () {\n  " + window.Blockly.JavaScript.statementToCode(block, 'PARAM_' + iParam) + "}";
+        params += "function () {\n  " + codeGenerator.statementToCode(block, 'PARAM_' + iParam) + "}";
       } else {
-        params += window.Blockly[language].valueToCode(block, 'PARAM_' + iParam, window.Blockly[language].ORDER_ATOMIC);
+        params += codeGenerator.valueToCode(block, 'PARAM_' + iParam, codeGenerator.ORDER_ATOMIC ?? ORDER_ATOMIC);
       }
       iParam += 1;
     }

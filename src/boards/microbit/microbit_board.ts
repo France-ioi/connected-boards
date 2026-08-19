@@ -268,8 +268,8 @@ export class MicrobitBoard extends AbstractBoard {
     });
     accelerometerModule.wasGesture.blocks.forEach((block: QuickalgoLibraryBlock) => {
       block.codeGenerators = {
-        Python: (blocklyBlock) => {
-          let blockParams = getBlockGeneratorParams(block, blocklyBlock, 'Python');
+        Python: (blocklyBlock, generator) => {
+          let blockParams = getBlockGeneratorParams(block, blocklyBlock, 'Python', generator);
 
           return [`accelerometer.was_gesture(${blockParams})`, 99];
         },
@@ -293,8 +293,8 @@ export class MicrobitBoard extends AbstractBoard {
     const ledMatrixModule = ledMatrixModuleDefinition(context, strings);
     ledMatrixModule.ledMatrixShow.blocks.forEach((block: QuickalgoLibraryBlock) => {
       block.codeGenerators = {
-        Python: (blocklyBlock) => {
-          let blockParams = getBlockGeneratorParams(block, blocklyBlock, 'Python');
+        Python: (blocklyBlock, generator) => {
+          let blockParams = getBlockGeneratorParams(block, blocklyBlock, 'Python', generator);
           if ('ledMatrixShowImage' === block.name) {
             blockParams = `Image(${blockParams})`;
           }
@@ -312,8 +312,8 @@ export class MicrobitBoard extends AbstractBoard {
     });
     ledMatrixModule.ledMatrixGetPixel.blocks.forEach((block: QuickalgoLibraryBlock) => {
       block.codeGenerators = {
-        Python: (blocklyBlock) => {
-          const blockParams = getBlockGeneratorParams(block, blocklyBlock, 'Python');
+        Python: (blocklyBlock, generator) => {
+          const blockParams = getBlockGeneratorParams(block, blocklyBlock, 'Python', generator);
 
           return [`display.get_pixel(${blockParams})`, 99];
         },
@@ -321,8 +321,8 @@ export class MicrobitBoard extends AbstractBoard {
     });
     ledMatrixModule.ledMatrixSetPixel.blocks.forEach((block: QuickalgoLibraryBlock) => {
       block.codeGenerators = {
-        Python: (blocklyBlock) => {
-          const blockParams = getBlockGeneratorParams(block, blocklyBlock, 'Python');
+        Python: (blocklyBlock, generator) => {
+          const blockParams = getBlockGeneratorParams(block, blocklyBlock, 'Python', generator);
 
           return `display.set_pixel(${blockParams});\n`;
         },

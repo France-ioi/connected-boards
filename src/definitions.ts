@@ -84,6 +84,23 @@ export interface BlocklyBlock {
   getFieldValue(field: string): string,
 }
 
+/**
+ * A Blockly code generator, of either generation.
+ *
+ * Up to Blockly 10 these hung off the global — `Blockly.Python`, `Blockly.JavaScript` —
+ * and carried their precedence constants as `ORDER_*` properties. Since Blockly 11 they
+ * are separate modules (`pythonGenerator`, `javascriptGenerator`), the constants moved to
+ * a standalone `Order` enum, and the running generator is handed to every block generator
+ * as a second argument. Only the second form is available to us, so a block generator that
+ * needs the generator has to take it from there and pass it on.
+ */
+export interface BlocklyGenerator {
+  valueToCode(block: BlocklyBlock, name: string, order: number): string,
+  statementToCode(block: BlocklyBlock, name: string): string,
+  /** Blockly 10 and earlier only; `Order.ATOMIC` in later versions, same value. */
+  ORDER_ATOMIC?: number,
+}
+
 export interface QuickalgoLibraryBlock {
   name?: string,
   yieldsValue?: string|boolean,
@@ -95,7 +112,7 @@ export interface QuickalgoLibraryBlock {
   variants?: any,
   hidden?: boolean,
   handler: Function,
-  codeGenerators?: {[languageName: string]: (block: BlocklyBlock) => [string, string]|string}
+  codeGenerators?: {[languageName: string]: (block: BlocklyBlock, generator?: BlocklyGenerator) => [string, string]|string}
 }
 
 export interface QuickalgoLibrary {
