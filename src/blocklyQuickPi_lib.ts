@@ -2909,7 +2909,7 @@ var getContext = function (display, infos, curLevel) {
 
     // Color indexes of block categories (as a hue in the range 0–420)
     context.provideBlocklyColours = function () {
-        if (window.Blockly) {
+        if (window.Blockly?.Blocks) {
             window.Blockly.Blocks.inputs.HUE = 50;
         }
 
