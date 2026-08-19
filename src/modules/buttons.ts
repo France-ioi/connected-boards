@@ -154,23 +154,23 @@ export function buttonsModuleDefinition(context: QuickalgoLibrary, strings) {
           blocklyInit() {
             return function () {
               this.setColour(context.blocklyHelper.getDefaultColours().categories["sensors"]);
-              this.appendDummyInput("PARAM_0")
-                .appendField(strings.label.onButtonPressed)
-                .appendField(new window.Blockly.FieldDropdown(sensorHandler.getSensorNames("button")), 'PARAM_0')
-                .appendField(strings.label.onButtonPressedEnd);
-              this.appendStatementInput("PARAM_1")
-                .setCheck(null)
-                .appendField(strings.label.onButtonPressedDo);
+              this.jsonInit({
+                message0: "%1 %2 %3",
+                args0: [
+                  {type: "field_label", text: strings.label.onButtonPressed},
+                  {type: "field_dropdown", name: "PARAM_0", options: sensorHandler.getSensorNames("button")},
+                  {type: "field_label", text: strings.label.onButtonPressedEnd},
+                ],
+                message1: "%1 %2",
+                args1: [
+                  {type: "field_label", text: strings.label.onButtonPressedDo},
+                  {type: "input_statement", name: "PARAM_1"},
+                ],
+              });
               this.setPreviousStatement(false);
               this.setNextStatement(false);
               this.setOutput(null);
             };
-          },
-          blocklyJson: {
-            "args0": [
-              {"type": "field_dropdown", "name": "PARAM_0", "options": sensorHandler.getSensorNames("button")},
-              { "type": "input_value", "name": "PARAM_1"},
-            ]
           },
           handler: onButtonPressed,
         },
